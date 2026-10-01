@@ -1,0 +1,7 @@
+simplyodd/
+.data/
+.env
+__pycache__/
+.pytest_cache/
+*.json.key
+service-account*.json

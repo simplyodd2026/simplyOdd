@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Product and category media are public; uploads happen only via the backend
+// (Admin SDK). Nothing else is readable.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /categories/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /avatars/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
