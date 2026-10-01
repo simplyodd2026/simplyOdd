@@ -16,6 +16,9 @@ def get_app() -> firebase_admin.App:
         options["projectId"] = s.firebase_project_id
     if s.firebase_storage_bucket:
         options["storageBucket"] = s.firebase_storage_bucket
-    # ApplicationDefault picks up GOOGLE_APPLICATION_CREDENTIALS locally and
-    # the attached service account on Cloud Run.
-    return firebase_admin.initialize_app(credentials.ApplicationDefault(), options)
+    # A key file named in .env wins; otherwise ApplicationDefault picks up the
+    # GOOGLE_APPLICATION_CREDENTIALS env var locally and the attached service
+    # account on Cloud Run.
+    cred = (credentials.Certificate(s.google_application_credentials)
+            if s.google_application_credentials else credentials.ApplicationDefault())
+    return firebase_admin.initialize_app(cred, options)

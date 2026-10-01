@@ -27,12 +27,6 @@ export default function AccountLayout() {
           </NavLink>
         )}
       </header>
-      {user && !user.emailVerified && (
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-l-2 border-accent bg-accent/10 px-4 py-3 text-sm">
-          <span>Confirm your email address so we can send order updates.</span>
-          <NavLink to="/verify-email" className="underline underline-offset-4">Confirm email</NavLink>
-        </div>
-      )}
       <div className="grid gap-10 lg:grid-cols-12">
         <nav className="flex gap-5 overflow-x-auto border-b border-rule pb-3 text-[17px] scrollbar-none lg:col-span-2 lg:flex-col lg:gap-3 lg:border-0" aria-label="Account">
           {NAV.map((n) => (

@@ -19,10 +19,6 @@ const AboutPage = lazy(() => import('@/pages/AboutPage'))
 const CustomPage = lazy(() => import('@/pages/CustomPage'))
 const HelpPage = lazy(() => import('@/pages/HelpPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
-const SignupPage = lazy(() => import('@/pages/auth/SignupPage'))
-const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
-const AuthActionPage = lazy(() => import('@/pages/auth/AuthActionPage'))
-const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'))
 const AccountLayout = lazy(() => import('@/pages/account/AccountLayout'))
 const ProfilePage = lazy(() => import('@/pages/account/ProfilePage'))
 const OrdersPage = lazy(() => import('@/pages/account/OrdersPage'))
@@ -53,6 +49,11 @@ function RequireAuth({ admin }: { admin?: boolean }) {
   return <Outlet />
 }
 
+function ToLogin() {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: '/login', search }} replace />
+}
+
 export const router = createBrowserRouter([
   {
     element: <SiteLayout />,
@@ -72,13 +73,11 @@ export const router = createBrowserRouter([
       { path: '/custom', element: s(<CustomPage />) },
       { path: '/help/:topic', element: s(<HelpPage />) },
       { path: '/login', element: s(<LoginPage />) },
-      { path: '/signup', element: s(<SignupPage />) },
-      { path: '/forgot-password', element: s(<ForgotPasswordPage />) },
-      { path: '/auth/action', element: s(<AuthActionPage />) },
+      // Google sign-in creates accounts, so the old email pages all lead to /login.
+      ...['/signup', '/forgot-password', '/verify-email', '/auth/action'].map((path) => ({ path, element: <ToLogin /> })),
       {
         element: <RequireAuth />,
         children: [
-          { path: '/verify-email', element: s(<VerifyEmailPage />) },
           { path: '/checkout', element: s(<CheckoutPage />) },
           { path: '/order/:id', element: s(<OrderConfirmationPage />) },
           {

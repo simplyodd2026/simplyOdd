@@ -50,23 +50,11 @@ export function createDevAuth(): AuthClient {
       return () => listeners.delete(cb)
     },
     getToken: async () => (current ? `dev:${current.uid}:${current.email}:${current.name ?? ''}` : null),
-    signIn: async (email) => {
+    devSignIn: async (email) => {
       validEmail(email)
       write(user(email, email === 'admin@simplyodd.dev' ? 'Studio Admin' : email === 'demo@simplyodd.dev' ? 'Aarav Mehta' : email.split('@')[0]))
     },
-    signUp: async (name, email, password) => {
-      validEmail(email)
-      if (password.length < 8) throw new Error('Use at least 8 characters for your password.')
-      write(user(email, name))
-    },
     signInWithGoogle: async () => write(user('google.user@simplyodd.dev', 'Google User', 'google')),
     signOut: async () => write(null),
-    sendPasswordReset: async (email) => validEmail(email),
-    confirmPasswordReset: async (_code, pw) => {
-      if (pw.length < 8) throw new Error('Use at least 8 characters for your password.')
-    },
-    applyEmailVerification: async () => undefined,
-    sendEmailVerification: async () => undefined,
-    reload: async () => current,
   }
 }

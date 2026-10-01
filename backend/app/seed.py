@@ -128,7 +128,7 @@ async def seed_catalogue(svc: Services) -> None:
             name=name, slug=slug, tagline=tagline, description=desc, price=price, compare_at_price=cmp, stock=stock,
             category_id=cats[cat], tags=tags, materials=mats,
             dimensions=Dimensions(width_cm=w, height_cm=h, depth_cm=d), weight_g=wt,
-            manufacturing="Designed in-house and printed to order in small batches in Bengaluru. "
+            manufacturing="Designed in-house and printed to order in small batches. "
                           "Each piece is sanded and inspected by hand; tiny layer lines are part of the look.",
             images=[ProductImage(url=f"/seed/{slug}-{n}.svg", alt=f"{name}, {v}")
                     for n, v in ((1, "studio view"), (2, "lit view"), (3, "detail"))],
@@ -174,8 +174,8 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
     for uid, email, name in people:
         user = AuthUser(uid=uid, email=email, name=name, email_verified=True)
         await svc.accounts.ensure_profile(user)
-        addr = dict(full_name=name, phone="9876543210", line1="42 Residency Road", city="Bengaluru",
-                    state="Karnataka", postal_code="560025", country="India")
+        addr = dict(full_name=name, phone="9876543210", line1="12 Example Street", city="Mumbai",
+                    state="Maharashtra", postal_code="400001", country="India")
         await svc.accounts.update_profile(user, ProfileUpdate(phone="9876543210"))
         await svc.accounts.add_address(user, AddressIn(**addr, is_default=True))
         for n in range(rng.randint(1, 3)):

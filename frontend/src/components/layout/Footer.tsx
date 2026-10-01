@@ -19,7 +19,7 @@ export function Footer() {
             Things that don't need to exist, made carefully anyway.
           </p>
           <p className="mt-4 max-w-sm text-sm text-paper/60">
-            Designed in-house and 3D printed to order in small batches in Bengaluru.
+            Designed in-house and 3D printed to order in small batches.
           </p>
           <a href="https://instagram.com" target="_blank" rel="noreferrer"
             className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-pink-2 px-5 text-sm font-semibold text-ink transition-colors hover:bg-paper">
@@ -55,7 +55,7 @@ export function Footer() {
       <div className="border-t border-paper/10">
         <div className="mx-auto flex max-w-[1600px] flex-wrap justify-between gap-2 px-4 py-5 text-sm text-paper/60 sm:px-6 lg:px-10">
           <span>© {new Date().getFullYear()} Simply Odd</span>
-          <span>Printed in Bengaluru, shipped across India.</span>
+          <span>Printed to order, shipped across India.</span>
         </div>
       </div>
       </div>

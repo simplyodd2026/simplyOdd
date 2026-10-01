@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 *.json.key
 service-account*.json
+simply-odd-service.json
+client_secret*.json
+*oauth-client*.json

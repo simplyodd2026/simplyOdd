@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import account, catalog, orders, reviews
+from app.api.routes import account, catalog, media, orders, reviews
 from app.api.routes.admin import router as admin_router
 from app.core.config import Settings, get_settings
 from app.core.container import LOCAL_MEDIA_ROOT, build_services
@@ -39,11 +39,11 @@ def create_app(settings: Settings | None = None, store: DocumentStore | None = N
     async def health():
         return {"status": "ok", "backend": settings.data_backend}
 
-    for r in (catalog.router, account.router, orders.router, reviews.router, admin_router):
+    for r in (catalog.router, account.router, orders.router, reviews.router, media.router, admin_router):
         api.include_router(r)
     app.include_router(api)
 
-    if settings.data_backend == "memory":
+    if settings.resolved_media_backend == "local":
         LOCAL_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
         app.mount("/media", StaticFiles(directory=LOCAL_MEDIA_ROOT), name="media")
     return app

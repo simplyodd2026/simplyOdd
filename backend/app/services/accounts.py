@@ -22,12 +22,12 @@ class AccountService:
             patch = {}
             if user.email and profile.email != user.email:
                 patch["email"] = user.email
-            if profile.is_admin != user.is_admin:
-                patch["is_admin"] = user.is_admin
             if patch:
                 await self.store.update(USERS, user.uid, patch)
                 profile = profile.model_copy(update=patch)
             return profile
+        # is_admin is only ever granted by editing the user document (or
+        # scripts/set_admin.py); sign-in never changes it.
         ts = now()
         profile = UserProfile(user_id=user.uid, name=user.name or "", email=user.email or "",
                               profile_image=user.picture, is_admin=user.is_admin, created_at=ts, updated_at=ts)

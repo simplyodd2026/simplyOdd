@@ -21,7 +21,15 @@ class Settings(BaseSettings):
 
     firebase_project_id: str | None = None
     firebase_storage_bucket: str | None = None
-    admin_emails: Csv = ["admin@simplyodd.dev"]
+    google_application_credentials: str | None = None
+
+    # Where uploaded images go. Unset = Firebase Storage on the firestore
+    # backend, local disk on the memory backend.
+    media_backend: Literal["local", "firebase", "drive"] | None = None
+    google_oauth_client_id: str | None = None
+    google_oauth_client_secret: str | None = None
+    google_drive_refresh_token: str | None = None
+    google_drive_folder_id: str | None = None
 
     currency: str = "INR"
     tax_rate: float = 0.18
@@ -35,7 +43,7 @@ class Settings(BaseSettings):
 
     catalog_cache_seconds: int = 30
 
-    @field_validator("cors_origins", "admin_emails", "payment_providers", mode="before")
+    @field_validator("cors_origins", "payment_providers", mode="before")
     @classmethod
     def _split_csv(cls, v):
         if isinstance(v, str):
@@ -43,10 +51,16 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("memory_persist_path", "firebase_project_id", "firebase_storage_bucket",
+                     "google_application_credentials", "media_backend", "google_oauth_client_id",
+                     "google_oauth_client_secret", "google_drive_refresh_token", "google_drive_folder_id",
                      "razorpay_key_id", "razorpay_key_secret", mode="before")
     @classmethod
     def _empty_to_none(cls, v):
         return v or None
+
+    @property
+    def resolved_media_backend(self) -> str:
+        return self.media_backend or ("firebase" if self.data_backend == "firestore" else "local")
 
     @property
     def is_production(self) -> bool:

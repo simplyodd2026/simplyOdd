@@ -82,22 +82,21 @@ Images go to Cloud Storage under `products/{id}/`, `categories/` and `avatars/{u
 
 ## Going live with Firebase
 
-1. **Create a Firebase project** and enable **Authentication** (Email/Password + Google), **Firestore** and **Storage**.
+1. **Create a Firebase project** and enable **Authentication** with the **Google** provider only (sign-in and sign-up are the same button), **Firestore** and **Storage**.
 2. **Deploy the rules and indexes:**
    ```bash
    cd firebase && firebase deploy --only firestore,storage --project <project-id>
    ```
    The browser never touches Firestore directly: all access goes through the API using the Admin SDK.
-3. **Point email action links at the site.** In Authentication → Templates, set the action URL to `https://<your-site>/auth/action`. That page handles password reset and email verification.
-4. **Configure the backend (`.env`):**
+3. **Configure the backend (`.env`):**
    - `DATA_BACKEND=firestore`
    - `ALLOW_DEV_AUTH=false`
    - `ENV=production`
    - `FIREBASE_PROJECT_ID` and `FIREBASE_STORAGE_BUCKET`
    - `CORS_ORIGINS=https://your-site`
-5. **Seed the catalogue** (optional): `DATA_BACKEND=firestore python -m scripts.seed`
-6. **Make yourself an admin:** `python -m scripts.set_admin you@example.com`, then sign out and in again. `ADMIN_EMAILS` also grants admin.
-7. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Cloud Run URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
+4. **Seed the catalogue** (optional): `DATA_BACKEND=firestore python -m scripts.seed`
+5. **Make yourself an admin:** sign in once, then run `python -m scripts.set_admin you@example.com` or set `is_admin` to `true` on your `users/{uid}` document in the Firestore console. It applies on the next request.
+6. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Cloud Run URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
 
 ## Deployment
 

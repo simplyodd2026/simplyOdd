@@ -86,7 +86,7 @@ function Postmark({ className }: { className?: string }) {
     <svg viewBox="0 0 160 110" aria-hidden="true" className={`pointer-events-none text-ink/60 ${className ?? ''}`}>
       <circle cx="52" cy="55" r="42" fill="none" stroke="currentColor" strokeWidth="2.5" />
       <circle cx="52" cy="55" r="32" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <text x="52" y="50" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" fontFamily="Prompt, sans-serif">BENGALURU</text>
+      <text x="52" y="50" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor" fontFamily="Prompt, sans-serif">SMALL BATCH</text>
       <text x="52" y="66" textAnchor="middle" fontSize="10" fill="currentColor" fontFamily="Prompt, sans-serif">SIMPLY ODD</text>
       {[0, 14, 28].map((y) => <path key={y} d={`M96 ${38 + y}c10-8 20 8 30 0s20 8 30 0`} fill="none" stroke="currentColor" strokeWidth="2.5" />)}
     </svg>

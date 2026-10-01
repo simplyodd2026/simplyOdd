@@ -1,9 +1,11 @@
-"""Product media storage. Firebase Cloud Storage in production; local disk
-(served under /media) when running on the memory backend."""
+"""Product media storage: Firebase Cloud Storage, Google Drive, or local disk
+(served under /media). Chosen by MEDIA_BACKEND; see app/core/container.py."""
 from __future__ import annotations
 
 import asyncio
+import json
 import mimetypes
+from collections import OrderedDict
 from pathlib import Path
 from typing import Protocol
 from urllib.parse import quote
@@ -80,5 +82,89 @@ class FirebaseMediaStorage:
         blob = self.bucket.blob(path)
         try:
             await asyncio.to_thread(blob.delete)
+        except Exception:
+            pass
+
+
+DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+
+
+class GoogleDriveMediaStorage:
+    """Stores images in one Google Drive folder, uploading as the Drive owner
+    via an OAuth refresh token (see scripts/drive_auth.py).
+
+    Files stay private. The API serves them at /api/media/drive/{file_id}
+    (app/api/routes/media.py), fetching through the Drive API and keeping
+    recent files in memory. Google's public image host rate-limits hotlinked
+    Drive files with 429s, so it is not used. Browsers cache each image
+    forever, since a file id never changes content."""
+
+    API = "https://www.googleapis.com/drive/v3/files"
+    UPLOAD = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id"
+    CACHE_BYTES = 200 * 1024 * 1024
+
+    def __init__(self, client_id: str, client_secret: str, refresh_token: str, folder_id: str, base_url: str):
+        from google.auth.transport.requests import AuthorizedSession
+        from google.oauth2.credentials import Credentials
+
+        creds = Credentials(None, refresh_token=refresh_token, client_id=client_id,
+                            client_secret=client_secret, token_uri="https://oauth2.googleapis.com/token",
+                            scopes=DRIVE_SCOPES)
+        self.session = AuthorizedSession(creds)
+        self.folder_id = folder_id
+        self.base_url = base_url.rstrip("/")
+        self._cache: OrderedDict[str, tuple[bytes, str]] = OrderedDict()
+        self._cache_size = 0
+
+    def url_for(self, file_id: str) -> str:
+        return f"{self.base_url}/api/media/drive/{file_id}"
+
+    def _upload(self, name: str, data: bytes, content_type: str) -> str:
+        meta = json.dumps({"name": name, "parents": [self.folder_id]}).encode()
+        boundary = uuid4().hex
+        body = (f"--{boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n".encode() + meta
+                + f"\r\n--{boundary}\r\nContent-Type: {content_type}\r\n\r\n".encode() + data
+                + f"\r\n--{boundary}--".encode())
+        r = self.session.post(self.UPLOAD, data=body, timeout=60,
+                              headers={"Content-Type": f"multipart/related; boundary={boundary}"})
+        r.raise_for_status()
+        return r.json()["id"]
+
+    async def upload(self, folder, filename, data, content_type):
+        # Drive folders are flat here; keep the logical folder in the file name.
+        name = _object_name(folder, filename, content_type).replace("/", "_")
+        file_id = await asyncio.to_thread(self._upload, name, data, content_type)
+        self._remember(file_id, data, content_type)
+        return self.url_for(file_id), file_id
+
+    def _remember(self, file_id: str, data: bytes, content_type: str) -> None:
+        if len(data) > self.CACHE_BYTES // 10:
+            return
+        self._cache[file_id] = (data, content_type)
+        self._cache_size += len(data)
+        while self._cache_size > self.CACHE_BYTES:
+            _, (old, _) = self._cache.popitem(last=False)
+            self._cache_size -= len(old)
+
+    def _download(self, file_id: str) -> tuple[bytes, str] | None:
+        r = self.session.get(f"{self.API}/{file_id}", params={"alt": "media"}, timeout=60)
+        if r.status_code == 404:
+            return None
+        r.raise_for_status()
+        return r.content, r.headers.get("Content-Type", "application/octet-stream")
+
+    async def download(self, file_id: str) -> tuple[bytes, str] | None:
+        if file_id in self._cache:
+            self._cache.move_to_end(file_id)
+            return self._cache[file_id]
+        found = await asyncio.to_thread(self._download, file_id)
+        if found:
+            self._remember(file_id, *found)
+        return found
+
+    async def delete(self, path):
+        self._cache.pop(path, None)
+        try:
+            await asyncio.to_thread(self.session.delete, f"{self.API}/{quote(path, safe='')}", timeout=30)
         except Exception:
             pass

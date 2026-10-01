@@ -4,8 +4,10 @@ import { auth } from '@/lib/auth'
 export function AuthShell({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
     <div className="mx-auto grid max-w-[1600px] lg:min-h-[calc(100dvh-110px)] lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden border-r border-rule bg-paper-2 lg:block">
-        <img src="/seed/ghost-lamp-2.svg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+      <div className="hidden items-end border-r border-rule bg-paper-2 p-16 lg:flex">
+        <p className="max-w-md font-serif text-5xl italic leading-tight text-ink/80">
+          Things that don't need to exist, made carefully anyway.
+        </p>
       </div>
       <div className="flex items-center px-4 py-14 sm:px-10 lg:px-20">
         <div className="w-full max-w-md">
@@ -14,8 +16,8 @@ export function AuthShell({ title, intro, children }: { title: string; intro?: R
           <div className="mt-10">{children}</div>
           {auth.mode === 'dev' && (
             <p className="mt-10 border-l-2 border-accent pl-4 text-sm text-fog">
-              Development sign-in: any password works. Use <span className="text-graphite">demo@simplyodd.dev</span> for a customer with orders,
-              or <span className="text-graphite">admin@simplyodd.dev</span> for the admin dashboard. Add Firebase keys to use real accounts.
+              Development sign-in: use <span className="text-graphite">demo@simplyodd.dev</span> for a customer with orders,
+              or <span className="text-graphite">admin@simplyodd.dev</span> for the admin dashboard. Add Firebase keys to use Google sign-in.
             </p>
           )}
         </div>

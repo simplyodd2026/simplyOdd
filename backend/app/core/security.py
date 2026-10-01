@@ -1,5 +1,8 @@
 """Authentication: verifies Firebase ID tokens sent as `Authorization: Bearer`.
 
+Admin access comes only from `is_admin` on the user's `users/{uid}` document,
+read on every request so flipping it in the Firestore console applies at once.
+
 In development (ALLOW_DEV_AUTH=true) a token of the form
 `dev:<uid>:<email>[:<name>]` is also accepted so the full stack can run
 without a Firebase project. This is refused at startup in production.
@@ -10,15 +13,11 @@ import asyncio
 
 from fastapi import Depends, Request
 
-from app.core.config import Settings, get_settings
+from app.core.config import Settings
+from app.core.container import Services, services
 from app.core.errors import Forbidden, Unauthorized
 from app.models.user import AuthUser
-
-
-def _is_admin(email: str | None, claims: dict, settings: Settings) -> bool:
-    if claims.get("admin") is True:
-        return True
-    return bool(email) and email.lower() in {e.lower() for e in settings.admin_emails}
+from app.services.accounts import USERS
 
 
 async def _verify(token: str, settings: Settings) -> AuthUser:
@@ -30,8 +29,7 @@ async def _verify(token: str, settings: Settings) -> AuthUser:
             raise Unauthorized("Malformed dev token")
         uid, email = parts[1], parts[2]
         name = parts[3] if len(parts) > 3 else email.split("@")[0]
-        return AuthUser(uid=uid, email=email, name=name, email_verified=True,
-                        is_admin=_is_admin(email, {}, settings))
+        return AuthUser(uid=uid, email=email, name=name, email_verified=True)
 
     from firebase_admin import auth as fb_auth
 
@@ -44,7 +42,7 @@ async def _verify(token: str, settings: Settings) -> AuthUser:
     email = claims.get("email")
     return AuthUser(
         uid=claims["uid"], email=email, name=claims.get("name"), picture=claims.get("picture"),
-        email_verified=bool(claims.get("email_verified")), is_admin=_is_admin(email, claims, settings),
+        email_verified=bool(claims.get("email_verified")),
     )
 
 
@@ -55,9 +53,14 @@ def _bearer(request: Request) -> str | None:
     return None
 
 
-async def optional_user(request: Request, settings: Settings = Depends(get_settings)) -> AuthUser | None:
+async def optional_user(request: Request, svc: Services = Depends(services)) -> AuthUser | None:
     token = _bearer(request)
-    return await _verify(token, settings) if token else None
+    if not token:
+        return None
+    user = await _verify(token, svc.settings)
+    profile = await svc.store.get(USERS, user.uid)
+    user.is_admin = bool(profile and profile.get("is_admin"))
+    return user
 
 
 async def current_user(user: AuthUser | None = Depends(optional_user)) -> AuthUser:

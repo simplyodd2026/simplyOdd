@@ -19,7 +19,7 @@ function ScrollToTop() {
 function AnnouncementBar({ threshold }: { threshold: number }) {
   const notes = [
     `Free shipping on orders over ${money(threshold)}`,
-    'Printed to order in Bengaluru',
+    'Printed to order, one batch at a time',
     'Use ODDONE for 10% off your first odd thing',
     'Every piece is checked by hand',
   ]

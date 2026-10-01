@@ -1,25 +1,32 @@
-"""Grant or revoke the `admin` custom claim on a Firebase user.
+"""Grant or revoke admin access by setting `is_admin` on the user's document.
 
     python -m scripts.set_admin someone@example.com [--revoke]
 
-The user must sign out and in again (or refresh their ID token) to pick it up.
+The person must have signed in once so their `users/{uid}` document exists.
+Takes effect on their next request; no need to sign out. Editing the field in
+the Firestore console does the same thing.
 """
+import asyncio
 import sys
 
-from firebase_admin import auth
+from app.core.config import get_settings
+from app.core.container import build_services
+from app.core.utils import now
+from app.services.accounts import USERS
 
-from app.core.firebase import get_app
 
-
-def main() -> None:
+async def main() -> None:
     if len(sys.argv) < 2:
         sys.exit(__doc__)
-    user = auth.get_user_by_email(sys.argv[1], app=get_app())
-    claims = dict(user.custom_claims or {})
-    claims["admin"] = "--revoke" not in sys.argv
-    auth.set_custom_user_claims(user.uid, claims, app=get_app())
-    print(f"{user.email}: admin={claims['admin']}")
+    email = sys.argv[1].strip().lower()
+    store = build_services(get_settings()).store
+    docs = await store.list(USERS, where=[("email", "==", email)], limit=1)
+    if not docs:
+        sys.exit(f"No user with email {email}. They need to sign in once first.")
+    is_admin = "--revoke" not in sys.argv
+    await store.update(USERS, docs[0]["user_id"], {"is_admin": is_admin, "updated_at": now()})
+    print(f"{email}: is_admin={is_admin}")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

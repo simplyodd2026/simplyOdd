@@ -7,13 +7,14 @@ from app.repositories.memory import MemoryStore
 
 CUSTOMER = {"Authorization": "Bearer dev:u-test:test@example.com:Test Person"}
 OTHER = {"Authorization": "Bearer dev:u-other:other@example.com"}
-ADMIN = {"Authorization": "Bearer dev:u-admin:admin@simplyodd.dev"}
+# The seeded "dev-admin" profile has is_admin=True.
+ADMIN = {"Authorization": "Bearer dev:dev-admin:admin@simplyodd.dev"}
 
 
 @pytest.fixture
 def client():
     settings = Settings(_env_file=None, env="test", memory_persist_path=None, catalog_cache_seconds=0,
-                        payment_providers=["mock", "cod"], admin_emails=["admin@simplyodd.dev"])
+                        payment_providers=["mock", "cod"])
     with TestClient(create_app(settings, MemoryStore())) as c:
         yield c
 

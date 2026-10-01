@@ -12,13 +12,9 @@ export interface AuthClient {
   readonly mode: 'firebase' | 'dev'
   onChange(cb: (user: SessionUser | null) => void): () => void
   getToken(forceRefresh?: boolean): Promise<string | null>
-  signIn(email: string, password: string): Promise<void>
-  signUp(name: string, email: string, password: string): Promise<void>
+  /** Google creates the account on first sign-in, so there is no separate sign-up. */
   signInWithGoogle(): Promise<void>
   signOut(): Promise<void>
-  sendPasswordReset(email: string): Promise<void>
-  confirmPasswordReset(code: string, newPassword: string): Promise<void>
-  applyEmailVerification(code: string): Promise<void>
-  sendEmailVerification(): Promise<void>
-  reload(): Promise<SessionUser | null>
+  /** Dev mode only: sign in as any email without a password. */
+  devSignIn?(email: string): Promise<void>
 }

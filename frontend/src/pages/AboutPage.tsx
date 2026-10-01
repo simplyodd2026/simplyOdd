@@ -22,7 +22,7 @@ export default function AboutPage() {
           </h1>
           <div className="flex flex-col gap-5 text-lg leading-relaxed text-smoke lg:col-span-4 lg:col-start-9">
             <p>We started Simply Odd because most homes are full of things nobody really looks at. We wanted to make the opposite: pieces that make people stop, tilt their heads, and ask where you got it.</p>
-            <p>Everything is designed by us and 3D printed in small batches in Bengaluru. Printing to order means we don’t warehouse thousands of units, and it means we can keep experimenting.</p>
+            <p>Everything is designed by us and 3D printed in small batches. Printing to order means we don’t warehouse thousands of units, and it means we can keep experimenting.</p>
           </div>
         </div>
       </Container>
