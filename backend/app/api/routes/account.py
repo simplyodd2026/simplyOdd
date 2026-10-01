@@ -36,9 +36,13 @@ async def upload_avatar(file: UploadFile = File(...), user: AuthUser = Depends(c
     ct = validate_upload(data, file.content_type)
     if ct == "image/svg+xml":  # SVG can carry script; not accepted from customers
         raise BadRequest("Upload a JPEG, PNG or WebP image")
-    await svc.accounts.ensure_profile(user)
-    url, _ = await svc.media.upload(f"avatars/{user.uid}", file.filename or "avatar", data, ct)
-    return await svc.accounts.update_profile(user, ProfileUpdate(profile_image=url))
+    profile = await svc.accounts.ensure_profile(user)
+    url, _ = await svc.media.upload(f"avatars/{user.uid}", file.filename or "avatar", data, ct,
+                                    label=["Avatars", user.email or user.uid])
+    updated = await svc.accounts.update_profile(user, ProfileUpdate(profile_image=url))
+    if old := svc.media.path_from_url(profile.profile_image):  # don't leave the previous photo behind
+        await svc.media.delete(old)
+    return updated
 
 
 # ------------------------------------------------------------------ addresses
