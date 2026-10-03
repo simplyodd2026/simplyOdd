@@ -3,7 +3,9 @@ import { Ransom } from '@/components/scrapbook/Ransom'
 import { TornEdge, TornNote } from '@/components/scrapbook/Torn'
 import { Polaroid } from '@/components/scrapbook/Polaroid'
 import { Daisy, DenimStar, Gingham, Mushroom, Rainbow, Sparkle, Strawberry, Tulip } from '@/components/scrapbook/Stickers'
+import { useRef } from 'react'
 import { useProducts } from '@/lib/queries'
+import { useScrapMotion } from '@/components/scrapbook/useScrapMotion'
 import { money } from '@/lib/format'
 import { Slang } from '@/components/scrapbook/Slang'
 
@@ -17,11 +19,13 @@ const SPOTS: [string, string, string, number][] = [
 /** A scrapbook page: ransom title, a torn note on pink grid paper and a collage of taped photos. */
 export function Hero() {
   const { data } = useProducts({ flag: 'featured', sort: 'popular', page_size: 3 })
+  const root = useRef<HTMLElement>(null)
+  useScrapMotion(root)
   const products = data?.items ?? []
   const lead = products[0]
 
   return (
-    <section className="relative overflow-hidden">
+    <section ref={root} className="relative overflow-hidden">
       <div className="relative mx-auto max-w-[1600px] px-4 pb-4 pt-10 sm:px-6 sm:pt-14 lg:px-10">
         <Daisy className="animate-bob absolute -left-3 top-2 w-16 sm:left-2 sm:w-24" />
         <div className="relative z-10 pl-10 sm:pl-24">
@@ -36,10 +40,10 @@ export function Hero() {
       </div>
 
       <div className="relative">
-        <div className="bg-paper"><TornEdge color="var(--color-pink)" fibre="#FFFFFF" seed="hero-top" /></div>
+        <div className="bg-paper"><TornEdge color="var(--color-pink)" fibre="var(--color-paper-2)" seed="hero-top" /></div>
         <div className="kraft-grid pink-grid -mt-px">
           <div className="mx-auto grid max-w-[1600px] items-center gap-10 px-4 pb-16 pt-6 sm:px-6 md:grid-cols-12 lg:px-10">
-            <div className="relative md:col-span-6 lg:col-span-5">
+            <div data-drop className="relative md:col-span-6 lg:col-span-5">
               <TornNote seed="hero-note" className="-rotate-1" paperClassName="px-7 py-9 sm:px-10 sm:py-12">
                 <p className="text-lg font-medium leading-relaxed text-ink text-pretty sm:text-xl">
                   Lamps that look like they grew overnight, vases caught mid-thought, and a box that
@@ -58,7 +62,7 @@ export function Hero() {
               {SPOTS.map(([left, top, width, tilt], i) => {
                 const p = products[i]
                 return (
-                  <div key={i} className="absolute" style={{ left, top, width }}>
+                  <div key={i} data-drop className="absolute" style={{ left, top, width }}>
                     {p ? (
                       <Polaroid to={`/product/${p.slug}`} src={p.images[1]?.url ?? p.images[0]?.url} alt={p.name} caption={p.name}
                         style={{ transform: `rotate(${tilt}deg)` }} />
@@ -76,7 +80,7 @@ export function Hero() {
               <Gingham className="absolute -right-6 top-[30%] h-20 w-28 rotate-6" />
             </div>
           </div>
-          <TornEdge color="#FFFFFF" fibre="var(--color-cream)" seed="hero-bottom" />
+          <TornEdge color="var(--color-paper)" fibre="var(--color-cream)" seed="hero-bottom" />
         </div>
       </div>
     </section>
@@ -93,7 +97,7 @@ function PriceBurst({ price, className }: { price: string; className?: string })
   return (
     <div className={`cutout pointer-events-none rotate-12 ${className ?? ''}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" className="w-full">
-        <polygon points={points} fill="#F3DF9E" stroke="#C9A53F" strokeWidth="1.5" />
+        <polygon points={points} fill="#EBDDC2" stroke="#B45309" strokeWidth="1.5" />
         <text x="50" y="44" textAnchor="middle" fontFamily="Gochi Hand, cursive" fontSize="11" fill="#43302A">only</text>
         <text x="50" y="62" textAnchor="middle" fontFamily="Chewy, sans-serif" fontSize="17" fill="#43302A">{price}</text>
       </svg>

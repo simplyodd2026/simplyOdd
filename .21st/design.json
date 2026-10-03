@@ -1,0 +1,13 @@
+{
+  "theme": {
+    "name": "Oxblood Salon",
+    "source": "21st theme 'Elegant Luxury' by serafimcloud (https://21st.dev/community/themes/elegant-luxury), adapted",
+    "decidedOn": "2026-10-03",
+    "tokens": "frontend/src/styles.css @theme",
+    "palette": { "page": "#FAF7F5", "ink": "#1A1A1A", "primary": "#9B2C2C", "secondary": "#FDF2D6", "muted": "#F0EBE8", "dark": "#2A1414" },
+    "typography": { "display": "Libre Baskerville", "body": "Poppins", "labels": "IBM Plex Mono", "scrapbook": ["Chewy", "Gochi Hand", "Abril Fatface", "DM Serif Display", "Playfair Display"] },
+    "surfaces": "6px corners, soft shadows; pill buttons",
+    "rejected": ["Sage Garden", "Mocha Mousse", "terracotta and clay", "sunlit persimmon", "linen and olive", "bone/ink/orange"]
+  },
+  "layout": "Retail storefront; scrapbook hero, Odd Board and reviews phone kept from the original site"
+}

@@ -3,7 +3,7 @@ import { money, date } from '@/lib/format'
 
 /** Single-series daily revenue. Bars are thin, rounded at the data end,
  *  anchored to a zero baseline, with a per-bar tooltip and a table view. */
-const BAR = '#4A6396' // brand denim accent, well over 3:1 on the white surface
+const BAR = '#9B2C2C' // brand denim accent, well over 3:1 on the white surface
 
 export function RevenueChart({ series }: { series: { date: string; revenue: number }[] }) {
   const [hover, setHover] = useState<number | null>(null)
@@ -42,8 +42,8 @@ export function RevenueChart({ series }: { series: { date: string; revenue: numb
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Daily revenue over ${series.length} days, total ${money(total)}`}>
             {ticks.map((t) => (
               <g key={t}>
-                <line x1={PAD_L} x2={W} y1={y(t)} y2={y(t)} stroke="#E8E3DF" strokeWidth="1" />
-                <text x={PAD_L - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#737373">{compact(t)}</text>
+                <line x1={PAD_L} x2={W} y1={y(t)} y2={y(t)} stroke="#EAE1D6" strokeWidth="1" />
+                <text x={PAD_L - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#8F7F72">{compact(t)}</text>
               </g>
             ))}
             {series.map((d, i) => {
@@ -61,7 +61,7 @@ export function RevenueChart({ series }: { series: { date: string; revenue: numb
               )
             })}
             {[0, Math.floor(series.length / 2), series.length - 1].map((i) => series[i] && (
-              <text key={i} x={PAD_L + i * step + step / 2} y={H - 6} textAnchor="middle" fontSize="11" fill="#737373">
+              <text key={i} x={PAD_L + i * step + step / 2} y={H - 6} textAnchor="middle" fontSize="11" fill="#8F7F72">
                 {date(series[i].date, { day: 'numeric', month: 'short' })}
               </text>
             ))}

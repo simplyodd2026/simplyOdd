@@ -1,134 +1,167 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCategories } from '@/lib/queries'
 import { cartCount, useCart } from '@/stores/cart'
 import { useWishlist } from '@/stores/wishlist'
 import { useSession } from '@/stores/session'
 import { useUi } from '@/stores/ui'
 import { cn } from '@/lib/cn'
-import { Icon } from '@/components/ui/Icon'
 import { Wordmark } from '@/components/brand/Wordmark'
+import { Icon } from '@/components/ui/Icon'
+
+const EASE = [0.76, 0, 0.24, 1] as const
 
 const LINKS = [
   { to: '/collections', label: 'Collections' },
-  { to: '/new', label: 'New arrivals' },
-  { to: '/bestsellers', label: 'Best sellers' },
-  { to: '/about', label: 'About' },
+  { to: '/about', label: 'Studio' },
+  { to: '/custom', label: 'Commissions' },
 ]
 
+/** A two-digit counter in brackets, like a readout: (02). */
 function Count({ n }: { n: number }) {
-  if (!n) return null
-  return (
-    <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent px-1 text-[11px] font-semibold tabular-nums text-paper">
-      {n > 99 ? '99+' : n}
-    </span>
-  )
+  return <span className="font-mono text-[11px] tabular-nums text-fog transition-colors group-hover:text-current">({String(n).padStart(2, '0')})</span>
+}
+
+/** Hides while you read downward, returns the moment you scroll back up. */
+function useHeaderVisibility(pinned: boolean) {
+  const [state, setState] = useState({ hidden: false, scrolled: false })
+  const last = useRef(0)
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      const delta = y - last.current
+      last.current = y
+      setState((s) => {
+        const hidden = pinned ? false : y > 240 && delta > 4 ? true : delta < -4 || y < 120 ? false : s.hidden
+        const scrolled = y > 10
+        return hidden === s.hidden && scrolled === s.scrolled ? s : { hidden, scrolled }
+      })
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [pinned])
+  return state
 }
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
   const { pathname } = useLocation()
   const items = useCart((s) => s.items)
   const saved = useWishlist((s) => s.ids.length)
   const user = useSession((s) => s.user)
   const { setCart, setSearch, setMenu } = useUi()
   const { data: categories } = useCategories()
+  const { hidden, scrolled } = useHeaderVisibility(shopOpen)
+  const bag = cartCount(items)
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
   useEffect(() => { setShopOpen(false) }, [pathname])
+  useEffect(() => { if (!preview && categories?.[0]?.image) setPreview(categories[0].image) }, [categories, preview])
 
-  const iconBtn = 'relative grid size-10 place-items-center rounded-full text-ink hover:bg-pink hover:text-accent transition-colors'
-  const link = ({ isActive }: { isActive: boolean }) =>
-    cn('relative py-3 transition-colors hover:text-accent after:absolute after:inset-x-0 after:bottom-1.5 after:h-[3px] after:origin-left after:rounded-full after:bg-accent after:transition-transform',
-      isActive ? 'text-accent after:scale-x-100' : 'text-ink after:scale-x-0 hover:after:scale-x-100')
+  const text = 'group relative items-center gap-1.5 py-2 text-[14px] text-ink transition-colors hover:text-accent'
 
   return (
-    <header className={cn('sticky top-0 z-40 border-b bg-paper transition-shadow duration-300',
-      scrolled ? 'border-rule shadow-[0_8px_24px_-18px_rgb(0_0_0/0.35)]' : 'border-transparent')}
+    <header
+      className={cn('sticky top-0 z-40 transition-[transform,background-color,border-color] duration-700 ease-[var(--ease-out-quint)]',
+        hidden ? '-translate-y-full' : 'translate-y-0',
+        scrolled || shopOpen ? 'border-b border-rule bg-paper' : 'border-b border-transparent bg-paper')}
       onMouseLeave={() => setShopOpen(false)}>
-      <div className="mx-auto grid h-16 max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:h-20 lg:px-10">
-        <div className="flex items-center gap-1">
-          <button className={cn(iconBtn, '-ml-2 lg:hidden')} onClick={() => setMenu(true)} aria-label="Open menu">
-            <Icon name="menu" size={22} />
-          </button>
-          <button onClick={() => setSearch(true)} aria-label="Search"
-            className="hidden h-10 w-64 items-center gap-2 rounded-full border border-rule bg-paper-2 px-4 text-sm text-fog transition-colors hover:border-ink/30 lg:flex">
-            <Icon name="search" size={18} /> <span className="whitespace-nowrap">Search oddities…</span>
-            <kbd className="ml-auto rounded-md border border-rule bg-paper px-1.5 text-[11px] font-medium">/</kbd>
-          </button>
-        </div>
-
-        <Link to="/" className="text-[26px] text-accent transition-colors hover:text-ink lg:text-[36px]" aria-label="Simply Odd home">
+      <div className="mx-auto grid h-16 max-w-[1680px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 sm:px-8 lg:h-[76px] lg:px-10">
+        <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
+          <NavLink to="/shop" onMouseEnter={() => setShopOpen(true)} onFocus={() => setShopOpen(true)}
+            aria-expanded={shopOpen} aria-haspopup="true"
+            className={({ isActive }) => cn(text, 'inline-flex', isActive && 'text-accent')}>
+            <span className="link-draw">Shop</span>
+            <Icon name="chevronDown" size={13} className={cn('transition-transform duration-500', shopOpen && 'rotate-180')} />
+          </NavLink>
+          {LINKS.map((l) => (
+            <NavLink key={l.to} to={l.to} onMouseEnter={() => setShopOpen(false)}
+              className={({ isActive }) => cn(text, 'inline-flex', isActive && 'text-accent')}>
+              {({ isActive }) => <span className="link-draw" aria-current={isActive ? 'page' : undefined}>{l.label}</span>}
+            </NavLink>
+          ))}
+        </nav>
+        <Link to="/" className="justify-self-start text-[26px] text-ink lg:hidden" aria-label="Simply Odd home">
           <Wordmark />
         </Link>
 
-        <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-          <button className={cn(iconBtn, 'lg:hidden')} onClick={() => setSearch(true)} aria-label="Search">
+        <Link to="/" className="hidden text-[34px] text-ink transition-colors duration-500 hover:text-accent lg:block" aria-label="Simply Odd home">
+          <Wordmark />
+        </Link>
+        <span className="lg:hidden" />
+
+        <div className="flex items-center justify-end gap-1 sm:gap-6">
+          <button onClick={() => setSearch(true)} className={cn(text, 'hidden lg:inline-flex')} aria-label="Search">
+            <span className="link-draw">Search</span>
+            <kbd className="rounded-sm border border-rule px-1 font-mono text-[10px] text-fog">/</kbd>
+          </button>
+          <Link to={user ? '/account' : '/login'} className={cn(text, 'hidden lg:inline-flex')}>
+            <span className="link-draw">{user ? 'Account' : 'Sign in'}</span>
+          </Link>
+          <Link to="/wishlist" className={cn(text, 'hidden sm:inline-flex')} aria-label={`Wishlist, ${saved} saved`}>
+            <span className="link-draw">Saved</span><Count n={saved} />
+          </Link>
+          <button onClick={() => setSearch(true)} className="grid size-10 place-items-center rounded-full text-ink lg:hidden" aria-label="Search">
             <Icon name="search" />
           </button>
-          <Link to="/wishlist" className={cn(iconBtn, 'hidden sm:grid')} aria-label={`Wishlist, ${saved} saved`}>
-            <Icon name="heart" /><Count n={saved} />
-          </Link>
-          <Link to={user ? '/account' : '/login'} className={cn(iconBtn, 'hidden sm:grid')} aria-label={user ? 'Your account' : 'Sign in'}>
-            <Icon name="user" />
-          </Link>
-          <button className={cn(iconBtn, '-mr-2')} onClick={() => setCart(true)} aria-label={`Bag, ${cartCount(items)} items`}>
-            <Icon name="bag" /><Count n={cartCount(items)} />
+          <button onClick={() => setCart(true)} className={cn(text, 'inline-flex')} aria-label={`Bag, ${bag} items`}>
+            <span className="link-draw">Bag</span><Count n={bag} />
+          </button>
+          <button onClick={() => setMenu(true)} className="-mr-2 ml-1 grid size-10 place-items-center rounded-full text-ink lg:hidden" aria-label="Open menu">
+            <Icon name="menu" size={22} />
           </button>
         </div>
       </div>
 
-      <nav className="hidden items-center justify-center gap-9 border-t border-rule text-[15px] font-semibold lg:flex" aria-label="Main">
-        <NavLink to="/shop" onMouseEnter={() => setShopOpen(true)} onFocus={() => setShopOpen(true)}
-          className={(a) => cn(link(a), 'flex items-center gap-1')} aria-expanded={shopOpen} aria-haspopup="true">
-          Shop <Icon name="chevronDown" size={14} className={cn('transition-transform', shopOpen && 'rotate-180')} />
-        </NavLink>
-        {LINKS.map((l) => (
-          <NavLink key={l.to} to={l.to} onMouseEnter={() => setShopOpen(false)} className={link}>
-            {l.label}
-          </NavLink>
-        ))}
-        <NavLink to="/custom" onMouseEnter={() => setShopOpen(false)} className={(a) => cn(link(a), 'flex items-center gap-1.5')}>
-          Custom ✦
-          <span className="font-hand -rotate-6 rounded-full bg-pink-2 px-1.5 text-[11px] leading-4 text-ink">new</span>
-        </NavLink>
-        <NavLink to="/shop?max=999&sort=price_asc" onMouseEnter={() => setShopOpen(false)}
-          className="flex items-center gap-1.5 py-3 text-accent hover:text-ink">
-          <span className="font-hand text-base leading-none">psst,</span> gifts under ₹999
-        </NavLink>
-      </nav>
-
-      {shopOpen && (
-        <div className="animate-fade absolute inset-x-0 top-full hidden border-y border-rule bg-paper shadow-[0_24px_40px_-24px_rgb(0_0_0/0.25)] lg:block">
-          <div className="mx-auto grid max-w-[1600px] grid-cols-12 gap-10 px-10 py-10">
-            <div className="col-span-3 flex flex-col gap-3 rounded-3xl bg-pink p-7">
-              <p className="font-hand -rotate-2 text-lg text-accent">start here</p>
-              <Link to="/shop" className="font-display text-4xl text-ink hover:text-accent">Everything</Link>
-              <Link to="/new" className="font-medium text-graphite hover:text-accent">New arrivals</Link>
-              <Link to="/bestsellers" className="font-medium text-graphite hover:text-accent">Best sellers</Link>
-            </div>
-            <ul className="col-span-9 grid grid-cols-3 gap-x-6 gap-y-2">
-              {categories?.map((c) => (
-                <li key={c.id}>
-                  <Link to={`/collections/${c.slug}`} className="group flex items-center gap-4 rounded-2xl p-2 transition-colors hover:bg-paper-2">
-                    <span className="size-14 shrink-0 overflow-hidden rounded-full bg-ash ring-2 ring-transparent transition group-hover:ring-accent">
-                      {c.image && <img src={c.image} alt="" className="h-full w-full object-cover" />}
-                    </span>
-                    <span className="flex-1 text-lg font-semibold text-ink group-hover:text-accent">{c.name}</span>
-                    <span className="text-sm tabular-nums text-fog">{c.product_count}</span>
+      <AnimatePresence>
+        {shopOpen && (
+          <motion.div
+            initial={{ clipPath: 'inset(0% 0% 100% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} exit={{ clipPath: 'inset(0% 0% 100% 0%)' }}
+            transition={{ duration: 0.7, ease: EASE }}
+            className="absolute inset-x-0 top-full hidden border-b border-rule bg-paper lg:block">
+            <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              className="mx-auto grid max-w-[1680px] grid-cols-12 gap-10 px-10 pb-12 pt-10">
+              <div className="col-span-3 flex flex-col gap-1">
+                <p className="label mb-4 text-fog">Browse</p>
+                {[['/shop', 'Everything'], ['/new', 'New arrivals'], ['/bestsellers', 'Best sellers'], ['/shop?max=999&sort=price_asc', 'Gifts under ₹999']].map(([to, label]) => (
+                  <Link key={to} to={to} className="group flex items-center gap-3 font-display text-[2.4rem] leading-[1.1] text-ink transition-colors hover:text-accent">
+                    <span className="transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2">{label}</span>
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
+                ))}
+              </div>
+              <div className="col-span-5 col-start-5">
+                <p className="label mb-4 text-fog">Collections</p>
+                <ul className="border-t border-rule">
+                  {categories?.map((c, i) => (
+                    <li key={c.id}>
+                      <Link to={`/collections/${c.slug}`} onMouseEnter={() => setPreview(c.image)}
+                        className="group flex items-baseline gap-5 border-b border-rule py-3 text-ink">
+                        <span className="font-mono text-[11px] text-fog">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="flex-1 text-[17px] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 group-hover:text-accent">{c.name}</span>
+                        <span className="font-mono text-[11px] tabular-nums text-fog">{c.product_count}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="col-span-3 col-start-10">
+                <div className="relative aspect-[4/5] overflow-hidden bg-ash">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {preview && (
+                      <motion.img key={preview} src={preview} alt="" className="absolute inset-0 h-full w-full object-cover"
+                        initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }} />
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   )
 }

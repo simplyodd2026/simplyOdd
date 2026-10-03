@@ -7,11 +7,11 @@ export function Price({ price, compareAt, className, size = 'md' }: {
   const discounted = !!compareAt && compareAt > price
   return (
     <span className={cn('inline-flex items-baseline gap-2 tabular-nums', className)}>
-      <span className={cn(size === 'lg' ? 'text-2xl font-semibold' : 'font-medium', discounted && 'text-accent')}>
+      <span className={cn(size === 'lg' && 'font-display text-4xl tracking-tight text-ink', discounted && 'text-accent')}>
         {money(price)}
       </span>
       {discounted && (
-        <s className={cn('text-fog', size === 'lg' ? 'text-base' : 'text-sm')} aria-label={`was ${money(compareAt!)}`}>
+        <s className={cn('text-fog', size === 'lg' ? 'font-mono text-sm' : 'text-[0.9em]')} aria-label={`was ${money(compareAt!)}`}>
           {money(compareAt!)}
         </s>
       )}

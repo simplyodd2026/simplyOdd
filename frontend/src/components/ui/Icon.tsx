@@ -22,12 +22,19 @@ const paths = {
   clock: <><circle cx="12" cy="12" r="8" /><path d="M12 7.5V12l3 2" /></>,
   filter: <><path d="M4 7h16" /><path d="M7 12h10" /><path d="M10 17h4" /></>,
   logout: <><path d="M14 4.5H6v15h8" /><path d="M10.5 12H20" /><path d="m16.5 8.5 3.5 3.5-3.5 3.5" /></>,
+  arrowRight: <><path d="M4.5 12h15" /><path d="m13.5 6 6 6-6 6" /></>,
+  arrowUpRight: <><path d="M7 17 17 7" /><path d="M8.5 7H17v8.5" /></>,
+  arrowLeft: <><path d="M19.5 12h-15" /><path d="m10.5 6-6 6 6 6" /></>,
+  truck: <><path d="M3.5 6.5h10v10h-10z" /><path d="M13.5 10h4l3 3.2v3.3h-7" /><circle cx="7.5" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" /></>,
+  returns: <><path d="M4.5 9.5h11a4.5 4.5 0 0 1 0 9H9" /><path d="m8 5.5-4 4 4 4" /></>,
+  shield: <><path d="M12 3.5 19 6v5.5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-2.5Z" /><path d="m9 12 2.2 2.2L15.5 10" /></>,
+  layers: <><path d="m12 4 8.5 4.5L12 13 3.5 8.5 12 4Z" /><path d="m3.5 12.5 8.5 4.5 8.5-4.5" /><path d="m3.5 16.5 8.5 4.5 8.5-4.5" /></>,
   external: <><path d="M13 5h6v6" /><path d="M19 5 10 14" /><path d="M17 13.5V19H5V7h5.5" /></>,
 } as const
 
 export type IconName = keyof typeof paths
 
-export function Icon({ name, size = 20, strokeWidth = 1.6, filled, ...rest }:
+export function Icon({ name, size = 20, strokeWidth = 1.4, filled, ...rest }:
   { name: IconName; size?: number; filled?: boolean } & SVGProps<SVGSVGElement>) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor"

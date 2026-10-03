@@ -1,31 +1,29 @@
 import { Hero } from '@/features/home/Hero'
-import { Featured } from '@/features/home/Featured'
-import { CategoryMosaic } from '@/features/home/CategoryMosaic'
-import { BrandStory } from '@/features/home/BrandStory'
-import { ProductRail } from '@/features/home/ProductRail'
+import { ServiceBar } from '@/features/home/ServiceBar'
+import { CategoryGrid } from '@/features/home/CategoryGrid'
+import { ProductCarousel } from '@/features/home/ProductCarousel'
 import { Moodboard } from '@/features/home/Moodboard'
-import { Clothesline } from '@/features/home/Clothesline'
+import { PromoBanners } from '@/features/home/PromoBanners'
+import { ShopTabs } from '@/features/home/ShopTabs'
 import { Reviews } from '@/features/home/Reviews'
-import { PromoPair } from '@/features/home/PromoPair'
-import { Principles } from '@/features/home/Principles'
-import { Newsletter } from '@/features/home/Newsletter'
 import { useDocumentTitle } from '@/lib/hooks'
 
+/**
+ * A storefront with a scrapbook heart: the collage hero, the Odd Board and the reviews phone
+ * keep the brand's handmade voice, while the shopping sections around them stay clean and quick to scan.
+ */
 export default function HomePage() {
   useDocumentTitle(undefined)
   return (
     <>
       <Hero />
-      <CategoryMosaic />
+      <ServiceBar />
+      <CategoryGrid />
+      <ProductCarousel title="New arrivals" query={{ flag: 'new', sort: 'newest' }} href="/new" linkLabel="Shop new arrivals" />
       <Moodboard />
-      <ProductRail ranked kicker="everyone's obsessed" title="Best sellers" query={{ flag: 'bestseller', sort: 'popular' }} href="/bestsellers" linkLabel="All best sellers" />
-      <PromoPair />
-      <Featured />
-      <BrandStory />
-      <Clothesline />
+      <PromoBanners />
+      <ShopTabs />
       <Reviews />
-      <Principles />
-      <Newsletter />
     </>
   )
 }

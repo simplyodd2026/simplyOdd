@@ -1,12 +1,16 @@
-import { NavLink, useParams } from 'react-router-dom'
+import { Link, NavLink, useParams } from 'react-router-dom'
 import { Container } from '@/components/layout/Container'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Accordion } from '@/components/ui/Accordion'
+import { Reveal } from '@/components/motion/Reveal'
 import { useDocumentTitle } from '@/lib/hooks'
 import { cn } from '@/lib/cn'
 import NotFoundPage from './NotFoundPage'
 
-const TOPICS: Record<string, { title: string; sections: [string, string][] }> = {
+const TOPICS: Record<string, { title: string; intro: string; sections: [string, string][] }> = {
   shipping: {
     title: 'Shipping',
+    intro: 'How long your piece takes to make, how it travels and what it costs.',
     sections: [
       ['When will my order ship?', 'Most pieces are printed to order and leave the studio within 2–4 business days. Large lamps can take up to 6.'],
       ['How long does delivery take?', 'Standard delivery takes 5–8 business days after dispatch. Express takes 2–3 business days to most metro PIN codes.'],
@@ -17,6 +21,7 @@ const TOPICS: Record<string, { title: string; sections: [string, string][] }> = 
   },
   returns: {
     title: 'Returns',
+    intro: 'Returns, refunds and what to do if something arrives damaged.',
     sections: [
       ['Can I return something?', 'Unused pieces in their original packaging can be returned within 14 days of delivery for a full refund of the item price.'],
       ['It arrived damaged.', 'Email hello@simplyodd.in with your order number and a photo within 48 hours of delivery. We’ll reprint it at no cost.'],
@@ -26,12 +31,13 @@ const TOPICS: Record<string, { title: string; sections: [string, string][] }> = 
   },
   faq: {
     title: 'Questions',
+    intro: 'Materials, finishes and the other things people ask us most.',
     sections: [
       ['What are the pieces made of?', 'Mostly plant-based PLA. Pieces that meet heat or water, like candle holders and lamps, use PETG. Each product page lists its materials.'],
       ['Why can I see lines on the surface?', 'They’re the layer lines from printing. We keep them on purpose, because they show how the object was built.'],
       ['Are vases watertight?', 'Vases marked watertight have a sealed interior. Planters include a drainage insert.'],
       ['Do you ship outside India?', 'Not yet. We’re working on it.'],
-      ['Can you make something custom?', 'Sometimes. Email hello@simplyodd.in with what you have in mind.'],
+      ['Can you make something custom?', 'Yes. Use the commissions page to send us a brief, or email hello@simplyodd.in.'],
     ],
   },
 }
@@ -42,25 +48,23 @@ export default function HelpPage() {
   useDocumentTitle(page?.title)
   if (!page) return <NotFoundPage />
   return (
-    <Container className="pt-10 sm:pt-16">
-      <div className="grid gap-10 lg:grid-cols-12">
-        <nav className="flex gap-6 text-lg lg:col-span-3 lg:flex-col lg:gap-3" aria-label="Help topics">
+    <>
+      <PageHeader key={topic} trail={<><Link to="/" className="link-draw hover:text-ink">Home</Link><span>/</span><span>Help</span><span>/</span><span className="text-ink">{page.title}</span></>}
+        title={page.title} intro={page.intro} />
+      <Container className="grid gap-10 pb-28 sm:pb-40 lg:grid-cols-12">
+        <nav className="flex gap-2 lg:col-span-3 lg:flex-col lg:items-start" aria-label="Help topics">
           {Object.entries(TOPICS).map(([k, t]) => (
-            <NavLink key={k} to={`/help/${k}`} className={({ isActive }) => cn(isActive ? 'text-ink underline decoration-accent decoration-2 underline-offset-8' : 'text-smoke hover:text-ink')}>{t.title}</NavLink>
+            <NavLink key={k} to={`/help/${k}`}
+              className={({ isActive }) => cn('rounded-full px-4 py-2 text-[14px] transition-colors', isActive ? 'bg-ink text-paper' : 'text-smoke hover:bg-ink/5 hover:text-ink')}>
+              {t.title}
+            </NavLink>
           ))}
         </nav>
-        <div className="lg:col-span-8">
-          <h1 className="mb-10 text-[length:var(--text-title)] font-display leading-[0.95]">{page.title}</h1>
-          <dl className="border-t border-rule">
-            {page.sections.map(([q, a]) => (
-              <div key={q} className="grid gap-2 border-b border-rule py-6 sm:grid-cols-2 sm:gap-8">
-                <dt className="text-xl font-semibold w-semi">{q}</dt>
-                <dd className="leading-relaxed text-smoke">{a}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
-    </Container>
+        <Reveal key={topic} className="border-t border-rule lg:col-span-8 lg:col-start-5">
+          {page.sections.map(([q, a], i) => <Accordion key={q} title={q} defaultOpen={i === 0}><p>{a}</p></Accordion>)}
+          <p className="mt-10 text-smoke">Still need help? <a href="mailto:hello@simplyodd.in" className="link-draw text-ink">hello@simplyodd.in</a></p>
+        </Reveal>
+      </Container>
+    </>
   )
 }

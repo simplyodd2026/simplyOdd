@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useScrapMotion } from '@/components/scrapbook/useScrapMotion'
 import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
 import { Bolt, HeartPatch, SmileyFlower, Sparkle } from '@/components/scrapbook/Stickers'
@@ -11,22 +13,25 @@ const AVATARS = ['bg-pink', 'bg-butter', 'bg-mint', 'bg-sky', 'bg-peach', 'bg-li
 /** "Screenshots or it didn't happen": customer reviews as a text thread on a phone. */
 export function Reviews() {
   const { data: reviews } = useRecentReviews(8)
+  const root = useRef<HTMLDivElement>(null)
+  useScrapMotion(root, [reviews?.length])
   if (!reviews?.length) return null
   const average = reviews.reduce((n, r) => n + r.rating, 0) / reviews.length
 
   return (
+    <div ref={root}>
     <Container className="py-16 sm:py-20">
       <div className="grain relative overflow-hidden rounded-[2.5rem] bg-lilac/70 px-6 py-12 sm:px-12 lg:px-16">
         <div className="grid items-center gap-12 lg:grid-cols-12">
           <div className="relative lg:col-span-5">
             <p className="font-hand -rotate-2 text-lg text-plum">screenshots or it didn't happen <span aria-hidden="true">♡</span></p>
-            <h2 className="mt-3 font-display text-5xl leading-[0.95] text-ink sm:text-6xl">What people are texting us</h2>
+            <h2 className="mt-3 font-chewy text-5xl leading-[0.95] text-ink sm:text-6xl">What people are texting us</h2>
             <p className="mt-4 max-w-sm text-lg text-graphite">
               Real reviews from verified buyers, straight from the group chat.
             </p>
 
-            <div className="mt-8 inline-flex items-center gap-4 rounded-2xl bg-paper px-5 py-4 shadow-[0_12px_24px_-14px_rgb(67_48_42/0.5)]">
-              <p className="font-display text-5xl leading-none text-ink">{average.toFixed(1)}</p>
+            <div className="mt-8 inline-flex items-center gap-4 rounded-[1rem] bg-paper px-5 py-4 shadow-[0_12px_24px_-14px_rgb(67_48_42/0.5)]">
+              <p className="font-chewy text-5xl leading-none text-ink">{average.toFixed(1)}</p>
               <div>
                 <Stars rating={Math.round(average)} />
                 <p className="mt-1 text-sm text-smoke">across the latest {reviews.length} reviews</p>
@@ -47,11 +52,12 @@ export function Reviews() {
             <Phone reviews={reviews} />
             <HeartPatch className="absolute bottom-4 left-[34%] hidden w-14 -rotate-12 sm:block" />
             <SmileyFlower className="absolute bottom-16 right-[8%] hidden w-20 rotate-12 sm:block" />
-            <Bolt className="absolute right-[14%] top-4 hidden w-12 rotate-12 sm:block" color="#F2CBAE" />
+            <Bolt className="absolute right-[14%] top-4 hidden w-12 rotate-12 sm:block" color="#F5C9A6" />
           </div>
         </div>
       </div>
     </Container>
+    </div>
   )
 }
 
@@ -67,14 +73,14 @@ function Phone({ reviews }: { reviews: ReviewWithProduct[] }) {
         </div>
         {/* Chat header */}
         <div className="flex flex-col items-center gap-1 border-b border-rule pb-3 pt-2">
-          <span className="grid size-12 place-items-center rounded-full bg-pink font-display text-2xl text-ink">O</span>
+          <span className="grid size-12 place-items-center rounded-full bg-pink font-chewy text-2xl text-ink">O</span>
           <p className="text-sm font-semibold text-ink">Simply Odd</p>
           <p className="font-hand text-[11px] text-smoke">usually replies with ♡</p>
         </div>
 
         {/* Thread */}
         <ol className="flex flex-1 flex-col gap-4 overflow-y-auto px-3 py-4 scrollbar-none" aria-label="Customer reviews">
-          <li className="max-w-[80%] self-end rounded-3xl rounded-br-md bg-accent px-4 py-2.5 text-sm text-paper">
+          <li data-msg className="max-w-[80%] self-end rounded-[1.5rem] rounded-br-[0.375rem] bg-accent px-4 py-2.5 text-sm text-paper">
             how's your odd thing doing? tell us everything ♡
           </li>
           {reviews.map((r, i) => <Message key={r.id} review={r} avatar={AVATARS[i % AVATARS.length]} />)}
@@ -94,17 +100,17 @@ function Message({ review: r, avatar }: { review: ReviewWithProduct; avatar: str
   const [first, last] = r.author_name.trim().split(/\s+/)
   const name = last ? `${first} ${last[0]}.` : first
   return (
-    <li className="flex items-end gap-2">
+    <li data-msg className="flex items-end gap-2">
       <span className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold text-ink ${avatar}`} aria-hidden="true">{first[0]}</span>
       <div className="max-w-[82%]">
         <p className="mb-1 ml-2 text-[11px] text-smoke">{name}</p>
-        <div className="relative rounded-3xl rounded-bl-md bg-paper px-4 py-3 text-sm text-ink shadow-sm">
+        <div className="relative rounded-[1.5rem] rounded-bl-[0.375rem] bg-paper px-4 py-3 text-sm text-ink shadow-sm">
           <Stars rating={r.rating} small />
           {r.title && <p className="mt-1 font-semibold">{r.title}</p>}
           {r.body && <p className="mt-0.5 leading-snug text-graphite">{r.body}</p>}
           {/* The product, as an attachment */}
-          <Link to={`/product/${r.product_slug}`} className="mt-2.5 flex items-center gap-2 rounded-2xl bg-paper-3 p-1.5 pr-3 hover:bg-pink">
-            <span className="size-9 shrink-0 overflow-hidden rounded-xl bg-ash">
+          <Link to={`/product/${r.product_slug}`} className="mt-2.5 flex items-center gap-2 rounded-[1rem] bg-paper-3 p-1.5 pr-3 hover:bg-pink">
+            <span className="size-9 shrink-0 overflow-hidden rounded-[0.75rem] bg-ash">
               {r.product_image && <img src={r.product_image} alt="" loading="lazy" className="h-full w-full object-cover" />}
             </span>
             <span className="truncate text-xs font-semibold">{r.product_name}</span>
@@ -122,9 +128,9 @@ function Message({ review: r, avatar }: { review: ReviewWithProduct; avatar: str
 function PullQuote({ review: r, className }: { review: ReviewWithProduct; className: string }) {
   const [first, last] = r.author_name.trim().split(/\s+/)
   return (
-    <figure className={`tape absolute z-10 hidden w-52 rounded-3xl rounded-bl-md bg-paper p-4 shadow-[0_16px_30px_-16px_rgb(67_48_42/0.55)] xl:block ${className}`}>
+    <figure data-drop className={`tape absolute z-10 hidden w-52 rounded-[1.5rem] rounded-bl-[0.375rem] bg-paper p-4 shadow-[0_16px_30px_-16px_rgb(67_48_42/0.55)] xl:block ${className}`}>
       <Stars rating={r.rating} small />
-      <blockquote className="mt-1 font-display text-xl leading-tight text-ink">“{r.title || r.body}”</blockquote>
+      <blockquote className="mt-1 font-chewy text-xl leading-tight text-ink">“{r.title || r.body}”</blockquote>
       <figcaption className="font-hand mt-2 text-xs text-smoke">{first}{last ? ` ${last[0]}.` : ''} on {r.product_name}</figcaption>
     </figure>
   )

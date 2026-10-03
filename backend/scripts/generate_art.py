@@ -1,8 +1,8 @@
 """Generates the demo product renders in frontend/public/seed.
 
 Each object is drawn the way a 3D printer builds it: as a stack of layer
-lines, in soft pastel filaments. Three images per product: studio (warm cream),
-a pastel backdrop with a soft glow, and a close-up detail.
+lines, in warm, earthy filaments. Three images per product: studio (warm cream),
+a soft rose, butter or linen backdrop with a glow, and a close-up detail.
 Run: python scripts/generate_art.py
 """
 from __future__ import annotations
@@ -15,19 +15,19 @@ W, H = 800, 1000
 BASE_Y = 820
 # Filament colours as (base, shade, highlight).
 PALETTE = {
-    "pink": ("#E9A3B0", "#B86C7B", "#F7D2D9"),
-    "peach": ("#F0B48E", "#C07E58", "#FBD9C2"),
-    "butter": ("#EDCF6E", "#B8963A", "#F8E7A8"),
-    "mint": ("#9FCBA8", "#5F9270", "#CDE8D2"),
-    "sky": ("#9DBBE0", "#6282AE", "#CFE0F4"),
-    "lilac": ("#B9A6E3", "#7E6AAE", "#DDD2F4"),
+    "pink": ("#D9A089", "#A8664E", "#EFCDBE"),   # clay rose
+    "peach": ("#D08A63", "#9C5536", "#EDBFA2"),  # terracotta
+    "butter": ("#D9B57A", "#A5824A", "#EFDCB5"), # honey
+    "mint": ("#B5B08F", "#7F7A5C", "#D9D6C1"),   # dried sage
+    "sky": ("#BDB2A3", "#857A6D", "#DDD6CC"),    # stone
+    "lilac": ("#C4AE9C", "#8C7461", "#E3D5C8"),  # mushroom
     "black": ("#3A3330", "#1F1A18", "#6B625D"),
     "white": ("#ECE6DF", "#A89F96", "#FFFFFF"),
 }
 INK = "#43302A"
-# Backdrops for the second shot, and the filament each one clashes with.
-BACKDROPS = [("#F7DDE1", "pink"), ("#F8EBC4", "butter"), ("#E2DAF5", "lilac"),
-             ("#DCEAD3", "mint"), ("#D8E5F4", "sky"), ("#F8E0CF", "peach")]
+# Warm neutral backdrops for the second shot, and the filament each one is too close to.
+BACKDROPS = [("#F6E4E1", "pink"), ("#FDF2D6", "butter"), ("#F0EBE8", "lilac"),
+             ("#F5E8D2", "mint"), ("#EFE3DA", "sky"), ("#F4D9C6", "peach")]
 
 
 class Canvas:
@@ -227,7 +227,7 @@ def egg_legs(c, color):
 def twist_cup(c, color):
     glow(c, 600, 180)
     lathe(c, lambda t: 85 - 6 * t, 330, BASE_Y, color, flutes=24, twist=2.4)
-    for i, (dx, h, col) in enumerate(((-30, 170, INK), (20, 200, "#E9A3B0"), (45, 150, "#9DBBE0"))):
+    for i, (dx, h, col) in enumerate(((-30, 170, INK), (20, 200, "#C9775A"), (45, 150, "#A67C55"))):
         c.body.insert(len(c.body) - 3, f'<rect x="{400 + dx}" y="{BASE_Y - 330 - h}" width="10" height="{h + 30}" rx="3" fill="{col}" transform="rotate({(i - 1) * 8} {400 + dx} {BASE_Y - 330})"/>')
     shadow(c, 90)
 
@@ -275,7 +275,7 @@ def faceted(c, color):
     for i in range(7):  # little leaves
         a = -0.9 + i * 0.3
         x2, y2 = 400 + math.sin(a) * 180, BASE_Y - 360 - math.cos(a) * 170
-        c.body.append(f'<path d="M400 {BASE_Y - 350} Q {400 + math.sin(a) * 60 - 30} {BASE_Y - 420} {x2:.0f} {y2:.0f} Q {400 + math.sin(a) * 60 + 30} {BASE_Y - 400} 400 {BASE_Y - 350}" fill="#7FAE6F"/>')
+        c.body.append(f'<path d="M400 {BASE_Y - 350} Q {400 + math.sin(a) * 60 - 30} {BASE_Y - 420} {x2:.0f} {y2:.0f} Q {400 + math.sin(a) * 60 + 30} {BASE_Y - 400} 400 {BASE_Y - 350}" fill="#8A8A5E"/>')
     shadow(c, 120)
 
 

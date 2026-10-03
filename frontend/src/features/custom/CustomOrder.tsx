@@ -1,47 +1,79 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
 import { Container } from '@/components/layout/Container'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Reveal } from '@/components/motion/Reveal'
 import { Button } from '@/components/ui/Button'
-import { Ransom } from '@/components/scrapbook/Ransom'
-import { Bolt, Daisy, Planet, Sparkle } from '@/components/scrapbook/Stickers'
+import { Input, Textarea } from '@/components/ui/Field'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
 
-const KINDS = [['lighting', 'lamp'], ['decor', 'home décor piece'], ['desk', 'desk buddy'], ['gift', 'gift'], ['other', 'something else entirely']] as const
-const SIZES = [['small', 'tiny'], ['medium', 'medium'], ['large', 'big'], ['not_sure', 'any-size']] as const
-const BUDGETS = [['under_1000', 'under ₹1,000'], ['1000_2500', '₹1,000–2,500'], ['2500_5000', '₹2,500–5,000'], ['5000_plus', '₹5,000+'], ['not_sure', 'not sure yet']] as const
+const KINDS = [['lighting', 'Lighting'], ['decor', 'Décor piece'], ['desk', 'Desk object'], ['gift', 'Gift'], ['other', 'Something else']] as const
+const SIZES = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large'], ['not_sure', 'Not sure']] as const
+const BUDGETS = [['under_1000', 'Under ₹1,000'], ['1000_2500', '₹1,000–2,500'], ['2500_5000', '₹2,500–5,000'], ['5000_plus', '₹5,000+'], ['not_sure', 'Not sure yet']] as const
+// Filament swatches: [value sent with the brief, display name, colour]
 const COLOURS = [
-  ['pink', '#F4D3D7'], ['butter', '#F3DF9E'], ['lilac', '#D3C8EE'], ['mint', '#CBDABF'],
-  ['sky', '#BFD1E8'], ['peach', '#F2CBAE'], ['white', '#FFFFFF'], ['black', '#3A3330'],
+  ['white', 'Bone', '#ECE6DF'], ['black', 'Charcoal', '#3A3330'], ['pink', 'Clay rose', '#D9A089'], ['peach', 'Terracotta', '#D08A63'],
+  ['butter', 'Honey', '#D9B57A'], ['mint', 'Sage', '#B5B08F'], ['sky', 'Stone', '#BDB2A3'], ['lilac', 'Mushroom', '#C4AE9C'],
 ] as const
 
-// Tap-to-fill starting points for people who aren't sure how to describe their idea.
-const INSPO = ['a lamp shaped like my cat', 'a planter with a tiny grumpy face', 'a vase that looks like it’s melting',
-  'a pen cup shaped like a boot', 'a mini version of my dog', 'a ring dish shaped like a cloud']
-
 const STEPS = [
-  ['Tell us the idea', 'Words, a doodle, a vibe, a link. Anything goes.'],
-  ['We sketch & quote', 'We email you back with questions, a sketch and a price.'],
-  ['We print it for you', 'Printed layer by layer, finished by hand, shipped to your door.'],
+  ['Brief', 'Tell us what you have in mind: a description, a reference, the space it is for.'],
+  ['Design and quote', 'Within three working days we reply with questions, a first sketch and a fixed price.'],
+  ['Make', 'Once you approve, we print, finish and inspect your piece, then ship it to you.'],
 ]
 
 type State = 'idle' | 'sending' | 'sent' | { error: string }
 
-/** "Made just for you": a mad-libs style order slip for one-off custom pieces. */
+function Choice<T extends string>({ label, value, onChange, options }: {
+  label: string; value: T; onChange: (v: T) => void; options: readonly (readonly [T, string])[]
+}) {
+  return (
+    <fieldset>
+      <legend className="label mb-3 text-smoke">{label}</legend>
+      <div className="flex flex-wrap gap-2">
+        {options.map(([v, l]) => (
+          <button key={v} type="button" onClick={() => onChange(v)} aria-pressed={value === v}
+            className={cn('rounded-full border px-4 py-2 text-[14px] transition-colors duration-300',
+              value === v ? 'border-ink bg-ink text-paper' : 'border-ink/15 text-ink hover:border-ink')}>
+            {l}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function Row({ n, children }: { n: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-6 border-t border-rule py-8 sm:grid-cols-[3rem_1fr]">
+      <span className="font-mono text-[11px] text-fog">{n}</span>
+      <div className="flex flex-col gap-6">{children}</div>
+    </div>
+  )
+}
+
+/** Commission brief: a structured form for one-off pieces. */
 export function CustomOrder() {
-  const [form, setForm] = useState({ name: '', email: '', idea: '', kind: 'lighting', size: 'medium', budget: 'not_sure', reference_url: '' })
+  const [form, setForm] = useState({ name: '', email: '', idea: '', reference_url: '' })
+  const [kind, setKind] = useState<(typeof KINDS)[number][0]>('lighting')
+  const [size, setSize] = useState<(typeof SIZES)[number][0]>('medium')
+  const [budget, setBudget] = useState<(typeof BUDGETS)[number][0]>('not_sure')
   const [colours, setColours] = useState<string[]>([])
   const [state, setState] = useState<State>('idle')
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value })
   const toggle = (c: string) => setColours((cs) => (cs.includes(c) ? cs.filter((x) => x !== c) : [...cs, c]))
+  const nameOf = (v: string) => COLOURS.find(([k]) => k === v)?.[1] ?? v
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.idea.trim().length < 10) return setState({ error: 'Tell us a little more about your idea (at least a sentence).' })
+    if (form.idea.trim().length < 10) return setState({ error: 'Please describe your idea in at least a sentence.' })
     setState('sending')
     try {
       await api('/custom-requests', {
         auth: false,
-        body: { ...form, colours: colours.length ? colours : ['surprise me'], reference_url: form.reference_url.trim() || null },
+        body: { ...form, kind, size, budget, colours: colours.length ? colours : ['surprise me'], reference_url: form.reference_url.trim() || null },
       })
       setState('sent')
     } catch (err) {
@@ -50,121 +82,85 @@ export function CustomOrder() {
   }
 
   return (
-    <Container className="py-16 sm:py-20">
-      <section id="custom" className="graph-paper relative overflow-hidden rounded-[2.5rem] px-6 py-12 shadow-[inset_0_0_0_1px_rgb(67_48_42/0.06)] sm:px-12 lg:px-16 lg:py-16">
-        <div className="grid gap-12 lg:grid-cols-12">
-          {/* Left: the pitch and how it works */}
-          <div className="relative lg:col-span-4">
-            <p className="font-hand -rotate-2 text-lg text-accent">got something in mind? <span aria-hidden="true">♡</span></p>
-            <h2 className="mt-3 text-[clamp(2.4rem,4.6vw,3.75rem)]"><Ransom text="made just for you" seed="custom" /></h2>
-            <p className="mt-5 max-w-sm text-lg text-graphite">
-              A lamp shaped like your cat. A vase in your favourite colour. A desk thing nobody else has.
-              Tell us, and we'll design it and print it, one of one.
-            </p>
-            <ol className="mt-10 flex flex-col gap-6">
-              {STEPS.map(([title, body], i) => (
-                <li key={title} className="relative flex gap-4">
-                  <span className="grid size-11 shrink-0 -rotate-6 place-items-center rounded-full border-2 border-dashed border-ink/40 bg-paper font-display text-xl text-ink">{i + 1}</span>
-                  <div>
-                    <p className="font-semibold text-ink">{title}</p>
-                    <p className="text-sm text-smoke">{body}</p>
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <svg aria-hidden="true" viewBox="0 0 20 40" className="absolute left-3 top-12 h-6 w-5 text-ink/30">
-                      <path d="M10 2C4 12 16 22 10 36" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="2 4" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </li>
-              ))}
-            </ol>
-            <Planet className="absolute -bottom-6 right-2 hidden w-24 rotate-12 lg:block" />
-          </div>
+    <>
+      <PageHeader trail={<><Link to="/" className="link-draw hover:text-ink">Home</Link><span>/</span><span className="text-ink">Commissions</span></>}
+        title={<>Commissions, <span className="font-odd">made for one.</span></>}
+        intro="We design and make one-off pieces to brief: lighting for a particular room, a gift, an object in a specific colour. Nothing is charged until you approve the design." />
 
-          {/* Right: the order slip */}
-          <div className="relative lg:col-span-8">
-            <div className="tape relative -rotate-1 rounded-2xl bg-paper p-6 shadow-[0_24px_40px_-24px_rgb(67_48_42/0.55)] sm:p-10">
-              {state === 'sent' ? (
-                <div className="flex min-h-[26rem] flex-col items-center justify-center gap-4 text-center">
-                  <Daisy className="w-20" />
-                  <p className="font-display text-4xl text-ink">Idea received!</p>
-                  <p className="max-w-md text-lg text-graphite">
-                    We'll email <span className="font-semibold text-ink">{form.email}</span> with questions, a sketch and a price.
-                  </p>
-                  <button className="font-hand text-base text-accent underline-offset-4 hover:underline" onClick={() => {
-                    setForm({ ...form, idea: '', reference_url: '' }); setColours([]); setState('idle')
-                  }}>send another idea</button>
+      <Container className="grid gap-16 pb-28 sm:pb-40 lg:grid-cols-12 lg:gap-8">
+        <Reveal stagger={0.08} className="lg:col-span-4">
+          <p className="label mb-6 text-fog">How it works</p>
+          {STEPS.map(([title, body], i) => (
+            <div key={title} className="border-t border-rule py-6">
+              <div className="flex items-baseline gap-5">
+                <span className="font-mono text-[11px] text-fog">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3 className="font-display text-2xl text-ink">{title}</h3>
+                  <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-smoke">{body}</p>
                 </div>
-              ) : (
-                <form onSubmit={submit} className="text-xl leading-[2.4] text-ink sm:text-2xl">
-                  <p className="font-hand -mt-2 mb-3 text-sm leading-none text-smoke">fill in the blanks ✎</p>
-                  <p>
-                    Hi! I'm <Blank label="Your name" required value={form.name} onChange={set('name')} placeholder="your name" className="w-40 sm:w-48" /> and
-                    you can reach me at <Blank label="Your email" required type="email" value={form.email} onChange={set('email')} placeholder="you@email.com" className="w-60 sm:w-72" />.
-                  </p>
-                  <p>
-                    I'd love a <Choice label="Size" value={form.size} onChange={set('size')} options={SIZES} />{' '}
-                    <Choice label="Kind of piece" value={form.kind} onChange={set('kind')} options={KINDS} /> that looks like…
-                  </p>
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-sm leading-normal">
-                    <span className="font-hand text-smoke">need inspo? tap one:</span>
-                    {INSPO.map((idea) => (
-                      <button key={idea} type="button" onClick={() => setForm({ ...form, idea: idea.charAt(0).toUpperCase() + idea.slice(1) + ', ' })}
-                        className="rounded-full bg-paper-3 px-3 py-1 text-ink transition-colors hover:bg-butter">{idea}</button>
-                    ))}
-                  </div>
-                  <label className="sr-only" htmlFor="custom-idea">Describe your idea</label>
-                  <textarea id="custom-idea" required minLength={10} maxLength={2000} value={form.idea} onChange={set('idea')} rows={3}
-                    placeholder="a cloud that holds my rings, but make it grumpy…"
-                    className="lined-paper mt-1 w-full resize-none rounded-xl border-2 border-dashed border-ink/20 px-4 pl-16 text-lg leading-[34px] text-ink outline-none placeholder:text-fog/70 focus:border-accent" />
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span>in</span>
-                    {COLOURS.map(([name, hex]) => (
-                      <button key={name} type="button" onClick={() => toggle(name)} aria-pressed={colours.includes(name)} aria-label={name} title={name}
-                        className={cn('size-9 rounded-full border-2 transition-transform hover:scale-110',
-                          colours.includes(name) ? 'scale-110 border-ink ring-2 ring-ink ring-offset-2' : 'border-ink/15')}
-                        style={{ background: hex }} />
-                    ))}
-                    <span className="font-hand text-base text-smoke">{colours.length ? colours.join(', ') : '(or leave it, surprise me)'}</span>
-                  </div>
-                  <p className="mt-2">
-                    and I'm thinking around <Choice label="Budget" value={form.budget} onChange={set('budget')} options={BUDGETS} />.
-                  </p>
-                  <p className="text-base leading-[2.4] text-smoke">
-                    Got a picture or a Pinterest board? <Blank label="Reference link (optional)" type="url" value={form.reference_url} onChange={set('reference_url')}
-                      placeholder="paste a link (optional)" className="w-64 text-base sm:w-80" />
-                  </p>
-                  <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <Button type="submit" size="lg" loading={state === 'sending'}>Send my idea ✦</Button>
-                    <p className="font-hand text-sm leading-snug text-smoke">no payment now, we'll talk first ♡</p>
-                  </div>
-                  {typeof state === 'object' && <p className="mt-3 text-base font-medium text-accent" role="alert">{state.error}</p>}
-                </form>
-              )}
+              </div>
             </div>
-            <Sparkle className="absolute -right-3 -top-6 w-12" />
-            <Bolt className="absolute -bottom-8 left-6 hidden w-12 -rotate-12 sm:block" color="#D3C8EE" />
-          </div>
+          ))}
+        </Reveal>
+
+        <div id="custom" className="lg:col-span-7 lg:col-start-6">
+          <AnimatePresence mode="wait">
+            {state === 'sent' ? (
+              <motion.div key="sent" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                className="flex min-h-[28rem] flex-col justify-center gap-6 rounded-lg bg-paper-2 p-8 sm:p-12">
+                <span className="label text-fog">Brief received</span>
+                <p className="font-display text-5xl leading-[1] text-ink">Thank you, {form.name.split(' ')[0] || 'we have it'}.</p>
+                <p className="max-w-md text-lg text-smoke">
+                  We'll reply to <span className="text-ink">{form.email}</span> within three working days with questions, a first sketch and a quote.
+                </p>
+                <button className="link-draw self-start text-[15px] text-ink" onClick={() => {
+                  setForm({ ...form, idea: '', reference_url: '' }); setColours([]); setState('idle')
+                }}>Send another brief</button>
+              </motion.div>
+            ) : (
+              <motion.form key="form" onSubmit={submit} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
+                <Reveal>
+                  <Row n="01">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <Input label="Name" required value={form.name} onChange={set('name')} autoComplete="name" />
+                      <Input label="Email" type="email" required value={form.email} onChange={set('email')} autoComplete="email" />
+                    </div>
+                  </Row>
+                  <Row n="02">
+                    <Choice label="Type of piece" value={kind} onChange={setKind} options={KINDS} />
+                    <Choice label="Approximate size" value={size} onChange={setSize} options={SIZES} />
+                  </Row>
+                  <Row n="03">
+                    <Textarea label="Describe your idea" required minLength={10} maxLength={2000} rows={5} value={form.idea} onChange={set('idea')}
+                      placeholder="What it is, where it will live, and anything it needs to do." />
+                    <Input label="Reference link (optional)" type="url" value={form.reference_url} onChange={set('reference_url')} placeholder="https://" />
+                  </Row>
+                  <Row n="04">
+                    <fieldset>
+                      <legend className="label mb-3 text-smoke">Colour preferences</legend>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {COLOURS.map(([value, name, hex]) => (
+                          <button key={value} type="button" onClick={() => toggle(value)} aria-pressed={colours.includes(value)} aria-label={name} title={name}
+                            className={cn('size-9 rounded-full ring-offset-2 ring-offset-paper transition-[box-shadow,transform] duration-300 hover:scale-110',
+                              colours.includes(value) ? 'ring-[1.5px] ring-ink' : 'ring-1 ring-ink/10')}
+                            style={{ background: hex }} />
+                        ))}
+                        <span className="ml-1 text-[13px] text-fog">{colours.length ? colours.map(nameOf).join(', ') : 'Optional — leave blank and we’ll suggest a palette'}</span>
+                      </div>
+                    </fieldset>
+                    <Choice label="Budget" value={budget} onChange={setBudget} options={BUDGETS} />
+                  </Row>
+                  <div className="flex flex-wrap items-center justify-between gap-6 border-t border-rule pt-8">
+                    <p className="max-w-xs text-[13px] text-fog">No payment now. We'll confirm details and price with you first.</p>
+                    <Button type="submit" size="lg" loading={state === 'sending'}>Send brief</Button>
+                  </div>
+                  {typeof state === 'object' && <p className="mt-4 text-[15px] text-accent" role="alert">{state.error}</p>}
+                </Reveal>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
-    </Container>
-  )
-}
-
-const blank = 'mx-1 inline-block border-b-2 border-dashed border-ink/35 bg-transparent px-1 font-semibold text-accent outline-none placeholder:font-normal placeholder:text-fog/60 focus:border-accent'
-
-function Blank({ label, className, ...rest }: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input aria-label={label} className={cn(blank, 'leading-tight', className)} {...rest} />
-}
-
-function Choice({ label, value, onChange, options }: {
-  label: string; value: string; onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; options: readonly (readonly [string, string])[]
-}) {
-  return (
-    <span className="relative inline-block">
-      <select aria-label={label} value={value} onChange={onChange} className={cn(blank, 'cursor-pointer appearance-none pr-6 leading-tight [field-sizing:content]')}>
-        {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      </select>
-      <span aria-hidden="true" className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-sm text-accent">▾</span>
-    </span>
+      </Container>
+    </>
   )
 }

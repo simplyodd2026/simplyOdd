@@ -1,7 +1,10 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Container, SectionHeading } from '@/components/layout/Container'
+import { useScrapMotion } from '@/components/scrapbook/useScrapMotion'
+import { Container } from '@/components/layout/Container'
+import { ScrapHeading } from '@/components/scrapbook/ScrapHeading'
 import { Slang } from '@/components/scrapbook/Slang'
-import { Wordmark } from '@/components/brand/Wordmark'
+import { ScrapWordmark } from '@/components/scrapbook/ScrapWordmark'
 import { useProducts } from '@/lib/queries'
 import { useWishlist } from '@/stores/wishlist'
 import { money } from '@/lib/format'
@@ -39,6 +42,8 @@ const ASPECTS = ['aspect-[3/4]', 'aspect-[4/5]', 'aspect-square', 'aspect-[2/3]'
 export function Moodboard() {
   const { data } = useProducts({ sort: 'popular', page_size: 12 })
   const products = data?.items ?? []
+  const root = useRef<HTMLDivElement>(null)
+  useScrapMotion(root, [products.length])
   if (!products.length) return null
 
   // Weave a note in after every second photo.
@@ -50,17 +55,18 @@ export function Moodboard() {
   })
 
   return (
+    <div ref={root}>
     <Container className="relative py-16 sm:py-20">
       <Lollipop className="absolute left-[12%] top-8 hidden w-12 -rotate-12 lg:block" />
       <SmileyFlower className="absolute right-[13%] top-12 hidden w-16 rotate-6 lg:block" />
       <Slang text="it's giving one-of-one" tone="lilac" tilt={4} className="absolute right-[21%] top-24 hidden xl:inline-flex" />
-      <SectionHeading center variant="marker" kicker="save it, pin it, love it" title="The Odd Board" />
+      <ScrapHeading center variant="marker" kicker="save it, pin it, love it" title="The Odd Board" />
       {/* A framed corkboard; every scrap is pinned on with a coloured push pin. */}
-      <div className="rounded-[1.25rem] bg-[#A67C55] p-3 shadow-[0_24px_50px_-24px_rgb(67_48_42/0.6),inset_0_2px_0_rgb(255_255_255/0.25)] sm:p-4">
-        <div className="cork rounded-lg p-4 pt-7 shadow-[inset_0_4px_14px_rgb(67_48_42/0.45)] sm:p-7 sm:pt-9">
+      <div className="rounded-[1.25rem] bg-[#A0714A] p-3 shadow-[0_24px_50px_-24px_rgb(67_48_42/0.6),inset_0_2px_0_rgb(255_255_255/0.25)] sm:p-4">
+        <div className="cork rounded-[0.5rem] p-4 pt-7 shadow-[inset_0_4px_14px_rgb(67_48_42/0.45)] sm:p-7 sm:pt-9">
           <div className="columns-2 gap-5 sm:columns-3 lg:columns-4 xl:columns-5">
             {tiles.map((t, k) => (
-              <div key={k} className="relative mb-7 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
+              <div key={k} data-drop className="relative mb-7 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
                 <PushPin color={PINS[k % PINS.length]} />
                 {t.kind === 'product' ? <Pin product={t.product} i={t.i} />
                   : t.kind === 'brand' ? <BrandNote />
@@ -71,14 +77,15 @@ export function Moodboard() {
         </div>
       </div>
     </Container>
+    </div>
   )
 }
 
-const PINS = ['#E88F9B', '#6F8FC9', '#E9C45A', '#7FAE6F', '#B59BE0']
+const PINS = ['#C98A6B', '#7F1D1D', '#E0B44C', '#C98A6B', '#B9A390']
 
 function PushPin({ color }: { color: string }) {
   return (
-    <span aria-hidden="true" className="absolute -top-3 left-1/2 z-10 block size-5 -translate-x-1/2 rounded-full shadow-[2px_4px_4px_rgb(0_0_0/0.35)]"
+    <span aria-hidden="true" data-pin className="absolute -top-3 left-1/2 z-10 block size-5 -translate-x-1/2 rounded-full shadow-[2px_4px_4px_rgb(0_0_0/0.35)]"
       style={{ background: `radial-gradient(circle at 35% 30%, #ffffffcc 0 18%, ${color} 22%)` }} />
   )
 }
@@ -90,11 +97,11 @@ function Pin({ product, i }: { product: Product; i: number }) {
   const caption = i % 3 === 0 && product.tagline
 
   return (
-    <Link to={`/product/${product.slug}`} className="group relative block overflow-hidden rounded-sm bg-paper p-2 shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
+    <Link to={`/product/${product.slug}`} className="group relative block overflow-hidden rounded-[0.125rem] bg-paper p-2 shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
       {img && <img src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
         className={cn('w-full bg-ash object-cover', ASPECTS[i % ASPECTS.length])} />}
       {caption && (
-        <p className="font-hand pointer-events-none absolute left-3 top-3 max-w-[72%] -rotate-3 rounded-lg bg-cream px-3 py-2 text-sm leading-snug text-plum shadow-md">
+        <p className="font-hand pointer-events-none absolute left-3 top-3 max-w-[72%] -rotate-3 rounded-[0.5rem] bg-cream px-3 py-2 text-sm leading-snug text-plum shadow-md">
           {caption} <span aria-hidden="true">♡</span>
         </p>
       )}
@@ -117,7 +124,7 @@ function NoteCard({ note }: { note: Extract<Note, { kind: 'note' }> }) {
   return (
     <div className="relative">
       <TornNote seed={note.text} paperClassName={cn('grid min-h-44 place-items-center p-7 text-center', NOTE_TONES[note.tone])}>
-        <p className={cn('text-balance', note.big ? 'font-display text-4xl leading-[1.05]' : 'font-hand text-xl leading-relaxed')}>
+        <p className={cn('text-balance', note.big ? 'font-chewy text-4xl leading-[1.05]' : 'font-hand text-xl leading-relaxed')}>
           {note.text}
           <span aria-hidden="true" className="mt-2 block font-hand text-xl">♡</span>
         </p>
@@ -128,9 +135,9 @@ function NoteCard({ note }: { note: Extract<Note, { kind: 'note' }> }) {
 
 function BrandNote() {
   return (
-    <div className="grain grid aspect-[4/5] place-items-center rounded-sm bg-sage p-6 text-center text-cream shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
+    <div className="grain grid aspect-[4/5] place-items-center rounded-[0.125rem] bg-sage p-6 text-center text-cream shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
       <div>
-        <Wordmark className="text-5xl" />
+        <ScrapWordmark className="text-5xl" />
         <p className="font-hand mt-3 text-sm">made to be looked at</p>
         <div className="mx-auto my-4 h-px w-16 bg-cream/40" />
         <p className="font-hand text-sm leading-relaxed">Good objects<br />brighter rooms<br />odder you</p>

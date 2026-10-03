@@ -3,13 +3,14 @@ import { cn } from '@/lib/cn'
 import { Icon } from './Icon'
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded-xl bg-black/[0.06]', className)} />
+  return <div className={cn('animate-pulse rounded-sm bg-ink/[0.06]', className)} />
 }
 
 export function EmptyState({ title, body, action, className }: { title: string; body?: ReactNode; action?: ReactNode; className?: string }) {
   return (
-    <div className={cn('flex flex-col items-start gap-4 border-t border-rule py-16', className)}>
-      <h2 className="max-w-xl text-3xl font-display leading-tight text-balance sm:text-4xl">{title}</h2>
+    <div className={cn('flex flex-col items-start gap-5 border-t border-rule py-16 sm:py-20', className)}>
+      <span className="label text-fog">Nothing here</span>
+      <h2 className="max-w-2xl font-display text-4xl leading-[1] text-ink text-balance sm:text-6xl">{title}</h2>
       {body && <div className="max-w-md text-smoke text-pretty">{body}</div>}
       {action}
     </div>
@@ -28,7 +29,7 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
         <span key={n} className="flex items-center">
           {i > 0 && n - nums[i - 1] > 1 && <span className="px-1 text-fog">…</span>}
           <button onClick={() => onChange(n)} aria-current={n === page ? 'page' : undefined}
-            className={cn('h-9 min-w-9 px-2 text-sm tabular-nums', n === page ? 'rounded-full bg-ink text-paper' : 'text-smoke hover:text-ink')}>
+            className={cn('h-10 min-w-10 px-2 font-mono text-[13px] tabular-nums transition-colors', n === page ? 'rounded-full bg-ink text-paper' : 'rounded-full text-smoke hover:bg-ink/5 hover:text-ink')}>
             {n}
           </button>
         </span>

@@ -21,7 +21,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell title="Sign in" intro="New here or coming back, it's the same button. We'll create your account the first time.">
+    <AuthShell title="Sign in" intro="Sign in or create an account with Google. Your account is set up automatically the first time.">
       <GoogleButton busy={busy} onClick={() => run(() => auth.signInWithGoogle())} />
       {error && <p className="mt-4 text-sm text-accent" role="alert">{error}</p>}
       {auth.devSignIn && (

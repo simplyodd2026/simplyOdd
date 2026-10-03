@@ -1,18 +1,22 @@
 import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
+import { ArrowLink } from '@/components/ui/ArrowLink'
+import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 import { useDocumentTitle } from '@/lib/hooks'
 
 export default function NotFoundPage() {
   useDocumentTitle('Not found')
   return (
-    <Container className="py-24 sm:py-32">
-      <p className="text-[length:var(--text-display)] font-black leading-[0.85] text-accent w-wide">404</p>
-      <h1 className="mt-6 max-w-2xl text-4xl font-display leading-tight sm:text-5xl">
-        This page doesn't exist. Unlike most of what we make, it isn't here on purpose.
-      </h1>
-      <div className="mt-8 flex flex-wrap gap-3">
-        <ButtonLink to="/shop">Browse the shop</ButtonLink>
-        <ButtonLink to="/" variant="outline">Go to the homepage</ButtonLink>
+    <Container className="grid min-h-[70vh] content-center gap-10 py-24 lg:grid-cols-12">
+      <p className="label text-fog lg:col-span-3">Error 404</p>
+      <div className="lg:col-span-9">
+        <SplitReveal as="h1" on="load" className="font-display text-[length:var(--text-title)] leading-[0.92] text-ink">
+          This page could not be found.
+        </SplitReveal>
+        <Reveal delay={0.3} className="mt-10 flex flex-wrap items-center gap-8">
+          <ButtonLink to="/shop" size="lg">Browse the shop</ButtonLink>
+          <ArrowLink to="/">Return home</ArrowLink>
+        </Reveal>
       </div>
     </Container>
   )

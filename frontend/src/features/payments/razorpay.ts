@@ -28,7 +28,7 @@ export const razorpayAdapter: PaymentAdapter = {
         name: payment.name,
         description: payment.description,
         prefill: payment.prefill,
-        theme: { color: '#B11226' },
+        theme: { color: '#9B2C2C' },
         handler: (res: Record<string, unknown>) => resolve(res),
         modal: { ondismiss: () => reject(new PaymentCancelled()) },
       })

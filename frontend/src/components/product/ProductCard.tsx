@@ -7,79 +7,79 @@ import { Price } from './Price'
 import { WishlistButton } from './WishlistButton'
 import { Icon } from '@/components/ui/Icon'
 
-export function ProductCard({ product, className, priority, size = 'md' }: {
-  product: Product; className?: string; priority?: boolean; size?: 'md' | 'lg'
+export function ProductCard({ product, className, priority, index, aspect = 'aspect-[4/5]', showTagline = true }: {
+  product: Product; className?: string; priority?: boolean; index?: number; aspect?: string; showTagline?: boolean
+  size?: 'md' | 'lg'
 }) {
   const add = useCart((s) => s.add)
   const soldOut = product.availability === 'out_of_stock'
   const [primary, secondary] = product.images
+  const badge = soldOut ? 'Sold out' : product.discount_percent > 0 ? `−${product.discount_percent}%` : product.is_new_arrival ? 'New' : null
 
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
     add(product.id)
-    toast(`Added ${product.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
+    toast(`${product.name} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }
 
   return (
     <article className={cn('group relative', className)}>
       <Link to={`/product/${product.slug}`} className="block" aria-label={product.name}>
-        <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-ash">
+        <div className={cn('relative overflow-hidden rounded-lg bg-ash transition-shadow duration-700 group-hover:shadow-[0_24px_40px_-24px_rgb(155_44_44/0.35)]', aspect)}>
           {primary && (
             <img src={primary.url} alt={primary.alt || product.name} loading={priority ? 'eager' : 'lazy'} decoding="async"
-              className={cn('absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.03]',
-                secondary && 'group-hover:opacity-0', soldOut && 'opacity-50 grayscale')} />
+              className={cn('absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]',
+                secondary && 'group-hover:opacity-0', soldOut && 'opacity-60 grayscale')} />
           )}
           {secondary && (
             <img src={secondary.url} alt="" aria-hidden="true" loading="lazy" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-[opacity,transform] duration-500 group-hover:scale-[1.03] group-hover:opacity-100" />
+              className="absolute inset-0 h-full w-full scale-[1.08] object-cover opacity-0 transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-100 group-hover:opacity-100" />
           )}
-          <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-            {soldOut ? (
-              <span className="rounded-full bg-ink px-3 py-1 text-xs font-semibold text-paper">Sold out</span>
-            ) : product.discount_percent > 0 ? (
-              <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold tabular-nums text-paper">−{product.discount_percent}%</span>
-            ) : product.is_new_arrival ? (
-              <span className="-rotate-3 rounded-full bg-paper px-3 py-1 text-xs font-bold text-accent shadow-sm">New!</span>
-            ) : null}
+          <div className="absolute inset-x-3 top-3 flex items-start justify-between">
+            {index !== undefined
+              ? <span className="font-mono text-[11px] text-ink/60">{String(index).padStart(2, '0')}</span>
+              : <span />}
+            {badge && <span className={cn('label rounded-full px-2.5 py-1 text-[10px]', soldOut ? 'bg-ink text-paper' : product.discount_percent > 0 ? 'bg-hot text-paper' : 'bg-sun text-ink')}>{badge}</span>}
           </div>
           {!soldOut && (
             <button onClick={quickAdd}
-              className="absolute inset-x-3 bottom-3 hidden h-11 translate-y-2 items-center justify-center gap-2 rounded-full bg-ink text-sm font-semibold text-paper
-                opacity-0 transition-all duration-300 hover:bg-accent focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
+              className="absolute inset-x-3 bottom-3 hidden h-11 translate-y-[140%] items-center justify-between rounded-full bg-paper px-5 text-[13px] font-medium text-ink
+                transition-[transform,background-color,color] duration-700 ease-[var(--ease-out-quint)] hover:bg-ink hover:text-paper focus-visible:translate-y-0 group-hover:translate-y-0 sm:flex"
               aria-label={`Add ${product.name} to bag`}>
-              <Icon name="plus" size={16} /> Add to bag
+              Add to bag <Icon name="plus" size={16} />
             </button>
           )}
         </div>
       </Link>
       <WishlistButton productId={product.id} name={product.name}
-        className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-paper text-ink shadow-sm" size={18} />
-      <div className="flex items-start justify-between gap-3 px-1 pt-3">
+        className={cn('absolute right-3 grid size-9 place-items-center rounded-full bg-paper/90 text-ink transition-opacity duration-500 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100',
+          badge ? 'top-12' : 'top-3')} size={17} />
+      <div className="flex items-start justify-between gap-4 pt-4">
         <div className="min-w-0">
-          <Link to={`/product/${product.slug}`} className={cn('block font-semibold leading-tight text-ink w-semi hover:text-accent',
-            size === 'lg' ? 'text-xl' : 'text-[17px]')}>
-            {product.name}
+          <Link to={`/product/${product.slug}`} className="block truncate text-[15px] font-medium leading-snug text-ink">
+            <span className="link-draw">{product.name}</span>
           </Link>
-          <Price price={product.price} compareAt={product.compare_at_price} className="mt-1 text-[15px] text-ink" />
-          {product.availability === 'low_stock' && <p className="mt-1 text-sm font-medium text-accent">Only {product.stock} left</p>}
+          {showTagline && product.tagline && <p className="mt-1 line-clamp-1 text-[13px] text-fog">{product.tagline}</p>}
+          {product.availability === 'low_stock' && <p className="mt-1 text-[13px] text-accent">Only {product.stock} left</p>}
         </div>
-        {!soldOut && (
-          <button onClick={quickAdd} className="grid size-9 shrink-0 place-items-center rounded-full bg-ink text-paper hover:bg-accent sm:hidden"
-            aria-label={`Add ${product.name} to bag`}>
-            <Icon name="plus" size={18} />
-          </button>
-        )}
+        <Price price={product.price} compareAt={product.compare_at_price} className="shrink-0 font-mono text-[13px] text-ink" />
       </div>
+      {!soldOut && (
+        <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink/15 text-[13px] text-ink active:bg-ink active:text-paper sm:hidden"
+          aria-label={`Add ${product.name} to bag`}>
+          <Icon name="plus" size={15} /> Add
+        </button>
+      )}
     </article>
   )
 }
 
-export function ProductCardSkeleton() {
+export function ProductCardSkeleton({ aspect = 'aspect-[4/5]' }: { aspect?: string }) {
   return (
     <div>
-      <div className="aspect-[4/5] animate-pulse rounded-3xl bg-black/[0.06]" />
-      <div className="mt-3 h-4 w-2/3 animate-pulse rounded-full bg-black/[0.06]" />
-      <div className="mt-2 h-4 w-1/4 animate-pulse bg-black/[0.06]" />
+      <div className={cn('animate-pulse bg-ink/[0.06]', aspect)} />
+      <div className="mt-4 h-3.5 w-2/3 animate-pulse bg-ink/[0.06]" />
+      <div className="mt-2 h-3 w-1/3 animate-pulse bg-ink/[0.06]" />
     </div>
   )
 }

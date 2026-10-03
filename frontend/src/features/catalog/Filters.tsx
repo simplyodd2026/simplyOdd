@@ -19,23 +19,24 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
   const [max, setMax] = useState(params.max_price?.toString() ?? '')
   useEffect(() => { setMin(params.min_price?.toString() ?? ''); setMax(params.max_price?.toString() ?? '') }, [params.min_price, params.max_price])
 
-  const group = 'border-t border-rule py-5'
-  const heading = 'mb-3 text-sm text-fog'
-  const option = (active: boolean) => cn('flex w-full items-baseline justify-between py-1.5 text-left text-[15px] transition-colors',
+  const group = 'border-b border-rule py-6'
+  const heading = 'label mb-4 text-fog'
+  const option = (active: boolean) => cn('group flex w-full items-center justify-between py-2 text-left text-[15px] transition-colors',
     active ? 'text-ink' : 'text-smoke hover:text-ink')
+  const dot = (active: boolean) => <span className={cn('mr-3 inline-block size-1.5 rounded-full transition-colors', active ? 'bg-hot' : 'bg-ink/15 group-hover:bg-ink/40')} />
 
   return (
     <div>
       {showCategories && (
         <div className={group}>
-          <p className={heading}>Category</p>
+          <p className={heading}>Collection</p>
           <button className={option(!params.category)} onClick={() => params.update({ category: null })}>
-            <span className={cn(!params.category && 'underline decoration-accent decoration-2 underline-offset-4')}>All</span>
+            <span className="flex items-center">{dot(!params.category)}All</span>
           </button>
           {categories?.map((c) => (
             <button key={c.id} className={option(params.category === c.slug)} onClick={() => params.update({ category: c.slug })}>
-              <span className={cn(params.category === c.slug && 'underline decoration-accent decoration-2 underline-offset-4')}>{c.name}</span>
-              <span className="text-sm tabular-nums text-fog">{c.product_count}</span>
+              <span className="flex items-center">{dot(params.category === c.slug)}{c.name}</span>
+              <span className="font-mono text-[11px] tabular-nums text-fog">{c.product_count}</span>
             </button>
           ))}
         </div>
@@ -47,17 +48,17 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
           const active = params.min_price === lo && params.max_price === hi
           return (
             <button key={label} className={option(active)} onClick={() => params.update(active ? { min: null, max: null } : { min: lo, max: hi })}>
-              <span className={cn(active && 'underline decoration-accent decoration-2 underline-offset-4')}>{label}</span>
+              <span className="flex items-center">{dot(active)}{label}</span>
             </button>
           )
         })}
-        <form className="mt-3 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); params.update({ min: min || null, max: max || null }) }}>
-          <input value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Min" aria-label="Minimum price"
-            className="h-9 w-full rounded-xl border border-rule bg-transparent px-2.5 text-sm outline-none focus:border-accent" />
+        <form className="mt-4 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); params.update({ min: min || null, max: max || null }) }}>
+          <input value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Min ₹" aria-label="Minimum price"
+            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-ink" />
           <span className="text-fog">–</span>
-          <input value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Max" aria-label="Maximum price"
-            className="h-9 w-full rounded-xl border border-rule bg-transparent px-2.5 text-sm outline-none focus:border-accent" />
-          <button type="submit" className="h-9 shrink-0 border border-rule px-3 text-sm hover:border-accent">Go</button>
+          <input value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Max ₹" aria-label="Maximum price"
+            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-ink" />
+          <button type="submit" className="h-10 shrink-0 rounded-full bg-ink px-4 text-sm text-paper transition-colors hover:bg-hot">Apply</button>
         </form>
       </div>
 
@@ -67,8 +68,8 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
       </div>
 
       {params.activeCount > 0 && (
-        <div className="border-t border-rule pt-5">
-          <button onClick={params.clear} className="text-sm text-ink underline underline-offset-4 hover:text-accent">Clear all filters</button>
+        <div className="pt-6">
+          <button onClick={params.clear} className="link-draw text-sm text-ink">Clear all filters</button>
         </div>
       )}
     </div>

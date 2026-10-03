@@ -1,11 +1,15 @@
 import { useState, type ReactNode } from 'react'
+import { motion } from 'motion/react'
 import type { Page, Product } from '@/lib/types'
+import { useCategories } from '@/lib/queries'
 import { ProductCard, ProductCardSkeleton } from '@/components/product/ProductCard'
 import { Pagination } from '@/components/ui/misc'
 import { Drawer } from '@/components/ui/Overlay'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { plural } from '@/lib/format'
+import { scrollToY } from '@/lib/scroll'
+import { cn } from '@/lib/cn'
 import { Filters } from './Filters'
 import { SORT_OPTIONS, type useCatalogParams } from './useCatalogParams'
 
@@ -21,54 +25,80 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
   extraSorts?: { value: string; label: string }[]
 }) {
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const { data: categories } = useCategories()
   const sorts = [...extraSorts, ...SORT_OPTIONS]
+  const tab = (active: boolean) => cn('shrink-0 rounded-full px-4 py-2 text-[14px] transition-colors duration-300',
+    active ? 'bg-ink text-paper' : 'text-smoke hover:bg-ink/5 hover:text-ink')
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[15rem_1fr] xl:gap-14">
-      <aside className="hidden lg:block" aria-label="Filters">
-        <div className="sticky top-24"><Filters params={params} showCategories={showCategories} /></div>
-      </aside>
-
-      <div>
-        <div className="mb-6 flex items-center justify-between gap-4 border-t border-rule pt-5">
-          <p className="text-sm text-smoke tabular-nums" aria-live="polite">
-            {data ? plural(data.total, 'object') : ' '}
-          </p>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setFiltersOpen(true)}
-              className="flex h-10 items-center gap-2 border border-rule px-3 text-sm hover:border-accent lg:hidden">
-              <Icon name="filter" size={16} /> Filters{params.activeCount ? ` (${params.activeCount})` : ''}
-            </button>
-            <label className="sr-only" htmlFor="sort">Sort by</label>
-            <select id="sort" value={params.sort} onChange={(e) => params.update({ sort: e.target.value })}
-              className="h-10 appearance-none rounded-xl border border-rule bg-transparent pl-3 pr-8 text-sm outline-none focus:border-accent "
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
-              {sorts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+    <div>
+      {/* Toolbar: collections as tabs, then filter and sort */}
+      <div className="sticky top-0 z-20 -mx-5 mb-10 flex items-center gap-4 border-y border-rule bg-paper/95 px-5 py-3 backdrop-blur-sm sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
+        {showCategories && categories ? (
+          <div className="-ml-1 flex min-w-0 flex-1 items-center gap-1 overflow-x-auto scrollbar-none">
+            <button className={tab(!params.category)} onClick={() => params.update({ category: null })}>All</button>
+            {categories.map((c) => (
+              <button key={c.id} className={tab(params.category === c.slug)} onClick={() => params.update({ category: c.slug })}>{c.name}</button>
+            ))}
           </div>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3">
-            {Array.from({ length: 6 }, (_, i) => <ProductCardSkeleton key={i} />)}
-          </div>
-        ) : !data?.items.length ? (
-          empty
         ) : (
-          <>
-            <div className={`grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-4 md:grid-cols-3 transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
-              {data.items.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 3} />)}
-            </div>
-            <div className="mt-14 flex justify-center">
-              <Pagination page={data.page} pages={data.pages} onChange={(page) => { params.update({ page }, false); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
-            </div>
-          </>
+          <p className="flex-1 font-mono text-[12px] tabular-nums text-fog" aria-live="polite">{data ? plural(data.total, 'piece') : ' '}</p>
         )}
+        <div className="flex shrink-0 items-center gap-2">
+          <button onClick={() => setFiltersOpen(true)}
+            className="flex h-10 items-center gap-2 rounded-full border border-ink/15 px-4 text-[14px] text-ink transition-colors hover:border-ink">
+            <Icon name="filter" size={16} /> <span className="hidden sm:inline">Filter</span>
+            {params.activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-hot font-mono text-[10px] text-paper">{params.activeCount}</span>}
+          </button>
+          <label className="sr-only" htmlFor="sort">Sort by</label>
+          <select id="sort" value={params.sort} onChange={(e) => params.update({ sort: e.target.value })}
+            className="hidden h-10 appearance-none rounded-full border border-ink/15 bg-transparent pl-4 pr-9 text-[14px] text-ink outline-none transition-colors hover:border-ink focus:border-ink sm:block"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232B201B' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }}>
+            {sorts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
       </div>
 
-      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters"
-        footer={<Button className="w-full" onClick={() => setFiltersOpen(false)}>Show {data ? plural(data.total, 'result') : 'results'}</Button>}>
-        <div className="px-5"><Filters params={params} showCategories={showCategories} /></div>
+      {showCategories && data && (
+        <p className="-mt-4 mb-8 font-mono text-[12px] tabular-nums text-fog" aria-live="polite">{plural(data.total, 'piece')}</p>
+      )}
+
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-14 lg:grid-cols-3 lg:gap-x-8">
+          {Array.from({ length: 6 }, (_, i) => <ProductCardSkeleton key={i} />)}
+        </div>
+      ) : !data?.items.length ? (
+        empty
+      ) : (
+        <>
+          <div className={cn('grid grid-cols-2 gap-x-4 gap-y-14 transition-opacity duration-500 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-20', isFetching && 'opacity-50')}>
+            {data.items.map((p, i) => (
+              <motion.div key={p.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+                transition={{ duration: 1, delay: (i % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}>
+                <ProductCard product={p} priority={i < 3} index={(data.page - 1) * data.page_size + i + 1} />
+              </motion.div>
+            ))}
+          </div>
+          <div className="mt-20 flex justify-center border-t border-rule pt-10">
+            <Pagination page={data.page} pages={data.pages} onChange={(page) => { params.update({ page }, false); scrollToY(0) }} />
+          </div>
+        </>
+      )}
+
+      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filter"
+        footer={<Button size="lg" className="w-full" onClick={() => setFiltersOpen(false)}>Show {data ? plural(data.total, 'result') : 'results'}</Button>}>
+        <div className="px-6 sm:px-8">
+          <div className="border-b border-rule py-6 sm:hidden">
+            <p className="label mb-4 text-fog">Sort by</p>
+            <div className="flex flex-wrap gap-2">
+              {sorts.map((o) => (
+                <button key={o.value} onClick={() => params.update({ sort: o.value })}
+                  className={cn('rounded-full border px-4 py-2 text-[14px]', params.sort === o.value ? 'border-ink bg-ink text-paper' : 'border-ink/15 text-ink')}>{o.label}</button>
+              ))}
+            </div>
+          </div>
+          <Filters params={params} showCategories={showCategories} />
+        </div>
       </Drawer>
     </div>
   )

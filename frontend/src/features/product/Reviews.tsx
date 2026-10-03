@@ -20,7 +20,7 @@ function RatingInput({ value, onChange }: { value: number; onChange: (n: number)
       {[1, 2, 3, 4, 5].map((n) => (
         <button key={n} type="button" role="radio" aria-checked={value === n} aria-label={plural(n, 'star')}
           onMouseEnter={() => setHover(n)} onClick={() => onChange(n)}
-          className={cn('p-0.5', (hover || value) >= n ? 'text-accent' : 'text-fog')}>
+          className={cn('p-0.5 transition-colors', (hover || value) >= n ? 'text-ink' : 'text-ink/20')}>
           <Icon name="star" size={26} filled={(hover || value) >= n} />
         </button>
       ))}
@@ -57,7 +57,7 @@ function ReviewForm({ product, existing, onDone }: { product: Product; existing?
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4 border border-rule p-5">
+    <form onSubmit={submit} className="flex flex-col gap-5 rounded-lg bg-paper-2 p-6 sm:p-8">
       <RatingInput value={rating} onChange={setRating} />
       <Input label="Headline" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Sum it up in a few words" />
       <Textarea label="Your review" value={body} onChange={(e) => setBody(e.target.value)} maxLength={3000}
@@ -95,16 +95,17 @@ export function Reviews({ product }: { product: Product }) {
   }
 
   return (
-    <section id="reviews" className="scroll-mt-24 border-t border-rule pt-10">
+    <section id="reviews" className="scroll-mt-28 border-t border-rule pt-16 sm:pt-24">
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <h2 className="text-[length:var(--text-heading)] font-display leading-none">Reviews</h2>
+          <p className="label mb-5 text-fog">Verified buyers</p>
+          <h2 className="font-display text-[length:var(--text-heading)] leading-none text-ink">Reviews</h2>
           {count > 0 ? (
             <div className="mt-6">
               <div className="flex items-end gap-3">
-                <span className="text-6xl font-black leading-none tabular-nums w-cond">{average.toFixed(1)}</span>
+                <span className="font-display text-7xl leading-none tabular-nums text-ink">{average.toFixed(1)}</span>
                 <div className="pb-1">
-                  <Stars value={average} size={16} className="text-accent" />
+                  <Stars value={average} size={16} className="text-ink" />
                   <p className="text-sm text-smoke">{plural(count, 'review')}</p>
                 </div>
               </div>
@@ -113,9 +114,9 @@ export function Reviews({ product }: { product: Product }) {
                   const c = distribution[String(n)] ?? 0
                   return (
                     <div key={n} className="flex items-center gap-3 text-sm">
-                      <dt className="w-12 text-smoke tabular-nums">{n} star</dt>
-                      <dd className="h-1.5 flex-1 bg-rule"><div className="h-full bg-accent" style={{ width: `${count ? (c / count) * 100 : 0}%` }} /></dd>
-                      <span className="w-6 text-right tabular-nums text-fog">{c}</span>
+                      <dt className="w-12 font-mono text-[12px] text-smoke tabular-nums">{n} star</dt>
+                      <dd className="h-px flex-1 bg-rule"><div className="h-full bg-ink" style={{ width: `${count ? (c / count) * 100 : 0}%` }} /></dd>
+                      <span className="w-6 text-right font-mono text-[12px] tabular-nums text-fog">{c}</span>
                     </div>
                   )
                 })}
@@ -128,7 +129,7 @@ export function Reviews({ product }: { product: Product }) {
           <div className="mt-8">
             {!user ? (
               <p className="text-sm text-smoke">
-                Bought this? <Link to={`/login?next=${encodeURIComponent(location.pathname + '#reviews')}`} className="text-ink underline underline-offset-4">Sign in</Link> to review it.
+                Bought this? <Link to={`/login?next=${encodeURIComponent(location.pathname + '#reviews')}`} className="link-draw text-ink">Sign in</Link> to review it.
               </p>
             ) : eligibility?.can_review && !mine && !editing ? (
               <Button variant="outline" onClick={() => setEditing(true)}>Write a review</Button>
@@ -143,27 +144,27 @@ export function Reviews({ product }: { product: Product }) {
           {reviews && reviews.length > 0 ? (
             <ul className="divide-y divide-rule border-y border-rule">
               {reviews.map((r) => (
-                <li key={r.id} className="py-6">
+                <li key={r.id} className="py-8">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Stars value={r.rating} className="text-accent" />
-                    <span className="text-sm text-fog">{date(r.created_at)}</span>
+                    <Stars value={r.rating} className="text-ink" />
+                    <span className="font-mono text-[12px] text-fog">{date(r.created_at)}</span>
                   </div>
-                  {r.title && <p className="mt-3 text-lg font-semibold w-semi">{r.title}</p>}
+                  {r.title && <p className="mt-4 font-display text-2xl text-ink">{r.title}</p>}
                   {r.body && <p className="mt-1 max-w-2xl leading-relaxed text-smoke">{r.body}</p>}
-                  <p className="mt-3 text-sm text-fog">
-                    {r.author_name}{r.verified && <span className="ml-2 text-graphite">Verified buyer</span>}
+                  <p className="mt-4 text-sm text-ink">
+                    {r.author_name}{r.verified && <span className="label ml-3 text-fog">Verified buyer</span>}
                   </p>
                   {r.user_id === user?.uid && !editing && (
                     <div className="mt-3 flex gap-4 text-sm">
-                      <button onClick={() => setEditing(true)} className="text-ink underline underline-offset-4 hover:text-accent">Edit</button>
-                      <button onClick={() => remove(r)} className="text-smoke underline underline-offset-4 hover:text-accent">Delete</button>
+                      <button onClick={() => setEditing(true)} className="link-draw text-ink">Edit</button>
+                      <button onClick={() => remove(r)} className="link-draw text-smoke hover:text-accent">Delete</button>
                     </div>
                   )}
                 </li>
               ))}
             </ul>
           ) : !editing && (
-            <p className="border-y border-rule py-10 text-smoke">Be the first to tell people what it's like to live with this one.</p>
+            <p className="border-y border-rule py-10 text-smoke">No reviews yet. Reviews are open to verified buyers of this piece.</p>
           )}
         </div>
       </div>
