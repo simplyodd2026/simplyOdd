@@ -1,4 +1,4 @@
-# Cloud Run image for the Simply Odd API
+# Container image for the Simply Odd API (Cloud Run, Render Docker, etc.)
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8080
@@ -13,5 +13,5 @@ COPY scripts ./scripts
 RUN useradd --create-home appuser
 USER appuser
 
-# Cloud Run injects $PORT
+# The host injects $PORT
 CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'

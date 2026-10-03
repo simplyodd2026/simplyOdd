@@ -96,24 +96,32 @@ Images go to Cloud Storage under `products/{id}/`, `categories/` and `avatars/{u
    - `CORS_ORIGINS=https://your-site`
 4. **Seed the catalogue** (optional): `DATA_BACKEND=firestore python -m scripts.seed`
 5. **Make yourself an admin:** sign in once, then run `python -m scripts.set_admin you@example.com` or set `is_admin` to `true` on your `users/{uid}` document in the Firestore console. It applies on the next request.
-6. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Cloud Run URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
+6. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Render URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
 
 ## Deployment
 
-**API → Google Cloud Run**
-```bash
-cd backend
-gcloud run deploy simplyodd-api --source . --region asia-south1 --allow-unauthenticated \
-  --set-env-vars ENV=production,DATA_BACKEND=firestore,ALLOW_DEV_AUTH=false,FIREBASE_PROJECT_ID=<id>,FIREBASE_STORAGE_BUCKET=<bucket>,CORS_ORIGINS=https://<site>,PAYMENT_PROVIDERS=razorpay,cod \
-  --set-secrets RAZORPAY_KEY_SECRET=razorpay-secret:latest,RAZORPAY_KEY_ID=razorpay-key:latest
-```
+**API → Render**
+
+`render.yaml` at the repo root is a Render Blueprint for the API.
+
+1. In Render: **New → Blueprint**, pick this repo. It creates `simplyodd-api` from `backend/` (Python 3.12, health check `/api/health`).
+2. Fill in the prompted values:
+   - `CORS_ORIGINS`: your frontend URL(s), comma-separated
+   - `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`
+   - `FIREBASE_CREDENTIALS_JSON`: paste the whole service-account JSON (or its base64). Render has no attached service account, so this replaces Application Default Credentials.
+   - `MEDIA_BACKEND`: leave empty for Firebase Storage, or `drive` plus the `GOOGLE_*` values. Don't use `local`, since Render's disk is wiped on every deploy.
+   - Razorpay keys if you enable it in `PAYMENT_PROVIDERS` (default `cod`)
+3. `PUBLIC_BASE_URL` defaults to Render's `RENDER_EXTERNAL_URL`, so you only need to set it for a custom domain.
+
+The free plan sleeps after 15 minutes idle, so the first request after that takes ~30–60s.
+
 The service account needs the *Firebase Admin SDK Administrator Service Agent* role, or Datastore User + Storage Object Admin + Firebase Authentication Admin.
 
 **Frontend → Vercel or Netlify**
 
 Build command `npm run build`, output `dist`. `vercel.json` and `netlify.toml` already include SPA rewrites.
 
-Nothing is provider-specific: the API is a plain container, and the frontend is static files plus one env var.
+Nothing is provider-specific: the API is a plain ASGI app (there's also a `Dockerfile`), and the frontend is static files plus one env var.
 
 ## Not included yet
 
