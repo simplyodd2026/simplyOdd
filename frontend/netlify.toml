@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  # VITE_* values are compiled into the public bundle by design (Firebase web
+  # config is not secret), so don't let secrets scanning fail the build on them.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_API_URL,VITE_FIREBASE_API_KEY,VITE_FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
