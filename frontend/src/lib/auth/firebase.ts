@@ -6,6 +6,8 @@ const FRIENDLY: Record<string, string> = {
   'auth/popup-blocked': 'Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.',
   'auth/too-many-requests': 'Too many attempts. Wait a minute, then try again.',
   'auth/network-request-failed': "Can't reach the sign-in service. Check your connection.",
+  'auth/unauthorized-domain': "Sign-in isn't enabled for this domain yet. Add it under Firebase Authentication → Settings → Authorized domains.",
+  'auth/operation-not-allowed': 'Google sign-in is turned off. Enable it under Firebase Authentication → Sign-in method.',
 }
 // Closing the Google window is a choice, not an error.
 const CANCELLED = new Set(['auth/popup-closed-by-user', 'auth/cancelled-popup-request'])
@@ -43,6 +45,7 @@ export function createFirebaseAuth(): AuthClient {
         await signInWithPopup(fa, google)
       } catch (e) {
         const code = (e as { code?: string }).code ?? ''
+        if (!CANCELLED.has(code)) console.error('Firebase sign-in failed:', code, e)
         if (!CANCELLED.has(code)) throw new Error(FRIENDLY[code] ?? 'Sign-in failed. Try again.')
       }
     },
