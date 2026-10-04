@@ -15,15 +15,14 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { Checkbox, Input } from '@/components/ui/Field'
 import { EmptyState, Skeleton } from '@/components/ui/misc'
 import { Icon } from '@/components/ui/Icon'
-import { OrderSummary } from '@/features/checkout/OrderSummary'
-import { CouponField } from '@/features/checkout/CouponField'
+import { Barcode, ReceiptCoupon, ReceiptLines, ReceiptPaper, Tear } from '@/features/checkout/Receipt'
 import { AddressFields, emptyAddress, validateAddress, type AddressErrors } from '@/features/account/AddressForm'
 import { getAdapter, PaymentCancelled } from '@/features/payments'
 
 type Step = 'address' | 'shipping' | 'payment'
 const STEPS: { id: Step; label: string }[] = [
   { id: 'address', label: 'Address' },
-  { id: 'shipping', label: 'Shipping' },
+  { id: 'shipping', label: 'Delivery' },
   { id: 'payment', label: 'Payment' },
 ]
 
@@ -142,145 +141,181 @@ export default function CheckoutPage() {
   const shippingOptions = quote?.shipping_options ?? []
   const totalLabel = quote ? money(pending?.total ?? quote.total) : ''
 
+  const receiptNo = pending?.number ?? 'Draft'
+  const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  const itemCount = cart.items.reduce((n, l) => n + l.quantity, 0)
+  // A choice on the slip: dashed when open, a solid ink outline once chosen.
+  const option = (active: boolean) => cn('w-full border p-4 text-left transition-colors duration-300',
+    active ? 'border-ink bg-paper-2/80' : 'border-dashed border-ink/25 hover:border-ink/60')
+  const tick = (active: boolean) => (
+    <span className={cn('mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border', active ? 'border-ink bg-ink text-paper' : 'border-ink/30')}>
+      {active && <Icon name="check" size={11} />}
+    </span>
+  )
+
   return (
-    <Container className="pt-8 sm:pt-12">
-      <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-        <h1 className="text-[length:var(--text-title)] font-display leading-[0.95]">Checkout</h1>
-        <ol className="flex items-center gap-2 text-sm sm:gap-4" aria-label="Checkout progress">
-          <li><Link to="/cart" className="text-fog hover:text-ink">Bag</Link></li>
-          {STEPS.map((s, i) => (
-            <li key={s.id} className="flex items-center gap-2 sm:gap-4">
-              <span className="h-px w-4 bg-rule sm:w-8" aria-hidden />
-              <button disabled={i > stepIndex || !!pending} onClick={() => setStep(s.id)} aria-current={s.id === step ? 'step' : undefined}
-                className={cn('flex items-center gap-2', s.id === step ? 'text-ink' : i < stepIndex ? 'text-smoke hover:text-ink' : 'text-fog')}>
-                <span className={cn('grid size-6 place-items-center rounded-full border text-xs tabular-nums',
-                  s.id === step ? 'border-accent bg-accent text-paper' : i < stepIndex ? 'border-graphite/40' : 'border-rule')}>
-                  {i < stepIndex ? <Icon name="check" size={12} /> : i + 1}
-                </span>
-                <span className="hidden sm:inline">{s.label}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </div>
+    <section className="linen bg-sand py-10 sm:py-16">
+      <Container>
+        <ReceiptPaper className="mx-auto max-w-[46rem]">
+          {/* The shop's header, printed at the top of the slip. */}
+          <header className="text-center">
+            <img src="/logo-mark.png" alt="Simply Odd" className="mx-auto h-8 w-auto" />
+            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-smoke">3D-printed objects for the home</p>
+            <h1 className="mt-6 font-display text-[clamp(2.6rem,6vw,3.6rem)] leading-none text-ink">Checkout</h1>
+            <p className="font-script -mt-1 text-[2.2rem] leading-none text-accent">your receipt</p>
+            <dl className="mx-auto mt-7 grid max-w-md grid-cols-3 gap-3 text-[12.5px] text-fog">
+              <div><dt>Receipt</dt><dd className="mt-0.5 tabular-nums text-ink">{receiptNo}</dd></div>
+              <div><dt>Date</dt><dd className="mt-0.5 text-ink">{today}</dd></div>
+              <div><dt>Items</dt><dd className="mt-0.5 tabular-nums text-ink">{itemCount}</dd></div>
+            </dl>
+          </header>
 
-      <div className="grid gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          {step === 'address' && (
-            <section className="flex flex-col gap-8">
-              <div>
-                <h2 className="mb-4 text-2xl font-display">Contact</h2>
-                <Input label="Email for order updates" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
-              </div>
-              <div>
-                <h2 className="mb-4 text-2xl font-display">Deliver to</h2>
-                {saved.length > 0 && (
-                  <div className="mb-6 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Saved addresses">
-                    {saved.map((a) => (
-                      <button key={a.id} role="radio" aria-checked={addressId === a.id} onClick={() => setAddressId(a.id)}
-                        className={cn('border p-4 text-left text-sm transition-colors', addressId === a.id ? 'border-accent bg-accent/5' : 'border-rule hover:border-graphite/40')}>
-                        <span className="flex items-center justify-between font-semibold text-ink">{a.label}{a.is_default && <span className="text-xs font-normal text-fog">Default</span>}</span>
-                        <span className="mt-2 block leading-relaxed text-smoke">{a.full_name}<br />{a.line1}{a.line2 && `, ${a.line2}`}<br />{a.city}, {a.state} {a.postal_code}<br />{a.phone}</span>
-                      </button>
-                    ))}
-                    <button role="radio" aria-checked={addressId === 'new'} onClick={() => setAddressId('new')}
-                      className={cn('flex min-h-32 items-center justify-center gap-2 border border-dashed p-4 text-sm', addressId === 'new' ? 'border-accent text-ink' : 'border-rule text-smoke hover:text-ink')}>
-                      <Icon name="plus" size={16} /> New address
-                    </button>
-                  </div>
-                )}
-                {addressId === 'new' && (
-                  <div className="flex flex-col gap-5">
-                    <AddressFields value={draft} onChange={setDraft} errors={errors} showLabel={saveAddress} />
-                    <Checkbox label="Save this address to my account" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
-                  </div>
-                )}
-              </div>
-              <Button size="lg" className="self-start" onClick={continueFromAddress}>Continue to shipping</Button>
-            </section>
+          <Tear />
+
+          {isLoading || !quote ? <Skeleton className="h-60" /> : (
+            <>
+              <ReceiptLines quote={quote} />
+              {quote.has_issues && (
+                <p className="mt-4 text-[14px] text-accent">Some items in your bag changed. <Link to="/cart" className="underline underline-offset-4">Review your bag</Link>.</p>
+              )}
+              {!pending && <div className="mt-6"><ReceiptCoupon quote={quote} /></div>}
+            </>
           )}
 
-          {step === 'shipping' && (
-            <section className="flex flex-col gap-6">
-              {address && (
-                <div className="flex items-start justify-between gap-4 border border-rule p-4 text-sm">
-                  <p className="leading-relaxed text-smoke"><span className="text-ink">{address.full_name}</span>, {address.line1}, {address.city}, {address.state} {address.postal_code}<br />{address.email}</p>
-                  <button onClick={() => setStep('address')} className="shrink-0 text-ink underline underline-offset-4">Change</button>
+          <Tear />
+
+          {/* The three steps, printed as a line across the slip. */}
+          <ol className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[15px]" aria-label="Checkout progress">
+            {STEPS.map((st, i) => (
+              <li key={st.id}>
+                <button disabled={i > stepIndex || !!pending} onClick={() => setStep(st.id)} aria-current={st.id === step ? 'step' : undefined}
+                  className={cn('flex items-baseline gap-2 pb-1 transition-colors',
+                    st.id === step ? 'border-b border-ink text-ink' : i < stepIndex ? 'text-smoke hover:text-ink' : 'text-fog')}>
+                  <span className="font-odd text-accent">{['i', 'ii', 'iii'][i]}.</span>
+                  {i < stepIndex ? <span className="inline-flex items-center gap-1">{st.label} <Icon name="check" size={13} /></span> : st.label}
+                </button>
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-9">
+            {step === 'address' && (
+              <section className="flex flex-col gap-8">
+                <div>
+                  <h2 className="mb-4 font-display text-[1.6rem] text-ink">Contact</h2>
+                  <Input label="Email for order updates" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
                 </div>
-              )}
-              <h2 className="text-2xl font-display">Delivery speed</h2>
-              <div className="flex flex-col gap-3" role="radiogroup" aria-label="Shipping method">
-                {shippingOptions.map((o) => (
-                  <button key={o.method} role="radio" aria-checked={cart.shippingMethod === o.method} onClick={() => cart.setShipping(o.method)}
-                    className={cn('flex items-center justify-between gap-4 border p-5 text-left transition-colors',
-                      cart.shippingMethod === o.method ? 'border-accent bg-accent/5' : 'border-rule hover:border-graphite/40')}>
-                    <span>
-                      <span className="block text-lg font-semibold">{o.label}</span>
-                      <span className="text-sm text-smoke">{o.eta}</span>
-                    </span>
-                    <span className="text-lg tabular-nums">{o.fee === 0 ? 'Free' : money(o.fee)}</span>
-                  </button>
-                ))}
-              </div>
-              <Button size="lg" className="self-start" onClick={() => setStep('payment')}>Continue to payment</Button>
-            </section>
-          )}
-
-          {step === 'payment' && (
-            <section className="flex flex-col gap-6">
-              <h2 className="text-2xl font-display">Payment</h2>
-              {pending && (
-                <p className="border border-accent/50 p-4 text-sm">
-                  Order {pending.number} is saved and waiting for payment. Your items are held for you.
-                </p>
-              )}
-              <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
-                {config?.payment_providers.map((p) => {
-                  const a = getAdapter(p.id)
-                  const active = provider === p.id
-                  const Panel = a?.Panel
-                  return (
-                    <div key={p.id} className={cn('border p-5 transition-colors', active ? 'border-accent bg-accent/5' : 'border-rule')}>
-                      <button role="radio" aria-checked={active} disabled={!!pending && pending.payment.provider !== p.id}
-                        onClick={() => { setProvider(p.id); setPanelState(a?.initialState) }}
-                        className="flex w-full items-center gap-3 text-left disabled:opacity-40">
-                        <span className={cn('grid size-5 place-items-center rounded-full border', active ? 'border-accent' : 'border-fog')}>
-                          {active && <span className="size-2.5 rounded-full bg-accent" />}
-                        </span>
-                        <span>
-                          <span className="block font-semibold">{p.label}</span>
-                          <span className="text-sm text-smoke">{p.description}</span>
-                        </span>
+                <div>
+                  <h2 className="mb-4 font-display text-[1.6rem] text-ink">Deliver to</h2>
+                  {saved.length > 0 && (
+                    <div className="mb-6 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Saved addresses">
+                      {saved.map((a) => (
+                        <button key={a.id} role="radio" aria-checked={addressId === a.id} onClick={() => setAddressId(a.id)} className={cn(option(addressId === a.id), 'flex gap-3 text-[14px]')}>
+                          {tick(addressId === a.id)}
+                          <span>
+                            <span className="flex items-center gap-2 font-medium text-ink">{a.label}{a.is_default && <span className="text-[12px] font-normal text-fog">Default</span>}</span>
+                            <span className="mt-1.5 block leading-relaxed text-smoke">{a.full_name}<br />{a.line1}{a.line2 && `, ${a.line2}`}<br />{a.city}, {a.state} {a.postal_code}<br />{a.phone}</span>
+                          </span>
+                        </button>
+                      ))}
+                      <button role="radio" aria-checked={addressId === 'new'} onClick={() => setAddressId('new')}
+                        className={cn(option(addressId === 'new'), 'flex min-h-32 items-center justify-center gap-2 text-[14px]', addressId === 'new' ? 'text-ink' : 'text-smoke')}>
+                        <Icon name="plus" size={16} /> New address
                       </button>
-                      {active && Panel && <Panel value={panelState} onChange={setPanelState} />}
                     </div>
-                  )
-                })}
-              </div>
-              {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
-              <Button size="lg" className="self-start" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
-                {pending ? `Try payment again` : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
-              </Button>
-              <p className="text-sm text-fog">By placing your order you agree to our <Link to="/help/returns" className="underline underline-offset-4">returns policy</Link>.</p>
-            </section>
-          )}
-        </div>
+                  )}
+                  {addressId === 'new' && (
+                    <div className="flex flex-col gap-5">
+                      <AddressFields value={draft} onChange={setDraft} errors={errors} showLabel={saveAddress} />
+                      <Checkbox label="Save this address to my account" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
+                    </div>
+                  )}
+                </div>
+                <Button size="lg" className="w-full" onClick={continueFromAddress}>Continue to delivery</Button>
+              </section>
+            )}
 
-        <aside className="lg:col-span-5">
-          <div className="flex flex-col gap-6 border border-rule bg-paper-2 p-6 lg:sticky lg:top-24">
-            <h2 className="text-2xl font-display">Order summary</h2>
-            {isLoading || !quote ? <Skeleton className="h-60" /> : (
-              <>
-                <OrderSummary quote={quote} />
-                {!pending && <CouponField quote={quote} />}
-                {quote.has_issues && (
-                  <p className="text-sm text-accent">Some items in your bag changed. <Link to="/cart" className="underline">Review your bag</Link>.</p>
+            {step === 'shipping' && (
+              <section className="flex flex-col gap-6">
+                {address && (
+                  <dl className="flex flex-col gap-1.5 text-[14px]">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <dt className="text-fog">Deliver to</dt>
+                      <button onClick={() => setStep('address')} className="link-draw shrink-0 text-ink">Change</button>
+                    </div>
+                    <dd className="leading-relaxed text-graphite"><span className="text-ink">{address.full_name}</span>, {address.line1}, {address.city}, {address.state} {address.postal_code}<br />{address.email}</dd>
+                  </dl>
                 )}
-              </>
+                <h2 className="font-display text-[1.6rem] text-ink">Delivery speed</h2>
+                <div className="flex flex-col gap-3" role="radiogroup" aria-label="Shipping method">
+                  {shippingOptions.map((o) => (
+                    <button key={o.method} role="radio" aria-checked={cart.shippingMethod === o.method} onClick={() => cart.setShipping(o.method)}
+                      className={cn(option(cart.shippingMethod === o.method), 'flex items-center gap-3')}>
+                      {tick(cart.shippingMethod === o.method)}
+                      <span className="flex-1">
+                        <span className="block text-[16px] font-medium text-ink">{o.label}</span>
+                        <span className="text-[13.5px] text-smoke">{o.eta}</span>
+                      </span>
+                      <span className="text-[16px] tabular-nums text-ink">{o.fee === 0 ? 'Free' : money(o.fee)}</span>
+                    </button>
+                  ))}
+                </div>
+                <Button size="lg" className="w-full" onClick={() => setStep('payment')}>Continue to payment</Button>
+              </section>
+            )}
+
+            {step === 'payment' && (
+              <section className="flex flex-col gap-6">
+                <h2 className="font-display text-[1.6rem] text-ink">Payment</h2>
+                {pending && (
+                  <p className="border border-dashed border-accent/60 p-4 text-[14px] text-graphite">
+                    Order {pending.number} is saved and waiting for payment. Your items are held for you.
+                  </p>
+                )}
+                <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
+                  {config?.payment_providers.map((pr) => {
+                    const a = getAdapter(pr.id)
+                    const active = provider === pr.id
+                    const Panel = a?.Panel
+                    return (
+                      <div key={pr.id} className={option(active)}>
+                        <button role="radio" aria-checked={active} disabled={!!pending && pending.payment.provider !== pr.id}
+                          onClick={() => { setProvider(pr.id); setPanelState(a?.initialState) }}
+                          className="flex w-full items-start gap-3 text-left disabled:opacity-40">
+                          {tick(active)}
+                          <span>
+                            <span className="block text-[16px] font-medium text-ink">{pr.label}</span>
+                            <span className="text-[13.5px] text-smoke">{pr.description}</span>
+                          </span>
+                        </button>
+                        {active && Panel && <Panel value={panelState} onChange={setPanelState} />}
+                      </div>
+                    )
+                  })}
+                </div>
+                {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
+                <Button size="lg" variant="terra" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
+                  {pending ? `Try payment again` : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
+                </Button>
+              </section>
             )}
           </div>
-        </aside>
-      </div>
-    </Container>
+
+          <Tear />
+
+          {/* The foot of the slip: a barcode, the number again and a note of thanks. */}
+          <footer className="text-center">
+            <Barcode value={`${receiptNo}${cart.items.map((l) => l.product_id).join('')}`} className="mx-auto h-11 w-56 text-ink/80" />
+            <p className="mt-2 text-[11px] uppercase tracking-[0.32em] text-fog">{receiptNo}</p>
+            <p className="font-script mt-5 text-[2.3rem] leading-none text-ink">thank you for shopping odd</p>
+            <p className="mt-4 text-[13px] leading-relaxed text-fog">
+              Printed to order and finished by hand. By placing your order you agree to our <Link to="/help/returns" className="underline underline-offset-4 hover:text-ink">returns policy</Link>.
+            </p>
+          </footer>
+        </ReceiptPaper>
+
+        <p className="mt-8 text-center text-[14px]"><Link to="/cart" className="link-draw text-ink">Back to your bag</Link></p>
+      </Container>
+    </section>
   )
 }
