@@ -67,7 +67,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 
 export function Checkbox({ label, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
   return (
-    <label className={cn('inline-flex cursor-pointer items-center gap-2.5 text-[15px]', className)}>
+    <label className={cn('cursor-pointer items-center gap-2.5 text-[15px]', !/\bflex\b/.test(className ?? '') && 'inline-flex', className)}>
       <input type="checkbox" className="size-4 accent-ink" {...rest} />
       <span>{label}</span>
     </label>

@@ -1,19 +1,21 @@
 import { useRef } from 'react'
 import { gsap, useGSAP, MQ, EASE } from '@/lib/motion'
 import { SplitReveal } from '@/components/motion/Reveal'
+import { cn } from '@/lib/cn'
 
 export const STEPS = [
-  ['Design', 'Every piece starts as a sketch and a question. We model it in-house and prototype until the proportions feel resolved.'],
-  ['Slice', 'The form is cut into hundreds of horizontal layers, each 0.2 mm tall, and the toolpath is tuned for that exact shape.'],
-  ['Print', 'Made to order in PLA or heat-resistant PETG. A medium vessel takes the better part of a day to build.'],
-  ['Finish', 'Supports removed, edges refined, interiors sealed where needed, then inspected by hand and packed in paper pulp.'],
+  ['Digital model', 'Every piece starts as a sketch and a question. We model it in-house and prototype until the proportions feel resolved.'],
+  ['First layer', 'The form is sliced into hundreds of layers, each 0.2 mm tall, and the first one is laid down on the bed.'],
+  ['Printing', 'Made to order in PLA or heat-resistant PETG, one layer on top of the last. A medium vessel takes most of a day.'],
+  ['Finished object', 'Supports removed, edges refined, interiors sealed where needed, then inspected by hand and packed in paper pulp.'],
 ] as const
 
 const LAYERS = 96
 const W = 360
 const H = 480
 const LAYER_H = H / LAYERS
-const HOT = '#E0B44C'
+const HEAD = '#5E6647'   // olive print head
+const LINE = '#A64F31'   // terracotta wireframe
 
 /** A vessel profile: narrow foot, full belly, pinched neck, flared lip, with a slight lean. */
 function layerAt(i: number) {
@@ -26,10 +28,56 @@ function layerAt(i: number) {
   return { x: W / 2 - r + lean, w: r * 2, y: H - (i + 1) * LAYER_H }
 }
 
+const LAYOUT = Array.from({ length: LAYERS }, (_, i) => layerAt(i))
+// The digital model's silhouette: up the left edge, across the lip, down the right edge.
+const OUTLINE = [
+  ...LAYOUT.map((l) => `${l.x},${l.y + LAYER_H / 2}`),
+  ...[...LAYOUT].reverse().map((l) => `${l.x + l.w},${l.y + LAYER_H / 2}`),
+].join(' ')
+
 /**
- * The craft, told by the object itself. On desktop the section pins while a vessel builds layer by layer
- * with the scroll, a print head tracking the current layer and the steps lighting in turn.
- * On touch screens it builds as you pass through, without pinning.
+ * The vessel, drawn in SVG. `built` is how many layers are already printed; the wireframe shows while it's
+ * unfinished. Animated by the Process section, or rendered still at a given stage elsewhere.
+ */
+export function Vessel({ built = LAYERS, className, animated }: { built?: number; className?: string; animated?: boolean }) {
+  const done = built >= LAYERS
+  return (
+    <svg viewBox={`-10 -30 ${W + 20} ${H + 50}`} className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="pr-shade" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#9C6A52" />
+          <stop offset="0.35" stopColor="#E8C9B4" />
+          <stop offset="0.62" stopColor="#C98774" />
+          <stop offset="1" stopColor="#7D4E3B" />
+        </linearGradient>
+      </defs>
+      <line x1="-10" x2={W + 10} y1={H + 4} y2={H + 4} stroke="rgb(42 31 23 / 0.35)" strokeWidth="1" />
+      <g className="pr-wire" style={animated ? undefined : { opacity: done ? 0 : 1 }}>
+        <polygon points={OUTLINE} fill="none" stroke={LINE} strokeWidth="1" strokeDasharray="4 4" pathLength={1000} className="pr-outline" />
+        {LAYOUT.filter((_, i) => i % 12 === 6).map((l, i) => (
+          <ellipse key={i} cx={l.x + l.w / 2} cy={l.y} rx={l.w / 2} ry={l.w * 0.06} fill="none" stroke={LINE} strokeWidth="0.6" opacity="0.55" />
+        ))}
+      </g>
+      {LAYOUT.map((l, i) => (
+        <rect key={i} className="pr-layer" x={l.x} y={l.y} width={l.w} height={LAYER_H * 0.8} rx={LAYER_H / 2} fill="url(#pr-shade)"
+          style={animated ? undefined : { opacity: i < built ? 1 : 0 }} />
+      ))}
+      {(animated || !done) && (
+        <g className="pr-head" transform={`translate(0 ${animated ? H - LAYER_H : (LAYOUT[Math.max(0, built - 1)]?.y ?? H)})`}
+          style={animated ? undefined : { opacity: built > 0 ? 1 : 0 }}>
+          <line x1="-10" x2={W + 10} y1="0" y2="0" stroke={HEAD} strokeWidth="1" strokeDasharray="3 5" />
+          <rect x={W / 2 - 14} y="-26" width="28" height="22" rx="3" fill={HEAD} />
+          <path d={`M${W / 2 - 6} -4 L${W / 2} 2 L${W / 2 + 6} -4 Z`} fill={HEAD} />
+        </g>
+      )}
+    </svg>
+  )
+}
+
+/**
+ * Made layer by layer. On desktop the section holds for a short while as the vessel goes from a dashed
+ * digital model to a first layer, prints upward under the head, and settles as a finished object, with the
+ * matching step lighting beside it. On touch screens it builds as you pass, without holding the page.
  */
 export function Process() {
   const root = useRef<HTMLElement>(null)
@@ -40,62 +88,66 @@ export function Process() {
     const steps = gsap.utils.toArray<HTMLElement>('.pr-step')
     const state = { n: 0 }
     const setStep = (p: number) => {
-      const active = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length))
+      const active = p < 0.14 ? 0 : p < 0.3 ? 1 : p < 0.92 ? 2 : 3
       steps.forEach((s, i) => s.classList.toggle('is-active', i === active))
     }
     const build = () => gsap.timeline()
-      .to(layers, { opacity: 1, scaleX: 1, duration: 0.2, stagger: 0.8 / LAYERS, ease: 'power2.out' }, 0)
-      .to('.pr-head', { y: 0, duration: 1, ease: 'none' }, 0)
+      .fromTo('.pr-outline', { strokeDashoffset: 1000 }, { strokeDashoffset: 0, duration: 0.14, ease: 'none' }, 0)
+      .to(layers, { opacity: 1, scaleX: 1, duration: 0.05, stagger: 0.74 / LAYERS, ease: 'power2.out' }, 0.16)
+      .to('.pr-head', { autoAlpha: 1, duration: 0.02 }, 0.15)
+      .to('.pr-head', { y: 0, duration: 0.76, ease: 'none' }, 0.16)
       .to(state, {
-        n: LAYERS, duration: 1, ease: 'none',
+        n: LAYERS, duration: 0.76, ease: 'none',
         onUpdate: () => { if (counter.current) counter.current.textContent = String(Math.round(state.n)).padStart(3, '0') },
-      }, 0)
-      .to('.pr-head', { autoAlpha: 0, duration: 0.05 }, 1)
-      .to('.pr-solid', { autoAlpha: 1, duration: 0.15 }, 1)
+      }, 0.16)
+      .to('.pr-head', { autoAlpha: 0, duration: 0.04 }, 0.93)
+      .to('.pr-wire', { autoAlpha: 0, duration: 0.06 }, 0.93)
 
+    const prepare = () => {
+      gsap.set(layers, { opacity: 0, scaleX: 0.25, transformOrigin: '50% 50%' })
+      gsap.set('.pr-head', { autoAlpha: 0 })
+    }
     const mm = gsap.matchMedia()
-    // The canvas wipes open from a framed panel to full bleed as you arrive.
-    mm.add(MQ.motion, () => {
-      gsap.fromTo(root.current, { clipPath: 'inset(0% 3% 0% 3% round 8px)' }, {
-        clipPath: 'inset(0% 0% 0% 0% round 0px)', ease: 'none',
-        scrollTrigger: { trigger: root.current, start: 'top bottom', end: 'top top', scrub: true },
-      })
-    })
     mm.add(MQ.desktop, () => {
-      gsap.set(layers, { opacity: 0, scaleX: 0.2, transformOrigin: '50% 50%' })
+      prepare()
       const tl = build()
       tl.eventCallback('onUpdate', () => setStep(tl.progress()))
       gsap.timeline({
-        scrollTrigger: { trigger: root.current, start: 'top top', end: '+=260%', pin: true, scrub: 1, anticipatePin: 1 },
+        scrollTrigger: { trigger: root.current, start: 'top top', end: '+=140%', pin: true, scrub: 0.8, anticipatePin: 1 },
       }).add(tl)
     })
     mm.add(MQ.mobile, () => {
-      gsap.set(layers, { opacity: 0, scaleX: 0.2, transformOrigin: '50% 50%' })
+      prepare()
       const tl = build()
-      gsap.timeline({ scrollTrigger: { trigger: '.pr-figure', start: 'top 75%', end: 'bottom 35%', scrub: 1 } }).add(tl)
-      steps.forEach((s) => gsap.from(s, { y: 30, autoAlpha: 0, duration: 1, ease: EASE.out, scrollTrigger: { trigger: s, start: 'top 90%', once: true } }))
+      gsap.timeline({ scrollTrigger: { trigger: '.pr-figure', start: 'top 80%', end: 'bottom 40%', scrub: 0.8 } }).add(tl)
+      steps.forEach((s) => gsap.from(s, { y: 24, autoAlpha: 0, duration: 1, ease: EASE.out, scrollTrigger: { trigger: s, start: 'top 90%', once: true } }))
       steps.forEach((s) => s.classList.add('is-active'))
     })
-    mm.add('(prefers-reduced-motion: reduce)', () => { steps.forEach((s) => s.classList.add('is-active')) })
+    mm.add('(prefers-reduced-motion: reduce)', () => {
+      steps.forEach((s) => s.classList.add('is-active'))
+      gsap.set('.pr-wire, .pr-head', { autoAlpha: 0 })
+    })
     return () => mm.revert()
   }, { scope: root })
 
   return (
-    <section ref={root} className="film-grain relative overflow-hidden bg-night text-paper lg:h-svh">
-      <div className="mx-auto grid h-full max-w-[1520px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-10 lg:py-0">
+    <section ref={root} className="linen relative overflow-hidden bg-sand text-ink lg:h-svh">
+      <div className="mx-auto grid h-full max-w-[1440px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-10 lg:py-0">
         <div className="lg:col-span-5">
-          <p className="label mb-5 text-paper/50"><span className="text-paper">(03)</span>&nbsp;&nbsp;Process</p>
-          <SplitReveal as="h2" className="font-display text-[clamp(2.25rem,4.4vw,4.75rem)] leading-[0.98]">
-            Made layer by layer, <span className="font-odd text-paper/60">to order.</span>
+          <SplitReveal as="h2" className="font-display text-[clamp(2.6rem,5vw,5.25rem)] leading-[0.98]">
+            Made layer<br /><span className="font-odd">by layer.</span>
           </SplitReveal>
-          <ol className="mt-8 border-t border-paper/15 xl:mt-12">
+          <p className="mt-5 max-w-md text-[16px] leading-[1.7] text-smoke">
+            Nothing waits in a warehouse. Your piece is printed after you order it, a fifth of a millimetre at a time.
+          </p>
+          <ol className="mt-10 border-t border-ink/15">
             {STEPS.map(([title, body], i) => (
-              <li key={title} className="pr-step group border-b border-paper/15 py-4 transition-opacity duration-700 [&:not(.is-active)]:opacity-35 xl:py-5">
+              <li key={title} className="pr-step border-b border-ink/15 py-4 transition-opacity duration-700 [&:not(.is-active)]:opacity-35 xl:py-5">
                 <div className="flex items-baseline gap-5">
-                  <span className="font-mono text-[11px] text-paper/50">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="w-6 font-odd text-[15px] text-accent">{['i', 'ii', 'iii', 'iv'][i]}.</span>
                   <div>
-                    <h3 className="text-xl text-paper">{title}</h3>
-                    <p className="mt-1.5 max-w-md text-[14px] leading-relaxed text-paper/60 xl:text-[15px]">{body}</p>
+                    <h3 className="font-display text-[1.45rem] leading-tight">{title}</h3>
+                    <p className="mt-1.5 max-w-md text-[14.5px] leading-relaxed text-smoke">{body}</p>
                   </div>
                 </div>
               </li>
@@ -104,45 +156,34 @@ export function Process() {
         </div>
 
         <div className="pr-figure relative lg:col-span-6 lg:col-start-7">
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-[34rem] border border-paper/10">
-            <div className="absolute inset-x-4 top-4 flex justify-between label text-paper/50">
-              <span>Layer <span ref={counter} className="text-paper">000</span> / {LAYERS}</span>
-              <span>0.20 mm · PETG</span>
-            </div>
-            <div className="absolute inset-x-4 bottom-4 flex justify-between label text-paper/40">
-              <span>Nozzle 0.4 mm</span>
-              <span>Bed 70 °C</span>
-            </div>
-
-            <svg viewBox={`0 -20 ${W} ${H + 40}`} className="absolute inset-[12%] h-[76%] w-[76%]" aria-hidden="true">
-              <defs>
-                <linearGradient id="pr-shade" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0" stopColor="#8C7461" />
-                  <stop offset="0.35" stopColor="#F1E7D3" />
-                  <stop offset="0.6" stopColor="#D8C6AE" />
-                  <stop offset="1" stopColor="#6E5A4B" />
-                </linearGradient>
-              </defs>
-              <line x1="0" x2={W} y1={H + 6} y2={H + 6} stroke="rgb(250 247 245 / 0.25)" strokeWidth="1" />
-              {Array.from({ length: LAYERS }, (_, i) => {
-                const l = layerAt(i)
-                return <rect key={i} className="pr-layer" x={l.x} y={l.y} width={l.w} height={LAYER_H * 0.78} rx={LAYER_H / 2} fill="url(#pr-shade)" />
-              })}
-              <g className="pr-solid" style={{ opacity: 0, visibility: 'hidden' }}>
-                {Array.from({ length: LAYERS }, (_, i) => {
-                  const l = layerAt(i)
-                  return i % 6 === 0 ? <rect key={i} x={l.x} y={l.y} width={l.w} height={LAYER_H * 0.5} fill={HOT} opacity="0.18" /> : null
-                })}
-              </g>
-              <g className="pr-head" transform={`translate(0 ${H - LAYER_H})`}>
-                <line x1="-20" x2={W + 20} y1="0" y2="0" stroke={HOT} strokeWidth="1" strokeDasharray="3 5" />
-                <rect x={W / 2 - 14} y="-26" width="28" height="22" fill={HOT} />
-                <path d={`M${W / 2 - 6} -4 L${W / 2} 2 L${W / 2 + 6} -4 Z`} fill={HOT} />
-              </g>
-            </svg>
+          <div className="plate relative mx-auto aspect-square w-full max-w-[36rem] bg-paper-2/60">
+            <Vessel animated className="absolute inset-[13%] h-[74%] w-[74%]" />
+            <p className="absolute inset-x-0 bottom-[6%] text-center text-[13px] tabular-nums text-smoke">
+              Layer <span ref={counter} className="text-ink">000</span> of {LAYERS}, 0.2 mm each
+            </p>
           </div>
         </div>
       </div>
     </section>
+  )
+}
+
+/** The same four stages, side by side and still: used on product pages, where nothing should hold the scroll. */
+export function ProcessStrip({ className }: { className?: string }) {
+  const stages = [0, 1, Math.round(LAYERS * 0.55), LAYERS]
+  return (
+    <ol className={cn('grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4', className)}>
+      {STEPS.map(([title, body], i) => (
+        <li key={title}>
+          <div className="plate mx-auto aspect-square w-full max-w-[15rem] bg-paper-2/70">
+            <Vessel built={stages[i]} className="size-full p-[14%]" />
+          </div>
+          <h3 className="mt-6 flex items-baseline gap-3 font-display text-[1.35rem] text-ink">
+            <span className="font-odd text-[14px] text-accent">{['i', 'ii', 'iii', 'iv'][i]}.</span>{title}
+          </h3>
+          <p className="mt-2 text-[14px] leading-relaxed text-smoke">{body}</p>
+        </li>
+      ))}
+    </ol>
   )
 }

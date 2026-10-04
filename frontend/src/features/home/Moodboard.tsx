@@ -2,43 +2,48 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useScrapMotion } from '@/components/scrapbook/useScrapMotion'
 import { Container } from '@/components/layout/Container'
-import { ScrapHeading } from '@/components/scrapbook/ScrapHeading'
-import { Slang } from '@/components/scrapbook/Slang'
 import { Wordmark } from '@/components/brand/Wordmark'
+import { TornNote } from '@/components/scrapbook/Torn'
+import { PaperClip, PushPin, Tape } from '@/components/paper/Fasteners'
 import { useProducts } from '@/lib/queries'
 import { useWishlist } from '@/stores/wishlist'
 import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { Product } from '@/lib/types'
-import { TornNote } from '@/components/scrapbook/Torn'
-import { Lollipop, SmileyFlower } from '@/components/scrapbook/Stickers'
 
 type Note =
-  | { kind: 'note'; text: string; tone: keyof typeof NOTE_TONES; big?: boolean }
+  | { kind: 'note'; text: string; tone: keyof typeof NOTE_TONES; voice: 'serif' | 'script' }
   | { kind: 'brand' }
 
-// Scribbled cards that sit between the photos, like a pinned moodboard.
+// Notes pinned up between the photographs, in the studio's own words.
 const NOTES: Note[] = [
-  { kind: 'note', text: 'Some days are just odder', tone: 'butter' },
-  { kind: 'note', text: 'Spread odd moods', tone: 'pink', big: true },
+  { kind: 'note', text: 'Some days are just odder.', tone: 'ivory', voice: 'script' },
+  { kind: 'note', text: 'Spread odd moods.', tone: 'clay', voice: 'serif' },
   { kind: 'brand' },
-  { kind: 'note', text: 'Normal is a little overrated', tone: 'mint' },
-  { kind: 'note', text: 'Meetings. Deadlines. Odd lamp. Repeat.', tone: 'sky' },
-  { kind: 'note', text: "It's a good day to be odd", tone: 'lilac', big: true },
+  { kind: 'note', text: 'Normal is a little overrated.', tone: 'sage', voice: 'serif' },
+  { kind: 'note', text: 'Meetings. Deadlines. Odd lamp. Repeat.', tone: 'ivory', voice: 'script' },
+  { kind: 'note', text: 'A good day to be odd.', tone: 'caramel', voice: 'serif' },
 ]
 
+// Torn paper in the palette's paler tones: ivory, a wash of clay, a wash of sage, pale caramel.
 const NOTE_TONES = {
-  pink: 'bg-pink-2 text-plum',
-  butter: 'bg-butter text-ink',
-  mint: 'bg-mint text-ink',
-  sky: 'bg-sky text-ink',
-  lilac: 'bg-lilac text-plum',
+  ivory: { paper: '#FBF8F3', ink: 'text-ink' },
+  clay: { paper: '#EED6C9', ink: 'text-plum' },
+  sage: { paper: '#DDE2D2', ink: 'text-olive' },
+  caramel: { paper: '#F1E1C4', ink: 'text-ink' },
 }
 
+// How each scrap is held up, in turn: a pin, a strip of tape, a paperclip.
+const HOLDS = ['pin', 'tape', 'clip', 'pin', 'tape'] as const
+const PIN_COLOURS = ['#A9532F', '#5E6647', '#D4A574', '#C98774']
 // Varied heights are what make a masonry board feel collected rather than gridded.
-const ASPECTS = ['aspect-[3/4]', 'aspect-[4/5]', 'aspect-square', 'aspect-[2/3]', 'aspect-[4/5]', 'aspect-[3/4]']
+const ASPECTS = ['aspect-[4/5]', 'aspect-square', 'aspect-[3/4]', 'aspect-[4/5]', 'aspect-[5/6]']
 
-/** "The Odd Board": a Pinterest-style masonry of products and handwritten notes. */
+/**
+ * The Odd Board: the studio's mood board, pinned to a linen-covered board. Products hang as polaroids with
+ * their names written underneath, notes are torn scraps in clay, sage and caramel, and everything is held
+ * up with pins, washi tape or a paperclip. Hover a photo to save it to your wishlist.
+ */
 export function Moodboard() {
   const { data } = useProducts({ sort: 'popular', page_size: 12 })
   const products = data?.items ?? []
@@ -46,75 +51,76 @@ export function Moodboard() {
   useScrapMotion(root, [products.length])
   if (!products.length) return null
 
-  // Weave a note in after every second photo.
+  // Weave a note in after every second photo; with only a few photos, after every one, so the board never looks bare.
   const tiles: ({ kind: 'product'; product: Product; i: number } | Note)[] = []
+  const sparse = products.length < 6
   products.forEach((product, i) => {
     tiles.push({ kind: 'product', product, i })
-    const note = NOTES[Math.floor(i / 2)]
-    if (i % 2 === 1 && note) tiles.push(note)
+    const note = NOTES[sparse ? i : Math.floor(i / 2)]
+    if ((sparse || i % 2 === 1) && note) tiles.push(note)
   })
+  if (sparse) NOTES.slice(products.length, 4).forEach((n) => tiles.push(n))
+  const columns = tiles.length >= 10 ? 'columns-2 sm:columns-3 lg:columns-4 xl:columns-5'
+    : tiles.length > 4 ? 'columns-2 sm:columns-3 lg:columns-4'
+      : ['columns-1', 'columns-1', 'columns-2', 'columns-2 sm:columns-3', 'columns-2 sm:columns-3 lg:columns-4'][tiles.length]
 
   return (
-    <div ref={root} className="scrap-tones">
-    <Container className="relative py-16 sm:py-20">
-      <Lollipop className="absolute left-[12%] top-8 hidden w-12 -rotate-12 lg:block" />
-      <SmileyFlower className="absolute right-[13%] top-12 hidden w-16 rotate-6 lg:block" />
-      <Slang text="it's giving one-of-one" tone="lilac" tilt={4} className="absolute right-[21%] top-24 hidden xl:inline-flex" />
-      <ScrapHeading center variant="marker" kicker="save it, pin it, love it" title="The Odd Board" />
-      {/* A framed corkboard; every scrap is pinned on with a coloured push pin. */}
-      <div className="rounded-[1.25rem] bg-[#A0714A] p-3 shadow-[0_24px_50px_-24px_rgb(67_48_42/0.6),inset_0_2px_0_rgb(255_255_255/0.25)] sm:p-4">
-        <div className="cork rounded-[0.5rem] p-4 pt-7 shadow-[inset_0_4px_14px_rgb(67_48_42/0.45)] sm:p-7 sm:pt-9">
-          <div className="columns-2 gap-5 sm:columns-3 lg:columns-4 xl:columns-5">
-            {tiles.map((t, k) => (
-              <div key={k} data-drop className="relative mb-7 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
-                <PushPin color={PINS[k % PINS.length]} />
-                {t.kind === 'product' ? <Pin product={t.product} i={t.i} />
-                  : t.kind === 'brand' ? <BrandNote />
-                    : <NoteCard note={t} />}
+    <div ref={root}>
+      <Container className="py-20 sm:py-28">
+        <div className="mx-auto max-w-[1360px]">
+          <div className="mb-12 text-center sm:mb-16">
+            <p className="font-script text-[clamp(2.4rem,4vw,3.4rem)] leading-none text-accent">save it, pin it, love it</p>
+            <h2 className="mt-2 font-display text-[clamp(2.8rem,5.6vw,5.5rem)] leading-[1] text-ink">The Odd Board</h2>
+          </div>
+
+          {/* A linen-covered pinboard with a thin wooden edge. */}
+          <div className="slab bg-[#8A6A4F] p-2.5 shadow-[0_30px_50px_-30px_rgb(66_44_28/0.6)] sm:p-3">
+            <div className="slab linen bg-sand px-3.5 pb-4 pt-9 shadow-[inset_0_3px_12px_rgb(66_44_28/0.25)] sm:px-9 sm:pb-8 sm:pt-12">
+              <div className={cn('gap-4 sm:gap-8', columns)}>
+                {tiles.map((t, k) => (
+                  <div key={k} data-drop className="relative mb-10 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
+                    <Hold kind={HOLDS[k % HOLDS.length]} k={k} />
+                    {t.kind === 'product' ? <Polaroid product={t.product} i={t.i} />
+                      : t.kind === 'brand' ? <BrandCard />
+                        : <NoteCard note={t} />}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
-      </div>
-    </Container>
+      </Container>
     </div>
   )
 }
 
-const PINS = ['#C98A6B', '#7F1D1D', '#E0B44C', '#C98A6B', '#B9A390']
-
-function PushPin({ color }: { color: string }) {
-  return (
-    <span aria-hidden="true" data-pin className="absolute -top-3 left-1/2 z-10 block size-5 -translate-x-1/2 rounded-full shadow-[2px_4px_4px_rgb(0_0_0/0.35)]"
-      style={{ background: `radial-gradient(circle at 35% 30%, #ffffffcc 0 18%, ${color} 22%)` }} />
-  )
+function Hold({ kind, k }: { kind: (typeof HOLDS)[number]; k: number }) {
+  if (kind === 'pin') return <PushPin color={PIN_COLOURS[k % PIN_COLOURS.length]} className="absolute -top-2.5 left-1/2 z-10 -translate-x-1/2" />
+  if (kind === 'tape') return <Tape tone={(['sand', 'sage', 'clay'] as const)[k % 3]} className={cn('absolute -top-3 left-1/2 z-10 -translate-x-1/2', k % 2 ? 'rotate-3' : '-rotate-3')} />
+  return <PaperClip className="absolute -top-7 left-5 z-10 w-6 rotate-[6deg] drop-shadow-[0_2px_2px_rgb(0_0_0/0.25)]" />
 }
 
-function Pin({ product, i }: { product: Product; i: number }) {
+function Polaroid({ product, i }: { product: Product; i: number }) {
   const saved = useWishlist((s) => s.ids.includes(product.id))
   const toggle = useWishlist((s) => s.toggle)
   const img = product.images[i % 2 === 0 ? 1 : 0] ?? product.images[0]
-  const caption = i % 3 === 0 && product.tagline
 
   return (
-    <Link to={`/product/${product.slug}`} className="group relative block overflow-hidden rounded-[0.125rem] bg-paper p-2 shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
-      {img && <img src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
-        className={cn('w-full bg-ash object-cover', ASPECTS[i % ASPECTS.length])} />}
-      {caption && (
-        <p className="font-hand pointer-events-none absolute left-3 top-3 max-w-[72%] -rotate-3 rounded-[0.5rem] bg-cream px-3 py-2 text-sm leading-snug text-plum shadow-md">
-          {caption} <span aria-hidden="true">♡</span>
-        </p>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <button type="button" aria-pressed={saved} aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggle(product.id, product.name) }}
-        className={cn('absolute right-3 top-3 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300',
-          saved ? 'bg-ink text-paper opacity-100' : 'bg-accent text-paper opacity-0 hover:bg-ink focus-visible:opacity-100 group-hover:opacity-100')}>
-        {saved ? 'Saved ♥' : 'Save'}
-      </button>
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 text-paper opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <span className="font-semibold leading-tight">{product.name}</span>
-        <span className="shrink-0 rounded-full bg-paper px-2.5 py-1 text-xs font-bold tabular-nums text-ink">{money(product.price)}</span>
+    <Link to={`/product/${product.slug}`} className="group relative block bg-[#FBFAF7] p-2.5 pb-3 shadow-[0_14px_22px_-12px_rgb(66_44_28/0.55)] sm:p-3">
+      <div className="relative overflow-hidden bg-ash">
+        {img && <img src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
+          className={cn('w-full object-cover transition-transform duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]', ASPECTS[i % ASPECTS.length])} />}
+        <button type="button" aria-pressed={saved} aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggle(product.id, product.name) }}
+          className={cn('absolute right-2.5 top-2.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-[opacity,background-color] duration-300',
+            saved ? 'bg-ink text-paper opacity-100' : 'bg-paper/95 text-ink opacity-0 hover:bg-ink hover:text-paper focus-visible:opacity-100 group-hover:opacity-100')}>
+          {saved ? 'Saved' : 'Save'}
+        </button>
+      </div>
+      {/* The caption written on the polaroid's wide bottom edge. */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1 pt-3">
+        <span className="min-w-0 truncate font-script text-[1.5rem] leading-[1.15] text-ink sm:text-[1.9rem]">{product.name}</span>
+        <span className="shrink-0 text-[12px] tabular-nums text-smoke sm:text-[13px]">{money(product.price)}</span>
       </div>
     </Link>
   )
@@ -122,26 +128,24 @@ function Pin({ product, i }: { product: Product; i: number }) {
 
 function NoteCard({ note }: { note: Extract<Note, { kind: 'note' }> }) {
   return (
-    <div className="relative">
-      <TornNote seed={note.text} paperClassName={cn('grid min-h-44 place-items-center p-7 text-center', NOTE_TONES[note.tone])}>
-        <p className={cn('text-balance', note.big ? 'font-chewy text-4xl leading-[1.05]' : 'font-hand text-xl leading-relaxed')}>
-          {note.text}
-          <span aria-hidden="true" className="mt-2 block font-hand text-xl">♡</span>
-        </p>
-      </TornNote>
-    </div>
+    // The tone is set inline so it always wins over the base paper colour of a torn note.
+    <TornNote seed={note.text} paperClassName={cn('grid min-h-32 place-items-center px-4 py-7 text-center sm:min-h-44 sm:px-7 sm:py-9', NOTE_TONES[note.tone].ink)}
+      paperStyle={{ backgroundColor: NOTE_TONES[note.tone].paper }}>
+      <p className={cn('text-balance', note.voice === 'serif' ? 'font-odd text-[1.3rem] leading-[1.12] sm:text-[1.9rem]' : 'font-script text-[1.7rem] leading-[1.05] sm:text-[2.3rem]')}>
+        {note.text}
+      </p>
+    </TornNote>
   )
 }
 
-function BrandNote() {
+function BrandCard() {
   return (
-    <div className="grain grid aspect-[4/5] place-items-center rounded-[0.125rem] bg-sage p-6 text-center text-cream shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
+    <div className="grain grid aspect-[4/5] place-items-center bg-olive p-4 text-center sm:p-7 text-paper shadow-[0_14px_22px_-12px_rgb(66_44_28/0.55)]">
       <div>
-        <Wordmark light className="mx-auto h-auto w-full max-w-[14rem]" />
-        <p className="font-hand mt-3 text-sm">made to be looked at</p>
-        <div className="mx-auto my-4 h-px w-16 bg-cream/40" />
-        <p className="font-hand text-sm leading-relaxed">Good objects<br />brighter rooms<br />odder you</p>
-        <span aria-hidden="true" className="mt-2 block font-hand">♡</span>
+        <Wordmark light className="mx-auto h-auto w-full max-w-[12rem]" />
+        <p className="mt-3 font-script text-[1.45rem] leading-none text-sun sm:mt-4 sm:text-[2rem]">made to be looked at</p>
+        <div className="mx-auto my-3 h-px w-14 bg-paper/40 sm:my-5" />
+        <p className="font-odd text-[0.95rem] leading-relaxed sm:text-[1.15rem]">Good objects,<br />brighter rooms,<br />odder you.</p>
       </div>
     </div>
   )

@@ -45,6 +45,7 @@ export default function ProductEditPage() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [pairSearch, setPairSearch] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   useDocumentTitle(isNew ? 'New product' : product?.name)
 
@@ -129,6 +130,8 @@ export default function ProductEditPage() {
   const card = 'flex flex-col gap-5 border border-rule p-5 sm:p-6'
   const h2 = 'text-lg font-semibold'
   const others = allProducts?.items.filter((p) => p.id !== id) ?? []
+  // The search narrows the pairing list by name; the order stays fixed so rows don't jump as you tick them.
+  const pairOptions = others.filter((p) => p.name.toLowerCase().includes(pairSearch.trim().toLowerCase()))
 
   return (
     <div>
@@ -223,12 +226,26 @@ export default function ProductEditPage() {
             </Select>
             <Input label="Tags" value={tagsText} onChange={(e) => setTagsText(e.target.value)} hint="Comma separated; used by search" />
             <div className="flex flex-col gap-1.5">
-              <span className="text-sm opacity-80">Frequently bought with</span>
-              <div className="max-h-48 overflow-y-auto border border-rule p-3">
-                {others.map((p) => (
-                  <Checkbox key={p.id} className="flex py-1 text-sm" label={p.name} checked={form.frequently_bought_with.includes(p.id)}
-                    onChange={(e) => set('frequently_bought_with', e.target.checked ? [...form.frequently_bought_with, p.id] : form.frequently_bought_with.filter((x) => x !== p.id))} />
-                ))}
+              <span className="flex items-baseline justify-between text-sm">
+                <span className="opacity-80">Frequently bought with</span>
+                {form.frequently_bought_with.length > 0 && <span className="text-[13px] text-fog">{form.frequently_bought_with.length} selected</span>}
+              </span>
+              <div className="border border-rule">
+                <label className="flex items-center gap-2 border-b border-rule px-3">
+                  <Icon name="search" size={15} className="shrink-0 text-fog" />
+                  <span className="sr-only">Search products</span>
+                  <input type="search" value={pairSearch} onChange={(e) => setPairSearch(e.target.value)} placeholder="Search products"
+                    className="h-10 w-full bg-transparent text-sm text-ink outline-none placeholder:text-fog" />
+                </label>
+                <ul className="max-h-56 overflow-y-auto py-1">
+                  {pairOptions.map((p) => (
+                    <li key={p.id}>
+                      <Checkbox className="flex w-full px-3 py-2 text-sm hover:bg-ink/[0.04]" label={p.name} checked={form.frequently_bought_with.includes(p.id)}
+                        onChange={(e) => set('frequently_bought_with', e.target.checked ? [...form.frequently_bought_with, p.id] : form.frequently_bought_with.filter((x) => x !== p.id))} />
+                    </li>
+                  ))}
+                  {pairOptions.length === 0 && <li className="px-3 py-3 text-sm text-fog">{others.length ? `No products match “${pairSearch}”.` : 'No other products yet.'}</li>}
+                </ul>
               </div>
             </div>
           </section>

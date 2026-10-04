@@ -3,7 +3,7 @@ import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { Spinner } from './Spinner'
 
-type Variant = 'primary' | 'light' | 'outline' | 'ghost' | 'dark' | 'outline-dark' | 'danger' | 'hot'
+type Variant = 'primary' | 'light' | 'outline' | 'ghost' | 'dark' | 'outline-dark' | 'danger' | 'hot' | 'brass' | 'outline-light' | 'terra' | 'olive'
 type Size = 'sm' | 'md' | 'lg'
 
 const base =
@@ -19,6 +19,10 @@ const variants: Record<Variant, string> = {
   'outline-dark': 'border border-ink/20 text-ink hover:border-ink',
   ghost: 'text-graphite hover:bg-ink/5 hover:text-ink',
   danger: 'border border-accent/60 text-accent hover:bg-accent hover:text-paper',
+  brass: 'bg-tan text-ink hover:bg-paper',
+  terra: 'bg-hot text-paper hover:bg-ink',
+  olive: 'bg-olive text-paper hover:bg-ink',
+  'outline-light': 'border border-paper/30 text-paper hover:border-paper hover:bg-paper hover:text-ink',
 }
 const sizes: Record<Size, string> = {
   sm: 'h-9 px-4 text-[13px]',

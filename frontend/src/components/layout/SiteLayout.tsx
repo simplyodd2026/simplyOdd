@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/Toaster'
 import { useConfig } from '@/lib/queries'
 import { money } from '@/lib/format'
 import { refreshScroll } from '@/lib/motion'
-import { scrollToTop, startSmoothScroll } from '@/lib/scroll'
+import { scrollToTop, scrollToY, startSmoothScroll } from '@/lib/scroll'
 
 /** A quiet service line above the header; the messages cross-fade rather than scroll. */
 function AnnouncementBar({ threshold }: { threshold: number }) {
@@ -61,6 +61,17 @@ export function SiteLayout() {
   const main = useRef<HTMLElement>(null)
 
   useEffect(() => startSmoothScroll(), [])
+
+  // Links such as /about#process land on their section once the new page has faded in and laid out.
+  const { pathname, hash } = useLocation()
+  useEffect(() => {
+    if (!hash) return
+    const t = setTimeout(() => {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)))
+      if (el) scrollToY(el.getBoundingClientRect().top + window.scrollY - 90)
+    }, 900)
+    return () => clearTimeout(t)
+  }, [pathname, hash])
 
   // Data and images arrive after first paint; re-measure scroll triggers whenever the page height settles.
   useEffect(() => {

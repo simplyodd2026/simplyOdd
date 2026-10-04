@@ -1,112 +1,76 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnimatePresence, motion } from 'motion/react'
-import { useProducts } from '@/lib/queries'
+import { motion } from 'motion/react'
 import { money } from '@/lib/format'
-import { cn } from '@/lib/cn'
+import { useTilt } from '@/lib/useTilt'
 import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
-import { SplitReveal, Reveal } from '@/components/motion/Reveal'
-import { usePieceTone } from './usePieceTone'
+import { SplitReveal } from '@/components/motion/Reveal'
+import { useHomePieces } from './pieces'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 
 /**
- * The shop as a gallery room: one piece on show at a time, with its wall label beside it.
- * The tan band along the bottom is the exhibit switcher, so the hero is something you browse, not a banner.
- * The light on the wall takes the colour of whichever piece is on show, and the whole stage fits one screen
- * on desktop, so the price and button are visible without scrolling.
+ * Intro. A magazine opening rather than a banner: the statement set large on the left with the studio's
+ * signature written across it, and the featured piece standing in an arched niche on the right, its foot
+ * stepping over the edge into the next chapter. A clay pebble drifts behind it, and the word "odd" is
+ * pressed into the floor of the page, cropped by the section edge.
  */
 export function Hero() {
-  const { data } = useProducts({ flag: 'featured', sort: 'popular', page_size: 4 })
-  const pieces = data?.items ?? []
-  const [n, setN] = useState(0)
-  const piece = pieces[n] ?? pieces[0]
-  const tone = usePieceTone(piece?.images[0]?.url)
-  const dims = piece ? [piece.dimensions.width_cm, piece.dimensions.height_cm, piece.dimensions.depth_cm] : []
+  const { hero: piece } = useHomePieces()
+  const tilt = useTilt<HTMLDivElement>(3)
 
   return (
-    <Container className="pt-3 sm:pt-5">
-      <section className="relative isolate mx-auto max-w-[1440px] overflow-hidden rounded-[20px] bg-paper-2 ring-1 ring-ink/5 sm:rounded-[28px] lg:h-[calc(100dvh-160px)] lg:max-h-[820px] lg:min-h-[500px]">
-        {/* Light on the wall behind the piece, tinted by the piece itself. */}
-        <div aria-hidden style={{ backgroundColor: tone }}
-          className="pointer-events-none absolute left-1/2 top-[8%] -z-10 h-[78%] w-[62%] -translate-x-[38%] rounded-full opacity-90 blur-[110px] transition-[background-color] duration-[1400ms] ease-out max-lg:left-0 max-lg:w-full max-lg:translate-x-0" />
+    <section className="relative isolate z-10">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[clamp(7rem,19vw,19rem)] overflow-hidden">
+        <span className="absolute -bottom-[0.32em] right-[-0.02em] select-none font-odd text-[clamp(14rem,34vw,34rem)] leading-none text-stone">odd</span>
+      </div>
 
-        <div className="grid gap-10 px-5 pt-10 sm:px-10 lg:h-full lg:grid-cols-12 lg:items-center lg:gap-6 lg:px-14 lg:pb-24 lg:pt-6">
-          <div className="lg:col-span-4">
-            <SplitReveal as="h1" on="load" delay={0.1} className="font-display text-[clamp(3rem,min(4.9vw,9.5dvh),5.5rem)] leading-[1.02] text-ink">
-              Odd shapes. Quiet rooms.
-            </SplitReveal>
-            <Reveal delay={0.35} y={18} className="mt-6 max-w-[22rem]">
-              <p className="text-[17px] leading-[1.6] text-graphite text-pretty">
-                Vases, lamps and small sculptures, designed in our studio and printed to order from plant-based materials, then finished by hand.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-5">
-                <ButtonLink to="/shop" size="lg">Shop the collection</ButtonLink>
-                <Link to="/new" className="link-draw text-[15px] font-medium text-ink">See what's new</Link>
-              </div>
-            </Reveal>
-          </div>
+      <Container className="grid gap-12 pb-0 pt-10 sm:pt-16 lg:min-h-[min(calc(100dvh-120px),900px)] lg:grid-cols-12 lg:items-center lg:gap-8 lg:pt-6">
+        <div className="relative lg:col-span-7 lg:pb-24">
+          <p className="text-[14px] text-smoke">A small 3D-printing studio in India</p>
+          <SplitReveal as="h1" on="load" delay={0.1} className="mt-5 font-display text-[clamp(3.2rem,7.2vw,8.25rem)] leading-[0.94] text-ink">
+            Objects for<br /><span className="font-odd">oddly beautiful</span><br />spaces.
+          </SplitReveal>
+          {/* The signature, written across the end of the statement. */}
+          <motion.p aria-hidden initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.4, ease: EASE, delay: 0.9 }}
+            className="font-script pointer-events-none absolute left-[46%] top-[clamp(8.75rem,18.5vw,20.5rem)] -rotate-6 whitespace-nowrap text-[clamp(3rem,7vw,7.75rem)] text-accent max-sm:left-auto max-sm:right-0 max-sm:top-[10.6rem]">
+            simply odd
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: EASE, delay: 0.55 }}>
+            <p className="mt-10 max-w-[26rem] text-[17px] lg:mt-14 leading-[1.65] text-graphite text-pretty">
+              Lamps, vessels and small sculptures, designed in our studio and printed to order in plant-based materials, then finished by hand.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+              <ButtonLink to="/shop" variant="terra" size="lg">Explore the objects</ButtonLink>
+              <Link to="/about#process" className="link-draw text-[15px] font-medium text-ink">See how they’re made</Link>
+            </div>
+          </motion.div>
+        </div>
 
-          <div className="relative flex min-h-[340px] items-center justify-center lg:col-span-4 lg:min-h-0">
-            <AnimatePresence mode="popLayout" initial={false}>
+        <div className="relative mx-auto w-full max-w-[min(26rem,calc((100svh-9rem)*0.73))] lg:col-span-4 lg:col-start-9 lg:max-w-[calc((100svh-13rem)*0.73)]">
+          <motion.span aria-hidden initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 1.6, ease: EASE, delay: 0.2 }}
+            className="absolute -left-[22%] bottom-[2%] -z-10 aspect-square w-[78%] bg-clay/80 morph lg:-left-[34%]" />
+          <motion.div initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} transition={{ duration: 1.5, ease: EASE, delay: 0.3 }}
+            className="relative z-10 lg:translate-y-[16%]">
+            <div ref={tilt}>
               {piece ? (
-                <motion.div key={piece.id} className="w-full max-w-[28rem]"
-                  initial={{ opacity: 0, y: 30, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                  transition={{ duration: 0.9, ease: EASE }}>
-                  <Link to={`/product/${piece.slug}`} aria-label={`View ${piece.name}`} className="block">
-                    <img src={piece.images[0]?.url} alt={piece.images[0]?.alt || piece.name} draggable={false}
-                      className="mx-auto block h-auto max-h-[min(calc(100dvh-330px),540px)] w-auto max-w-full object-contain" />
-                  </Link>
-                </motion.div>
-              ) : <div className="aspect-[4/5] w-full max-w-[28rem] animate-pulse rounded-full bg-ink/[0.04]" />}
-            </AnimatePresence>
-          </div>
-
-          {/* The wall label for whichever piece is on show. */}
-          <div className="lg:col-span-3 lg:col-start-10 lg:pt-6" aria-live="polite">
-            {piece && (
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={piece.id} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.5, ease: EASE }}>
-                  <p className="text-[13px] text-fog">On show</p>
-                  <p className="mt-1 font-display text-[clamp(2rem,2.6vw,2.75rem)] leading-none text-ink">{piece.name}</p>
-                  {piece.tagline && <p className="mt-3 text-[15px] text-smoke">{piece.tagline}</p>}
-                  <dl className="mt-6 border-b border-ink/70">
-                    <div className="border-t border-ink/70 py-4">
-                      <dt className="text-[12px] font-medium text-fog">Material</dt>
-                      <dd className="mt-1 line-clamp-2 text-[15px] text-ink">{piece.materials[0] ?? 'Plant-based PLA'}</dd>
-                    </div>
-                    {dims.every(Boolean) && (
-                      <div className="border-t border-ink/70 py-4">
-                        <dt className="text-[12px] font-medium text-fog">Dimension</dt>
-                        <dd className="mt-1 text-[15px] tabular-nums text-ink">{dims.join(' × ')} cm</dd>
-                      </div>
-                    )}
-                  </dl>
-                  <Link to={`/product/${piece.slug}`} className="mt-5 inline-block text-[15px] font-medium text-ink"><span className="link-draw">View this piece</span></Link>
-                </motion.div>
-              </AnimatePresence>
-            )}
-          </div>
+                <Link to={`/product/${piece.slug}`} aria-label={`${piece.name}, ${money(piece.price)}`}
+                  className="table-shadow arch block aspect-[3/4.1] overflow-hidden bg-ash">
+                  <img src={piece.images[0]?.url} alt={piece.images[0]?.alt || piece.name} draggable={false} fetchPriority="high"
+                    className="size-full object-cover" />
+                </Link>
+              ) : <div className="arch aspect-[3/4.1] animate-pulse bg-ash" />}
+            </div>
+          </motion.div>
+          {piece && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1.1 }}
+              className="relative z-10 mt-5 flex items-baseline justify-between gap-4 text-[14px] text-smoke lg:absolute lg:-left-[44%] lg:bottom-[-10%] lg:mt-0 lg:block lg:w-[40%]">
+              <span className="block font-odd text-[1.35rem] leading-tight text-ink">{piece.name}</span>
+              <span className="mt-1 block tabular-nums">{money(piece.price)}</span>
+            </motion.p>
+          )}
         </div>
-
-        {/* The tan band: price of the piece on show, and the other pieces you can put on the plinth. */}
-        <div className="relative mt-10 flex flex-wrap items-center gap-x-6 gap-y-4 bg-tan px-5 py-4 sm:px-10 lg:absolute lg:bottom-0 lg:right-0 lg:mt-0 lg:w-[62%] lg:flex-nowrap lg:py-3 lg:pl-10 lg:pr-5">
-          <p className="mr-auto font-display text-[clamp(2.5rem,3.6vw,3.5rem)] font-light leading-none tabular-nums text-ink">
-            {piece ? money(piece.price) : ' '}
-          </p>
-          <div className="flex items-center gap-2" role="tablist" aria-label="Featured pieces">
-            {pieces.map((p, i) => (
-              <button key={p.id} type="button" role="tab" aria-selected={i === n} aria-label={`Show ${p.name}`} onClick={() => setN(i)}
-                className={cn('size-14 overflow-hidden rounded-full border-2 bg-paper-2 transition-[border-color,transform] duration-500 ease-[var(--ease-out-quint)] hover:-translate-y-0.5',
-                  i === n ? 'border-ink' : 'border-transparent')}>
-                <img src={p.images[0]?.url} alt="" className="size-full object-cover" />
-              </button>
-            ))}
-          </div>
-          {piece && <ButtonLink to={`/product/${piece.slug}`} size="lg" className="h-14 w-full px-10 sm:w-auto">Shop this piece</ButtonLink>}
-        </div>
-      </section>
-    </Container>
+      </Container>
+    </section>
   )
 }

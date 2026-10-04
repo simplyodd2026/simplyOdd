@@ -1,53 +1,60 @@
 @import "tailwindcss";
 
 @theme {
-  /* Gallery Shop: a limestone room, chalk plinths, ink type, a tan band for buying and moss for the odd accent.
-     Pieces are shown like exhibits, so the palette stays quiet and lets the objects carry the colour. */
-  --color-paper: #ECE9E4;         /* limestone page */
-  --color-paper-2: #F7F6F3;       /* chalk: plinths, panels, cards */
-  --color-paper-3: #E3DFD8;       /* pressed / hover */
-  --color-ash: #F2F0EC;           /* product image backdrop */
-  --color-ink: #1C1B19;           /* type and buttons */
-  --color-night: #23221F;         /* footer and dark panels */
-  --color-graphite: #2E2C29;      /* body copy */
-  --color-smoke: #57544F;         /* secondary copy */
-  --color-fog: #6A665F;           /* tertiary copy, ≥4.5:1 on limestone */
-  --color-rule: #D6D1C8;
-  --color-rule-light: #DFDBD3;
-  --color-accent: #4B5440;        /* moss */
-  --color-hot: #4B5440;           /* moss for fills: badges, progress */
-  --color-sun: #E6DCC8;           /* pale tan, the second tone */
-  --color-accent-soft: #D9DDCF;
-  --color-cream: #F7F6F3;
-  --color-tan: #CDB591;           /* the purchase band */
-  /* Legacy names kept so older panels still resolve; all mapped into the quiet palette. */
-  --color-pink: #E7E1D8;
-  --color-pink-2: #D8CFC2;
-  --color-butter: #E6DCC8;
-  --color-lilac: #E3DFD8;
-  --color-mint: #DDE0D5;
-  --color-sky: #E1E3E2;
-  --color-peach: #E6D6C4;
-  --color-plum: #3A3F32;
-  --color-kraft: #CDB591;
+  /* Terra: an ivory room of speckled ceramic, frayed linen and travertine, taken from the studio mood board.
+     Deep wood brown for type, terracotta and clay for warmth, sage and olive for the green notes. */
+  --color-paper: #F3EDE4;         /* warm ivory page */
+  --color-paper-2: #F9F6F1;       /* off-white: panels and plates */
+  --color-paper-3: #E9E0D4;       /* pressed / hover */
+  --color-ash: #EEE6DB;           /* product image backdrop */
+  --color-ink: #2A1F17;           /* deep wood brown: type and buttons */
+  --color-night: #2E231B;         /* espresso: footer */
+  --color-graphite: #3E3228;      /* body copy */
+  --color-smoke: #5E5044;         /* secondary copy */
+  --color-fog: #6F6152;           /* tertiary copy, ≥4.5:1 on ivory */
+  --color-rule: #DDD1C2;
+  --color-rule-light: #E6DDD0;
+  --color-accent: #A64F31;        /* terracotta for text and small signals */
+  --color-hot: #A9532F;           /* terracotta for fills, ≥4.5:1 under ivory text */
+  --color-sun: #E8CFA8;           /* pale caramel */
+  --color-accent-soft: #EBD5C8;
+  --color-cream: #F9F6F1;
+  --color-tan: #D4A574;           /* caramel: the purchase band */
+  --color-sand: #DCCDB9;          /* linen */
+  --color-stone: #E6DACA;         /* travertine */
+  --color-clay: #C98774;          /* dusty terracotta */
+  --color-sage: #9AA38F;
+  --color-olive: #5E6647;
+  --color-brass: #D4A574;
+  --color-brass-light: #E8CFA8;
+  /* Legacy names kept so older panels still resolve; all mapped into the earthy palette. */
+  --color-pink: #EBD5C8;
+  --color-pink-2: #DDB9A8;
+  --color-butter: #EFE0C4;
+  --color-lilac: #E9E0D4;
+  --color-mint: #DCE0D2;
+  --color-sky: #E4E2DA;
+  --color-peach: #EBCDB5;
+  --color-plum: #6B3A26;
+  --color-kraft: #C9A27A;
   --color-kraft-line: #A88F6A;
-  --color-terracotta: #8A6F4E;
-  --color-sage: #4B5440;
-  --color-denim: #3A3F32;
-  --color-mustard: #CDB591;
+  --color-terracotta: #B85C3C;
+  --color-denim: #5E6647;
+  --color-mustard: #D4A574;
 
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Antonio", "Arial Narrow", sans-serif;
-  --font-condensed: "Antonio", "Arial Narrow", sans-serif;
-  --font-mono: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Didot", Georgia, serif;
+  --font-display: "Playfair Display", "Didot", Georgia, serif;
+  --font-condensed: "Playfair Display", "Didot", Georgia, serif;
+  --font-mono: "Jost", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Monsieur La Doulaise", "Snell Roundhand", cursive;
   --font-hand: "Gochi Hand", "Segoe Print", cursive;
   --font-chewy: "Chewy", system-ui, sans-serif;
 
-  --text-display: clamp(4rem, 15vw, 15rem);
+  --text-display: clamp(3.5rem, 11vw, 11rem);
   --text-wordmark: clamp(3.25rem, 15.5vw, 19rem);
-  --text-title: clamp(2.75rem, 7.2vw, 7.25rem);
-  --text-heading: clamp(2rem, 4.2vw, 4rem);
+  --text-title: clamp(2.6rem, 6vw, 6rem);
+  --text-heading: clamp(2rem, 3.8vw, 3.6rem);
 
   /* Gently rounded surfaces with soft shadows. */
   --radius-xs: 2px;
@@ -65,29 +72,9 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* The Odd Board keeps its original scrapbook colours: inside it, the palette tokens switch back
-   to the pastel notes, oxblood and ivory polaroids, while the rest of the shop stays quiet. */
-.scrap-tones {
-  --color-paper: #FAF7F5;
-  --color-cream: #FDF6E8;
-  --color-accent: #9B2C2C;
-  --color-hot: #9B2C2C;
-  --color-pink: #F6E4E1;
-  --color-pink-2: #E9C3BD;
-  --color-butter: #FDF2D6;
-  --color-lilac: #F0EBE8;
-  --color-mint: #F5E8D2;
-  --color-sky: #EFE3DA;
-  --color-peach: #F4D9C6;
-  --color-plum: #7F1D1D;
-  --color-sage: #92400E;
-  --color-kraft: #C9A27A;
-  --color-mustard: #E0B44C;
-}
-
 @layer base {
   html {
-    font-feature-settings: "ss01", "tnum" 0;
+    font-feature-settings: "kern", "liga";
     background: var(--color-paper);
     color: var(--color-graphite);
     font-family: var(--font-sans);
@@ -109,23 +96,55 @@
 }
 
 @layer utilities {
-  /* Fraunces at large optical sizes: tight, high-contrast display type. */
-  /* Tall, thin capitals: the shop's one loud voice, borrowed from gallery wall titles. */
+  /* Playfair Display: high-contrast transitional serif with a dramatic italic, the "old money" voice. */
   .font-display {
     font-family: var(--font-display);
-    font-weight: 300;
-    letter-spacing: -0.005em;
-    text-transform: uppercase;
+    font-weight: 400;
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
   }
-  /* A restrained italic for emphasis inside display lines. */
+  /* The flourish: Playfair's italic, for whole display lines rather than single accented words. */
   .font-odd {
     font-family: var(--font-display);
-    font-weight: 300;
-    text-transform: uppercase;
+    font-weight: 400;
+    font-style: italic;
+    font-optical-sizing: auto;
+    letter-spacing: -0.01em;
   }
-  .font-serif { font-family: var(--font-serif); }
-  /* Tall, hairline-thin capitals for the product name and price. */
-  .font-condensed { font-family: var(--font-condensed); font-weight: 200; letter-spacing: -0.01em; }
+  .font-serif { font-family: var(--font-serif); font-optical-sizing: auto; }
+  /* The signature: a flowing script laid over the serif, used sparingly, like a hand-signed card. */
+  .font-script { font-family: var(--font-script); font-weight: 400; font-style: normal; letter-spacing: 0; line-height: 1; }
+  /* Product names and prices share the display face, a touch tighter. */
+  .font-condensed { font-family: var(--font-condensed); font-weight: 400; font-optical-sizing: auto; letter-spacing: -0.02em; }
+  /* Organic frames: pebbles, plates and leaves rather than rectangles. Each is a fixed, deliberate shape. */
+  .pebble { border-radius: 58% 42% 47% 53% / 46% 54% 46% 54%; }
+  .pebble-2 { border-radius: 44% 56% 62% 38% / 55% 41% 59% 45%; }
+  .pebble-3 { border-radius: 63% 37% 41% 59% / 39% 56% 44% 61%; }
+  /* A plate tipped slightly out of round. */
+  .plate { border-radius: 50% 50% 48% 52% / 52% 49% 51% 48%; }
+  /* The arch of a doorway or a niche. */
+  .arch { border-radius: 999px 999px 1.25rem 1.25rem; }
+  /* A tile with three soft corners and one crisp one, like a cut slab. */
+  .slab { border-radius: 2.75rem 2.75rem 2.75rem 0.375rem; }
+  .slab-r { border-radius: 2.75rem 0.375rem 2.75rem 2.75rem; }
+  /* One shape that breathes: a clay pebble drifting between two outlines. */
+  .morph { animation: morph 22s ease-in-out infinite alternate; }
+  /* A soft, long shadow, as if the object sits on a sunlit table. */
+  .table-shadow { box-shadow: 0 1px 0 rgb(42 31 23 / 0.04), 0 40px 60px -36px rgb(66 44 28 / 0.45); }
+  /* Linen: a faint woven texture over flat colour. */
+  .linen {
+    background-image:
+      repeating-linear-gradient(0deg, rgb(42 31 23 / 0.025) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgb(42 31 23 / 0.02) 0 1px, transparent 1px 4px);
+  }
+  /* Speckled ceramic glaze. */
+  .speckled {
+    background-image:
+      radial-gradient(rgb(94 80 68 / 0.28) 0.8px, transparent 1.1px),
+      radial-gradient(rgb(94 80 68 / 0.18) 0.6px, transparent 0.9px);
+    background-size: 19px 23px, 13px 11px;
+    background-position: 0 0, 7px 5px;
+  }
   /* Small technical labels. */
   /* Small labels read like a museum caption: sentence case, medium weight. */
   .label {
@@ -153,7 +172,7 @@
   }
   .link-draw:hover, .link-draw:focus-visible, .link-draw[aria-current="page"] { background-size: 100% 1px; }
   /* Masks used by text reveals so lines rise from behind a baseline. */
-  /* GSAP's SplitText line masks: leave room so Antonio's Q tail and descenders aren't clipped. */
+  /* GSAP's SplitText line masks: leave room so descenders and italic swashes aren't clipped. */
   .split-line-mask { padding-bottom: 0.16em; margin-bottom: -0.16em; }
   .mask-line { display: block; overflow: clip; padding-bottom: 0.16em; margin-bottom: -0.16em; }
   /* A fine light grain over dark bands. */
@@ -258,6 +277,10 @@
   }
 }
 
+@keyframes morph {
+  0% { border-radius: 58% 42% 47% 53% / 46% 54% 46% 54%; transform: rotate(0deg); }
+  100% { border-radius: 45% 55% 58% 42% / 56% 44% 56% 44%; transform: rotate(6deg); }
+}
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }

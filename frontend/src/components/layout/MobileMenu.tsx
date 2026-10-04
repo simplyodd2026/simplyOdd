@@ -13,12 +13,12 @@ const EASE = [0.76, 0, 0.24, 1] as const
 const OUT = [0.16, 1, 0.3, 1] as const
 
 const PRIMARY = [
-  ['/shop', 'Shop all'],
+  ['/shop', 'All objects'],
   ['/new', 'New arrivals'],
-  ['/bestsellers', 'Best sellers'],
   ['/collections', 'Collections'],
+  ['/about#process', 'Process'],
+  ['/about', 'About'],
   ['/custom', 'Commissions'],
-  ['/about', 'Studio'],
 ] as const
 
 /** Full-screen menu: the panel wipes down, then each line rises from behind its own mask. */

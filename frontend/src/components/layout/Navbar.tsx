@@ -14,7 +14,8 @@ const EASE = [0.76, 0, 0.24, 1] as const
 
 const LINKS = [
   { to: '/collections', label: 'Collections' },
-  { to: '/about', label: 'Studio' },
+  { to: '/about#process', label: 'Process' },
+  { to: '/about', label: 'About' },
   { to: '/custom', label: 'Commissions' },
 ]
 
@@ -72,13 +73,17 @@ export function Navbar() {
           <NavLink to="/shop" onMouseEnter={() => setShopOpen(true)} onFocus={() => setShopOpen(true)}
             aria-expanded={shopOpen} aria-haspopup="true"
             className={({ isActive }) => cn(text, 'inline-flex', isActive && 'font-semibold')}>
-            <span className="link-draw">Shop</span>
+            <span className="link-draw">Objects</span>
             <Icon name="chevronDown" size={13} className={cn('transition-transform duration-500', shopOpen && 'rotate-180')} />
           </NavLink>
           {LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} onMouseEnter={() => setShopOpen(false)}
-              className={({ isActive }) => cn(text, 'inline-flex', isActive && 'font-semibold')}>
-              {({ isActive }) => <span className="link-draw" aria-current={isActive ? 'page' : undefined}>{l.label}</span>}
+              className={({ isActive }) => cn(text, 'inline-flex', isActive && !l.to.includes('#') && 'font-semibold')}>
+              {({ isActive }) => {
+                // A link to a section of a page (/about#process) shouldn't light up as the page itself.
+                const current = isActive && !l.to.includes('#')
+                return <span className="link-draw" aria-current={current ? 'page' : undefined}>{l.label}</span>
+              }}
             </NavLink>
           ))}
         </nav>
