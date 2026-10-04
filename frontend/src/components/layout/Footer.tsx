@@ -94,8 +94,8 @@ export function Footer() {
       </div>
 
       <div className="overflow-hidden px-3 sm:px-6 lg:px-8" aria-hidden="true">
-        <div className="ft-mark flex justify-center pb-[3vw] pt-[2vw] text-[10.5vw] leading-[1] text-paper/90">
-          <Wordmark className="font-light tracking-[0.3em] [margin-right:-0.3em]" />
+        <div className="ft-mark flex justify-center pb-[3vw] pt-[2vw] opacity-90">
+          <Wordmark light className="h-auto w-[72vw] max-w-[1100px]" />
         </div>
       </div>
     </footer>

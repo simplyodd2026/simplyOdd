@@ -4,7 +4,7 @@ import { useScrapMotion } from '@/components/scrapbook/useScrapMotion'
 import { Container } from '@/components/layout/Container'
 import { ScrapHeading } from '@/components/scrapbook/ScrapHeading'
 import { Slang } from '@/components/scrapbook/Slang'
-import { ScrapWordmark } from '@/components/scrapbook/ScrapWordmark'
+import { Wordmark } from '@/components/brand/Wordmark'
 import { useProducts } from '@/lib/queries'
 import { useWishlist } from '@/stores/wishlist'
 import { money } from '@/lib/format'
@@ -137,7 +137,7 @@ function BrandNote() {
   return (
     <div className="grain grid aspect-[4/5] place-items-center rounded-[0.125rem] bg-sage p-6 text-center text-cream shadow-[0_10px_18px_-10px_rgb(67_48_42/0.6)]">
       <div>
-        <ScrapWordmark className="text-5xl" />
+        <Wordmark light className="mx-auto h-auto w-full max-w-[14rem]" />
         <p className="font-hand mt-3 text-sm">made to be looked at</p>
         <div className="mx-auto my-4 h-px w-16 bg-cream/40" />
         <p className="font-hand text-sm leading-relaxed">Good objects<br />brighter rooms<br />odder you</p>

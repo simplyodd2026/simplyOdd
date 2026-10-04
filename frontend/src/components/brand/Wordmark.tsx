@@ -1,11 +1,13 @@
 import { cn } from '@/lib/cn'
 
-/** The name in widely spaced condensed capitals, like lettering above a gallery door. */
-export function Wordmark({ className }: { className?: string; letterClassName?: string; animate?: boolean; text?: string }) {
+/**
+ * The Simply Odd logo. Sized by the parent's font-size (1.5em tall), so it
+ * drops into the same slots the old text wordmark used. `light` turns it
+ * white for dark backgrounds.
+ */
+export function Wordmark({ className, light = false }: { className?: string; light?: boolean }) {
   return (
-    <span className={cn('inline-flex items-baseline whitespace-nowrap font-[family-name:var(--font-display)] font-medium uppercase leading-none tracking-[0.34em]', className)}
-      aria-label="Simply Odd" role="img">
-      <span aria-hidden="true">Simply Odd</span>
-    </span>
+    <img src="/logo-mark.png" alt="Simply Odd" width={700} height={160} draggable={false}
+      className={cn('block h-[1.5em] w-auto select-none', light && 'brightness-0 invert', className)} />
   )
 }
