@@ -27,7 +27,7 @@ export function Spotlight() {
   }
 
   return (
-    <section className="linen relative isolate overflow-hidden bg-stone pb-24 pt-28 sm:pb-32 lg:pt-[clamp(12rem,18vw,17rem)]">
+    <section className="linen relative isolate overflow-hidden bg-stone pb-24 pt-28 sm:pb-32 sm:pt-36">
       <p aria-hidden className="pointer-events-none absolute right-[-0.06em] top-[clamp(1rem,6vw,5rem)] -z-10 select-none whitespace-nowrap font-display text-[clamp(7rem,21vw,22rem)] leading-none text-sage/30">
         {p.name}
       </p>

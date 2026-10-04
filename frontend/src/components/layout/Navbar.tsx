@@ -77,7 +77,7 @@ export function Navbar() {
   const items = useCart((s) => s.items)
   const saved = useWishlist((s) => s.ids.length)
   const user = useSession((s) => s.user)
-  const { setCart, setSearch, setMenu } = useUi()
+  const { setCart, setSearch, setMenu, heroDark } = useUi()
   const { data: categories } = useCategories()
   const { hidden, scrolled } = useHeaderVisibility(shopOpen)
   const bag = cartCount(items)
@@ -89,6 +89,8 @@ export function Navbar() {
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.4 })
   const compact = scrolled || shopOpen
+  // Floating over the hero photograph at the top of the home page: light text on dark glass.
+  const overPhoto = heroDark && !compact
 
   const tool = 'relative grid size-10 place-items-center rounded-full text-ink transition-[background-color,transform] duration-500 ease-[var(--ease-out-quint)] hover:-translate-y-0.5 hover:bg-ink/[0.06]'
 
@@ -100,14 +102,14 @@ export function Navbar() {
       onMouseLeave={() => { setShopOpen(false); setHovered(null) }}>
       {/* The bar: full width and open at the top of the page, a floating capsule once you scroll. */}
       {/* Clear at the top of the page; once you scroll, a capsule of frosted glass. */}
-      <div className={cn('pointer-events-auto relative mx-auto flex items-center justify-between gap-4 transition-[max-width,padding,background-color,box-shadow,border-radius,height] duration-[900ms] ease-[var(--ease-out-quint)]',
+      <div className={cn(overPhoto && 'over-photo', 'pointer-events-auto relative mx-auto flex items-center justify-between gap-4 transition-[max-width,padding,background-color,box-shadow,border-radius,height] duration-[900ms] ease-[var(--ease-out-quint)]',
         compact
           ? 'mx-3 h-14 max-w-[1120px] rounded-full bg-paper/45 pl-5 pr-2 shadow-[0_18px_40px_-22px_rgb(66_44_28/0.5),inset_0_1px_0_rgb(255_255_255/0.55)] ring-1 ring-ink/[0.07] backdrop-blur-2xl backdrop-saturate-150 sm:mx-6 lg:mx-auto lg:h-[60px] lg:pl-7'
           : 'h-14 max-w-[1520px] bg-transparent px-5 sm:px-8 lg:h-16 lg:px-10')}>
         <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: OUT }} className="shrink-0">
           <Link to="/" aria-label="Simply Odd home"
             className={cn('block origin-left text-ink transition-[font-size] duration-[900ms] ease-[var(--ease-out-quint)]', compact ? 'text-[16px] lg:text-[17px]' : 'text-[17px] lg:text-[19px]')}>
-            <Wordmark />
+            <Wordmark light={overPhoto} />
           </Link>
         </motion.div>
 
