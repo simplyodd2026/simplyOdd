@@ -33,12 +33,12 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
         <div className={cn('relative overflow-hidden rounded-[10px] bg-paper-2', aspect)}>
           {primary && (
             <img src={primary.url} alt={primary.alt || product.name} loading={priority ? 'eager' : 'lazy'} decoding="async"
-              className={cn('absolute inset-0 h-full w-full object-cover mix-blend-multiply transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.03]',
+              className={cn('absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.03]',
                 secondary && 'group-hover:opacity-0', soldOut && 'opacity-50 grayscale')} />
           )}
           {secondary && (
             <img src={secondary.url} alt="" aria-hidden="true" loading="lazy" decoding="async"
-              className="absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 mix-blend-multiply transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-100 group-hover:opacity-100" />
+              className="absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-100 group-hover:opacity-100" />
           )}
           {badge && (
             <span className={cn('absolute left-3 top-3 rounded-full px-2.5 py-1 text-[12px] font-medium',

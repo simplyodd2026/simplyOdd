@@ -56,7 +56,7 @@ export function Hero() {
                   transition={{ duration: 0.9, ease: EASE }}>
                   <Link to={`/product/${piece.slug}`} aria-label={`View ${piece.name}`} className="block">
                     <img src={piece.images[0]?.url} alt={piece.images[0]?.alt || piece.name} draggable={false}
-                      className="mx-auto aspect-[4/5] max-h-[min(calc(100dvh-330px),540px)] w-full object-cover mix-blend-multiply [mask-image:radial-gradient(ellipse_closest-side_at_50%_50%,#000_70%,transparent_100%)]" />
+                      className="mx-auto block h-auto max-h-[min(calc(100dvh-330px),540px)] w-auto max-w-full object-contain" />
                   </Link>
                 </motion.div>
               ) : <div className="aspect-[4/5] w-full max-w-[28rem] animate-pulse rounded-full bg-ink/[0.04]" />}
@@ -100,7 +100,7 @@ export function Hero() {
               <button key={p.id} type="button" role="tab" aria-selected={i === n} aria-label={`Show ${p.name}`} onClick={() => setN(i)}
                 className={cn('size-14 overflow-hidden rounded-full border-2 bg-paper-2 transition-[border-color,transform] duration-500 ease-[var(--ease-out-quint)] hover:-translate-y-0.5',
                   i === n ? 'border-ink' : 'border-transparent')}>
-                <img src={p.images[0]?.url} alt="" className="size-full object-cover mix-blend-multiply" />
+                <img src={p.images[0]?.url} alt="" className="size-full object-cover" />
               </button>
             ))}
           </div>

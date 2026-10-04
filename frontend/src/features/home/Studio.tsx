@@ -13,7 +13,7 @@ export function Studio() {
     <Container className="py-6">
       <section className="mx-auto grid max-w-[1440px] overflow-hidden rounded-[20px] bg-night text-paper sm:rounded-[28px] lg:grid-cols-2">
         <div className="relative min-h-[320px] bg-paper-2">
-          {shot && <img src={shot.url} alt={shot.alt || lamp?.name || ''} loading="lazy" className="absolute inset-0 h-full w-full object-cover mix-blend-multiply" />}
+          {shot && <img src={shot.url} alt={shot.alt || lamp?.name || ''} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
         </div>
         <div className="flex flex-col justify-between gap-12 px-6 py-12 sm:px-12 sm:py-16 lg:px-16">
           <div>

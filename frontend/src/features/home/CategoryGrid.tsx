@@ -18,7 +18,7 @@ export function CategoryGrid() {
             <Link key={c.id} to={`/collections/${c.slug}`} className="group block">
               <div className="aspect-[5/4] overflow-hidden rounded-[10px] bg-paper-2">
                 {c.image && <img src={c.image} alt="" loading="lazy"
-                  className="h-full w-full object-cover mix-blend-multiply transition-transform duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]" />}
+                  className="h-full w-full object-cover transition-transform duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]" />}
               </div>
               <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-ink/70 pt-3">
                 <span className="font-display text-[clamp(1.4rem,2vw,1.9rem)] leading-none text-ink"><span className="link-draw">{c.name}</span></span>

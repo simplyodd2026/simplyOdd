@@ -114,14 +114,14 @@ export default function ProductPage() {
             </Reveal>
           </div>
 
-          {/* The piece itself, its photo feathered into the wall so it floats like a cut-out. */}
+          {/* The piece itself, shown whole: a cut-out PNG floats on the wall, a photo sits as it was shot. */}
           <div className="relative flex flex-col items-center lg:col-span-4">
             <motion.button key={hero?.url} type="button" onClick={() => setViewer(shot)} aria-label={`Open image ${shot + 1} of ${p.images.length}`}
               initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
               className="relative z-10 block w-full max-w-[30rem] cursor-zoom-in">
               {hero ? (
                 <img src={hero.url} alt={hero.alt || p.name} draggable={false}
-                  className="mx-auto aspect-[4/5] max-h-[min(64vh,600px)] w-full object-cover mix-blend-multiply [mask-image:radial-gradient(ellipse_closest-side_at_50%_50%,#000_70%,transparent_100%)]" />
+                  className="mx-auto block h-auto max-h-[min(64vh,600px)] w-auto max-w-full object-contain" />
               ) : <div className="aspect-[4/5] w-full bg-ash" />}
             </motion.button>
             {p.images.length > 1 && (
