@@ -41,7 +41,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
         </div>
         {count > 1 && (
           <div className="absolute inset-x-5 bottom-4 flex items-center gap-3 sm:inset-x-8">
-            <span className="font-mono text-[11px] tabular-nums text-ink">{String(active + 1).padStart(2, '0')}/{String(count).padStart(2, '0')}</span>
+            <span className="tabular-nums text-[11px] text-ink">{String(active + 1).padStart(2, '0')}/{String(count).padStart(2, '0')}</span>
             <div className="h-px flex-1 bg-ink/15">
               <div className="h-full bg-ink transition-transform duration-500 ease-[var(--ease-out-quint)]"
                 style={{ width: `${100 / count}%`, transform: `translateX(${active * 100}%)` }} />
@@ -80,7 +80,7 @@ export function Viewer({ images, name, index, onChange }: { images: ProductImage
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}
           className="fixed inset-0 z-[60] flex flex-col bg-paper">
           <div className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-8">
-            <span className="font-mono text-[12px] tabular-nums text-fog">{String(index + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}</span>
+            <span className="tabular-nums text-[12px] text-fog">{String(index + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}</span>
             <button onClick={close} className="grid size-11 place-items-center rounded-full bg-ink text-paper" aria-label="Close"><Icon name="close" /></button>
           </div>
           <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-5 pb-5">

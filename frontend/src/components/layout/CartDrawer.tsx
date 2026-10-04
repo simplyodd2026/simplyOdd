@@ -24,7 +24,7 @@ export function CartDrawer() {
 
   return (
     <Drawer open={cartOpen} onClose={close} label="Bag"
-      title={<span className="flex items-baseline gap-2">Bag <span className="font-mono text-[12px] text-fog">({String(count).padStart(2, '0')})</span></span>}
+      title={<span className="flex items-baseline gap-2">Bag <span className="tabular-nums text-[12px] text-fog">({String(count).padStart(2, '0')})</span></span>}
       footer={items.length > 0 && quote ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-baseline justify-between">
@@ -74,9 +74,9 @@ export function CartDrawer() {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-3">
                       <Link to={`/product/${line.slug}`} onClick={close} className="font-display text-xl leading-tight text-ink hover:text-accent">{line.name}</Link>
-                      <span className="font-mono text-[13px] tabular-nums text-ink">{money(line.line_total)}</span>
+                      <span className="tabular-nums text-[13px] text-ink">{money(line.line_total)}</span>
                     </div>
-                    <span className="mt-1 font-mono text-[12px] tabular-nums text-fog">{money(line.unit_price)} each</span>
+                    <span className="mt-1 tabular-nums text-[12px] text-fog">{money(line.unit_price)} each</span>
                     {line.issue && <p className="mt-1 text-sm text-accent">{line.issue}</p>}
                     <div className="mt-auto flex items-center justify-between pt-3">
                       <QuantityStepper size="sm" value={line.quantity} max={Math.max(1, line.stock)} onChange={(n) => setQuantity(line.product_id, n)} />

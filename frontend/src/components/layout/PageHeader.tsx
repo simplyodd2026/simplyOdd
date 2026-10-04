@@ -15,7 +15,7 @@ export function PageHeader({ trail, title, count, intro, aside, className }: {
           <SplitReveal as="h1" on="load" by="lines" delay={0.15} className="font-display text-[length:var(--text-title)] leading-[0.92] text-ink">
             {title}
           </SplitReveal>
-          {count !== undefined && <sup className="mt-[0.6em] font-mono text-[13px] text-fog">({String(count).padStart(2, '0')})</sup>}
+          {count !== undefined && <sup className="mt-[0.6em] tabular-nums text-[13px] text-fog">({String(count).padStart(2, '0')})</sup>}
         </div>
         {(intro || aside) && (
           <Reveal delay={0.35} y={20} className="flex flex-col gap-6 lg:col-span-4">

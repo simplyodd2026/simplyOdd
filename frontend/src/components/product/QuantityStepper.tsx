@@ -17,7 +17,7 @@ export function QuantityStepper({ value, onChange, max = 99, size = 'md', label 
           const n = parseInt(e.target.value.replace(/\D/g, ''), 10)
           if (!Number.isNaN(n)) onChange(Math.max(1, Math.min(max, n)))
         }}
-        className="w-8 bg-transparent text-center font-mono text-[13px] tabular-nums text-ink outline-none" />
+        className="w-8 bg-transparent text-center tabular-nums text-[13px] text-ink outline-none" />
       <button type="button" onClick={() => onChange(value + 1)} disabled={value >= max} className={btn} aria-label="Increase quantity">
         <Icon name="plus" size={15} />
       </button>

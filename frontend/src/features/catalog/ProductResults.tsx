@@ -42,13 +42,13 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
             ))}
           </div>
         ) : (
-          <p className="flex-1 font-mono text-[12px] tabular-nums text-fog" aria-live="polite">{data ? plural(data.total, 'piece') : ' '}</p>
+          <p className="flex-1 tabular-nums text-[12px] text-fog" aria-live="polite">{data ? plural(data.total, 'piece') : ' '}</p>
         )}
         <div className="flex shrink-0 items-center gap-2">
           <button onClick={() => setFiltersOpen(true)}
             className="flex h-10 items-center gap-2 rounded-full border border-ink/15 px-4 text-[14px] text-ink transition-colors hover:border-ink">
             <Icon name="filter" size={16} /> <span className="hidden sm:inline">Filter</span>
-            {params.activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-hot font-mono text-[10px] text-paper">{params.activeCount}</span>}
+            {params.activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-hot tabular-nums text-[10px] text-paper">{params.activeCount}</span>}
           </button>
           <label className="sr-only" htmlFor="sort">Sort by</label>
           <select id="sort" value={params.sort} onChange={(e) => params.update({ sort: e.target.value })}
@@ -60,7 +60,7 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
       </div>
 
       {showCategories && data && (
-        <p className="-mt-4 mb-8 font-mono text-[12px] tabular-nums text-fog" aria-live="polite">{plural(data.total, 'piece')}</p>
+        <p className="-mt-4 mb-8 tabular-nums text-[12px] text-fog" aria-live="polite">{plural(data.total, 'piece')}</p>
       )}
 
       {isLoading ? (

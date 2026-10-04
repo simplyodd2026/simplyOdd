@@ -98,12 +98,12 @@ function SearchPanel({ close }: { close: () => void }) {
                   {sug.products.map((p, i) => (
                     <motion.li key={p.id} variants={item}>
                       <Link to={`/product/${p.slug}`} onClick={() => { recent.add(debounced); close() }} className="group flex items-center gap-5 border-b border-rule py-4">
-                        <span className="w-6 font-mono text-[11px] text-fog">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="w-6 tabular-nums text-[11px] text-fog">{String(i + 1).padStart(2, '0')}</span>
                         <span className="aspect-[4/5] w-14 shrink-0 overflow-hidden bg-ash">
                           <img src={p.images[0]?.url} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         </span>
                         <span className="flex-1 font-display text-2xl text-ink transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 sm:text-3xl">{p.name}</span>
-                        <span className="font-mono text-[13px] tabular-nums text-smoke">{money(p.price)}</span>
+                        <span className="tabular-nums text-[13px] text-smoke">{money(p.price)}</span>
                       </Link>
                     </motion.li>
                   ))}
@@ -160,7 +160,7 @@ function SearchPanel({ close }: { close: () => void }) {
                       <li key={c.id}>
                         <Link to={`/collections/${c.slug}`} onClick={close} className="group flex items-baseline justify-between border-b border-rule py-3">
                           <span className="text-lg text-ink transition-transform duration-500 group-hover:translate-x-2">{c.name}</span>
-                          <span className="font-mono text-[11px] text-fog">{plural(c.product_count, 'piece')}</span>
+                          <span className="tabular-nums text-[11px] text-fog">{plural(c.product_count, 'piece')}</span>
                         </Link>
                       </li>
                     ))}
@@ -183,7 +183,7 @@ function SearchPanel({ close }: { close: () => void }) {
                           <img src={p.images[1]?.url ?? p.images[0]?.url} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-105" />
                         </div>
                         <p className="mt-3 truncate text-[15px] text-ink">{p.name}</p>
-                        <p className="font-mono text-[12px] tabular-nums text-fog">{money(p.price)}</p>
+                        <p className="tabular-nums text-[12px] text-fog">{money(p.price)}</p>
                       </Link>
                     </li>
                   ))}

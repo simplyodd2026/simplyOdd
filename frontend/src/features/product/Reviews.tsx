@@ -114,9 +114,9 @@ export function Reviews({ product }: { product: Product }) {
                   const c = distribution[String(n)] ?? 0
                   return (
                     <div key={n} className="flex items-center gap-3 text-sm">
-                      <dt className="w-12 font-mono text-[12px] text-smoke tabular-nums">{n} star</dt>
+                      <dt className="w-12 tabular-nums text-[12px] text-smoke">{n} star</dt>
                       <dd className="h-px flex-1 bg-rule"><div className="h-full bg-ink" style={{ width: `${count ? (c / count) * 100 : 0}%` }} /></dd>
-                      <span className="w-6 text-right font-mono text-[12px] tabular-nums text-fog">{c}</span>
+                      <span className="w-6 text-right tabular-nums text-[12px] text-fog">{c}</span>
                     </div>
                   )
                 })}
@@ -147,7 +147,7 @@ export function Reviews({ product }: { product: Product }) {
                 <li key={r.id} className="py-8">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <Stars value={r.rating} className="text-ink" />
-                    <span className="font-mono text-[12px] text-fog">{date(r.created_at)}</span>
+                    <span className="tabular-nums text-[12px] text-fog">{date(r.created_at)}</span>
                   </div>
                   {r.title && <p className="mt-4 font-display text-2xl text-ink">{r.title}</p>}
                   {r.body && <p className="mt-1 max-w-2xl leading-relaxed text-smoke">{r.body}</p>}

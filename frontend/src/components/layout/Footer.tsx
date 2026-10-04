@@ -79,7 +79,7 @@ export function Footer() {
           <div className={col}>
             <p className={head}>Studio</p>
             <Link to="/about" className={a}>About</Link>
-            <Link to="/custom" className={a}>Commissions</Link>
+            <Link to="/customise" className={a}>Customise</Link>
             <a href="mailto:hello@simplyodd.in" className={a}>hello@simplyodd.in</a>
             <a href="https://instagram.com" target="_blank" rel="noreferrer" className={`${a} inline-flex items-center gap-1`}>Instagram <Icon name="arrowUpRight" size={14} /></a>
           </div>

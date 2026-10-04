@@ -32,7 +32,7 @@ export function BoughtTogether({ product, others }: { product: Product; others: 
                     <input type="checkbox" className="mt-0.5 accent-ink" disabled={i === 0} checked={on}
                       onChange={() => setSelected((s) => (s.includes(p.id) ? s.filter((x) => x !== p.id) : [...s, p.id]))} />
                     <span><span className="block font-medium leading-tight">{i === 0 ? `This: ${p.name}` : p.name}</span>
-                      <span className="font-mono text-[12px] tabular-nums text-fog">{money(p.price)}</span></span>
+                      <span className="tabular-nums text-[12px] text-fog">{money(p.price)}</span></span>
                   </label>
                 </div>
               </div>

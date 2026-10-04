@@ -48,8 +48,6 @@
   --font-condensed: "Playfair Display", "Didot", Georgia, serif;
   --font-mono: "Jost", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Monsieur La Doulaise", "Snell Roundhand", cursive;
-  --font-hand: "Gochi Hand", "Segoe Print", cursive;
-  --font-chewy: "Chewy", system-ui, sans-serif;
 
   --text-display: clamp(3.5rem, 11vw, 11rem);
   --text-wordmark: clamp(3.25rem, 15.5vw, 19rem);
@@ -154,9 +152,6 @@
     line-height: 1.3;
     letter-spacing: 0.005em;
   }
-  /* Scrapbook voices, used by the hero, the board and the reviews phone. */
-  .font-hand { font-family: var(--font-hand); font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em; }
-  .font-chewy { font-family: var(--font-chewy); font-weight: 400; font-style: normal; font-variation-settings: normal; letter-spacing: 0.005em; }
   .w-semi { font-weight: 500; letter-spacing: -0.01em; }
   .w-wide { font-weight: 600; letter-spacing: -0.02em; }
   .w-cond { font-weight: 600; letter-spacing: -0.02em; }

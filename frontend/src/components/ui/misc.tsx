@@ -29,7 +29,7 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
         <span key={n} className="flex items-center">
           {i > 0 && n - nums[i - 1] > 1 && <span className="px-1 text-fog">…</span>}
           <button onClick={() => onChange(n)} aria-current={n === page ? 'page' : undefined}
-            className={cn('h-10 min-w-10 px-2 font-mono text-[13px] tabular-nums transition-colors', n === page ? 'rounded-full bg-ink text-paper' : 'rounded-full text-smoke hover:bg-ink/5 hover:text-ink')}>
+            className={cn('h-10 min-w-10 px-2 tabular-nums text-[13px] transition-colors', n === page ? 'rounded-full bg-ink text-paper' : 'rounded-full text-smoke hover:bg-ink/5 hover:text-ink')}>
             {n}
           </button>
         </span>

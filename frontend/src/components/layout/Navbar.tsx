@@ -16,7 +16,7 @@ const LINKS = [
   { to: '/collections', label: 'Collections' },
   { to: '/about#process', label: 'Process' },
   { to: '/about', label: 'About' },
-  { to: '/custom', label: 'Commissions' },
+  { to: '/customise', label: 'Customise' },
 ]
 
 /** Hides while you read downward, returns the moment you scroll back up. */

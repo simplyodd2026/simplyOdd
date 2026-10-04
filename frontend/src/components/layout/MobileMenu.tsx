@@ -18,7 +18,7 @@ const PRIMARY = [
   ['/collections', 'Collections'],
   ['/about#process', 'Process'],
   ['/about', 'About'],
-  ['/custom', 'Commissions'],
+  ['/customise', 'Customise'],
 ] as const
 
 /** Full-screen menu: the panel wipes down, then each line rises from behind its own mask. */
@@ -50,7 +50,7 @@ export function MobileMenu() {
                 <motion.span className="block" initial={{ y: '110%' }} animate={{ y: 0 }} exit={{ y: '110%' }}
                   transition={{ duration: 0.9, ease: OUT, delay: 0.25 + i * 0.05 }}>
                   <Link to={to} className="flex items-baseline gap-4 py-1 font-display text-[clamp(2.6rem,11vw,4.5rem)] leading-[1.02] active:text-hot">
-                    <span className="font-mono text-[11px] tracking-normal text-paper/40">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="tabular-nums text-[11px] tracking-normal text-paper/40">{String(i + 1).padStart(2, '0')}</span>
                     {label}
                   </Link>
                 </motion.span>

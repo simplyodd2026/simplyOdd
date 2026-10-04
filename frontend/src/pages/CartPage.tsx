@@ -48,7 +48,7 @@ export default function CartPage() {
                   <Link to={`/product/${l.slug}`} className="overflow-hidden bg-ash">{l.image && <img src={l.image} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}</Link>
                   <div className="flex flex-col">
                     <Link to={`/product/${l.slug}`} className="font-display text-3xl leading-tight text-ink hover:text-accent">{l.name}</Link>
-                    <span className="mt-2 font-mono text-[12px] tabular-nums text-fog">
+                    <span className="mt-2 tabular-nums text-[12px] text-fog">
                       {money(l.unit_price)}{l.compare_at_price && l.compare_at_price > l.unit_price && <s className="ml-2 text-fog">{money(l.compare_at_price)}</s>}
                     </span>
                     {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}{l.stock > 0 && '. Reduce the quantity to continue.'}</p>}
@@ -63,7 +63,7 @@ export default function CartPage() {
                       )}
                     </div>
                   </div>
-                  <span className="col-start-2 font-mono text-[15px] tabular-nums text-ink sm:col-start-3 sm:text-right">{money(l.line_total)}</span>
+                  <span className="col-start-2 tabular-nums text-[15px] text-ink sm:col-start-3 sm:text-right">{money(l.line_total)}</span>
                 </li>
               ))}
             </ul>

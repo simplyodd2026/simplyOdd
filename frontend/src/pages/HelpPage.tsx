@@ -37,7 +37,7 @@ const TOPICS: Record<string, { title: string; intro: string; sections: [string, 
       ['Why can I see lines on the surface?', 'They’re the layer lines from printing. We keep them on purpose, because they show how the object was built.'],
       ['Are vases watertight?', 'Vases marked watertight have a sealed interior. Planters include a drainage insert.'],
       ['Do you ship outside India?', 'Not yet. We’re working on it.'],
-      ['Can you make something custom?', 'Yes. Use the commissions page to send us a brief, or email hello@simplyodd.in.'],
+      ['Can you make something custom?', 'Yes. Use the Customise page to send us a brief, or email hello@simplyodd.in.'],
     ],
   },
 }

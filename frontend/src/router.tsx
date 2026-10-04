@@ -70,7 +70,9 @@ export const router = createBrowserRouter([
       { path: '/cart', element: s(<CartPage />) },
       { path: '/wishlist', element: s(<WishlistPage />) },
       { path: '/about', element: s(<AboutPage />) },
-      { path: '/custom', element: s(<CustomPage />) },
+      { path: '/customise', element: s(<CustomPage />) },
+      // The page used to be called Commissions and lived at /custom; old links still land on it.
+      { path: '/custom', element: <Navigate to="/customise" replace /> },
       { path: '/help/:topic', element: s(<HelpPage />) },
       { path: '/login', element: s(<LoginPage />) },
       // Google sign-in creates accounts, so the old email pages all lead to /login.

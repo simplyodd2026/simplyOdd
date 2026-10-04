@@ -5,7 +5,7 @@ import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 
 /**
  * The last word. A closing line set very large, with the studio's signature written across it, and then
- * the open door: a terracotta shape, rounded on one side like a pebble cut in half, inviting a commission.
+ * the open door: a terracotta shape, rounded on one side like a pebble cut in half, inviting you to customise a piece.
  */
 export function Finale() {
   return (
@@ -23,13 +23,13 @@ export function Finale() {
         <Reveal y={40} className="mx-auto mt-24 max-w-[1300px] sm:mt-32">
           <div className="grid overflow-hidden rounded-[2.5rem] bg-hot text-paper sm:rounded-l-[2.5rem] sm:rounded-r-full md:grid-cols-[1.2fr_1fr]">
             <div className="p-8 sm:p-12 lg:p-16">
-              <p className="text-[14px] text-paper/80">Commissions</p>
+              <p className="text-[14px] text-paper/80">Customise</p>
               <h3 className="mt-3 font-display text-[clamp(2.2rem,3.8vw,3.6rem)] leading-[1.02]">Have an odd idea? We’ll print it.</h3>
               <p className="mt-5 max-w-md text-[16px] leading-[1.65] text-paper/85">
                 Send a sketch, a photo or a few words. We’ll model it, print a one-off and finish it by hand.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
-                <ButtonLink to="/custom" variant="light" size="lg">Start a commission</ButtonLink>
+                <ButtonLink to="/customise" variant="light" size="lg">Customise a piece</ButtonLink>
                 <Link to="/shop?max=999&sort=price_asc" className="link-draw text-[15px] font-medium">Or find a gift under ₹999</Link>
               </div>
             </div>

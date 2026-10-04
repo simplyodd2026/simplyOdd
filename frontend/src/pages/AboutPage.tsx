@@ -48,7 +48,7 @@ export default function AboutPage() {
         </Reveal>
         <div className="mt-20 flex flex-wrap items-center gap-8">
           <Magnetic><ButtonLink to="/shop" size="lg">Shop the collection</ButtonLink></Magnetic>
-          <ArrowLink to="/custom">Commission a piece</ArrowLink>
+          <ArrowLink to="/customise">Customise a piece</ArrowLink>
         </div>
       </Container>
     </>

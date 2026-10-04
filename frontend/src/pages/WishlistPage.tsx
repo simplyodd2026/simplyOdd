@@ -41,7 +41,7 @@ export default function WishlistPage() {
                   <img src={p.images[0]?.url} alt={p.name} className={`aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105 ${soldOut ? 'opacity-50 grayscale' : ''}`} />
                 </Link>
                 <Link to={`/product/${p.slug}`} className="mt-4 text-[15px] font-medium text-ink"><span className="link-draw">{p.name}</span></Link>
-                <Price price={p.price} compareAt={p.compare_at_price} className="mt-1 font-mono text-[13px] text-fog" />
+                <Price price={p.price} compareAt={p.compare_at_price} className="mt-1 tabular-nums text-[13px] text-fog" />
                 <div className="mt-4 flex flex-col gap-2">
                   <Button size="sm" disabled={soldOut} onClick={() => {
                     add(p.id)
