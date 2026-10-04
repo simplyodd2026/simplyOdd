@@ -13,11 +13,11 @@ export function ServiceBar() {
     ['shield', 'Secure checkout', 'Pay online or cash on delivery'],
   ]
   return (
-    <section className="border-b border-rule">
-      <Reveal stagger={0.06} y={16} className="mx-auto grid max-w-[1680px] grid-cols-2 lg:grid-cols-4">
+    <section className="mt-10 border-y border-rule sm:mt-14">
+      <Reveal stagger={0.06} y={16} className="mx-auto grid max-w-[1520px] grid-cols-2 lg:grid-cols-4">
         {items.map(([icon, title, body], i) => (
           <div key={title} className={`flex items-center gap-4 px-5 py-6 sm:px-8 lg:px-10 ${i % 2 ? '' : 'border-r border-rule'} ${i < 2 ? 'border-b border-rule lg:border-b-0' : ''} lg:border-r lg:last:border-r-0`}>
-            <Icon name={icon} size={24} className="shrink-0 text-accent" />
+            <Icon name={icon} size={22} className="shrink-0 text-ink" />
             <div>
               <p className="text-[14px] font-medium text-ink">{title}</p>
               <p className="text-[13px] text-fog">{body}</p>

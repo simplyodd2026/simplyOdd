@@ -17,30 +17,39 @@ export default function AccountLayout() {
   const navigate = useNavigate()
   const name = profile?.name || user?.name || user?.email?.split('@')[0]
 
+  const first = name?.split(/\s+/)[0]
+
   return (
-    <Container className="pt-10 sm:pt-16">
-      <header className="mb-10 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-[length:var(--text-title)] font-display leading-[0.95]">Hello, {name}</h1>
-        {profile?.is_admin && (
-          <NavLink to="/admin" className="inline-flex items-center gap-2 border border-accent px-3 py-2 text-sm text-accent hover:bg-accent hover:text-paper">
-            Open admin dashboard
-          </NavLink>
-        )}
-      </header>
-      <div className="grid gap-10 lg:grid-cols-12">
-        <nav className="flex gap-5 overflow-x-auto border-b border-rule pb-3 text-[17px] scrollbar-none lg:col-span-2 lg:flex-col lg:gap-3 lg:border-0" aria-label="Account">
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end}
-              className={({ isActive }) => cn('shrink-0', isActive ? 'text-ink underline decoration-accent decoration-2 underline-offset-8' : 'text-smoke hover:text-ink')}>
-              {n.label}
+    <Container className="pb-24 pt-10 sm:pb-32 sm:pt-14">
+      <div className="mx-auto max-w-[1440px]">
+        <header className="mb-10 flex flex-wrap items-end justify-between gap-6 sm:mb-12">
+          <div>
+            <h1 className="font-display text-[clamp(2.75rem,5vw,4.75rem)] leading-[0.98] text-ink">Hello, {first}</h1>
+            {user?.email && <p className="mt-4 text-[15px] text-smoke">{user.email}</p>}
+          </div>
+          {profile?.is_admin && (
+            <NavLink to="/admin" className="inline-flex h-11 items-center gap-2 rounded-full border border-ink/20 px-5 text-[14px] font-medium text-ink transition-colors hover:border-ink">
+              Open admin dashboard <Icon name="arrowUpRight" size={15} />
             </NavLink>
-          ))}
-          <button onClick={async () => { await auth.signOut(); navigate('/') }}
-            className="flex shrink-0 items-center gap-2 text-left text-smoke hover:text-ink lg:mt-6">
-            <Icon name="logout" size={18} /> Sign out
-          </button>
-        </nav>
-        <div className="min-w-0 lg:col-span-10"><Outlet /></div>
+          )}
+        </header>
+
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <nav className="-mx-5 flex gap-2 overflow-x-auto px-5 scrollbar-none sm:-mx-8 sm:px-8 lg:col-span-3 lg:mx-0 lg:flex-col lg:gap-1 lg:self-start lg:px-0 xl:col-span-2" aria-label="Account">
+            {NAV.map((n) => (
+              <NavLink key={n.to} to={n.to} end={n.end}
+                className={({ isActive }) => cn('shrink-0 rounded-full px-4 py-2.5 text-[15px] transition-colors',
+                  isActive ? 'bg-ink text-paper' : 'text-smoke hover:bg-ink/5 hover:text-ink')}>
+                {n.label}
+              </NavLink>
+            ))}
+            <button onClick={async () => { await auth.signOut(); navigate('/') }}
+              className="flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-left text-[15px] text-smoke transition-colors hover:bg-ink/5 hover:text-ink lg:mt-4 lg:border-t lg:border-rule lg:rounded-none lg:pt-5">
+              <Icon name="logout" size={17} /> Sign out
+            </button>
+          </nav>
+          <div className="min-w-0 rounded-[20px] bg-paper-2 p-5 sm:p-8 lg:col-span-9 lg:p-10 xl:col-span-10"><Outlet /></div>
+        </div>
       </div>
     </Container>
   )

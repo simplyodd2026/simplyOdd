@@ -11,7 +11,7 @@ export function Price({ price, compareAt, className, size = 'md' }: {
         {money(price)}
       </span>
       {discounted && (
-        <s className={cn('text-fog', size === 'lg' ? 'font-mono text-sm' : 'text-[0.9em]')} aria-label={`was ${money(compareAt!)}`}>
+        <s className={cn('text-fog', size === 'lg' ? 'text-sm' : 'text-[0.9em]')} aria-label={`was ${money(compareAt!)}`}>
           {money(compareAt!)}
         </s>
       )}

@@ -29,7 +29,7 @@ let current = read()
 const uidFor = (email: string) => {
   // Keep the seeded demo accounts' ids so their orders show up.
   if (email === 'demo@simplyodd.dev') return 'demo-customer'
-  if (email === 'admin@simplyodd.dev') return 'dev-admin'
+  if (email === 'diveshkasyap5@gmail.com') return 'dev-admin'
   return `dev-${email.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
 }
 
@@ -52,7 +52,7 @@ export function createDevAuth(): AuthClient {
     getToken: async () => (current ? `dev:${current.uid}:${current.email}:${current.name ?? ''}` : null),
     devSignIn: async (email) => {
       validEmail(email)
-      write(user(email, email === 'admin@simplyodd.dev' ? 'Studio Admin' : email === 'demo@simplyodd.dev' ? 'Aarav Mehta' : email.split('@')[0]))
+      write(user(email, email === 'diveshkasyap5@gmail.com' ? 'Studio Admin' : email === 'demo@simplyodd.dev' ? 'Aarav Mehta' : email.split('@')[0]))
     },
     signInWithGoogle: async () => write(user('google.user@simplyodd.dev', 'Google User', 'google')),
     signOut: async () => write(null),

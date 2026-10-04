@@ -55,7 +55,7 @@ export function Moodboard() {
   })
 
   return (
-    <div ref={root}>
+    <div ref={root} className="scrap-tones">
     <Container className="relative py-16 sm:py-20">
       <Lollipop className="absolute left-[12%] top-8 hidden w-12 -rotate-12 lg:block" />
       <SmileyFlower className="absolute right-[13%] top-12 hidden w-16 rotate-6 lg:block" />

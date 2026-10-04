@@ -1,44 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  /* Oxblood Salon (from the 21st "Elegant Luxury" theme): warm ivory, near-black ink and deep oxblood,
-     with soft butter as a second tone. A boutique-interiors feel: rich, warm and confident. */
-  --color-paper: #FAF7F5;         /* ivory page */
-  --color-paper-2: #F5EFEB;       /* raised panels and cards */
-  --color-paper-3: #F0EBE8;       /* muted: pressed / hover */
-  --color-ash: #F3EDE8;           /* product image backdrop */
-  --color-ink: #1A1A1A;           /* near-black: type and buttons */
-  --color-night: #2A1414;         /* wine-black: footer, process, dark panels */
-  --color-graphite: #2B2522;      /* body copy */
-  --color-smoke: #57534E;         /* secondary copy */
-  --color-fog: #6B6560;           /* tertiary copy, ≥4.5:1 on ivory */
-  --color-rule: #E9DED3;
-  --color-rule-light: #E9DED3;
-  --color-accent: #9B2C2C;        /* oxblood */
-  --color-hot: #9B2C2C;           /* oxblood for fills: buttons, badges, progress */
-  --color-sun: #FDF2D6;           /* butter, the second tone */
-  --color-accent-soft: #F2D3CF;
-  --color-cream: #FDF6E8;         /* torn-note paper */
-  /* Scrapbook tones (hero, board, reviews) */
-  --color-pink: #F6E4E1;          /* rose blush */
-  --color-pink-2: #E9C3BD;        /* dusty rose */
-  --color-butter: #FDF2D6;        /* butter */
-  --color-lilac: #F0EBE8;         /* blush grey */
-  --color-mint: #F5E8D2;          /* sand */
-  --color-sky: #EFE3DA;           /* linen */
-  --color-peach: #F4D9C6;         /* apricot */
-  --color-plum: #7F1D1D;          /* wine */
-  --color-kraft: #C9A27A;
-  --color-kraft-line: #9C7A57;
-  --color-terracotta: #B45309;    /* amber */
-  --color-sage: #92400E;          /* burnt amber */
-  --color-denim: #7F1D1D;         /* wine */
-  --color-mustard: #E0B44C;       /* gold */
+  /* Gallery Shop: a limestone room, chalk plinths, ink type, a tan band for buying and moss for the odd accent.
+     Pieces are shown like exhibits, so the palette stays quiet and lets the objects carry the colour. */
+  --color-paper: #ECE9E4;         /* limestone page */
+  --color-paper-2: #F7F6F3;       /* chalk: plinths, panels, cards */
+  --color-paper-3: #E3DFD8;       /* pressed / hover */
+  --color-ash: #F2F0EC;           /* product image backdrop */
+  --color-ink: #1C1B19;           /* type and buttons */
+  --color-night: #23221F;         /* footer and dark panels */
+  --color-graphite: #2E2C29;      /* body copy */
+  --color-smoke: #57544F;         /* secondary copy */
+  --color-fog: #6A665F;           /* tertiary copy, ≥4.5:1 on limestone */
+  --color-rule: #D6D1C8;
+  --color-rule-light: #DFDBD3;
+  --color-accent: #4B5440;        /* moss */
+  --color-hot: #4B5440;           /* moss for fills: badges, progress */
+  --color-sun: #E6DCC8;           /* pale tan, the second tone */
+  --color-accent-soft: #D9DDCF;
+  --color-cream: #F7F6F3;
+  --color-tan: #CDB591;           /* the purchase band */
+  /* Legacy names kept so older panels still resolve; all mapped into the quiet palette. */
+  --color-pink: #E7E1D8;
+  --color-pink-2: #D8CFC2;
+  --color-butter: #E6DCC8;
+  --color-lilac: #E3DFD8;
+  --color-mint: #DDE0D5;
+  --color-sky: #E1E3E2;
+  --color-peach: #E6D6C4;
+  --color-plum: #3A3F32;
+  --color-kraft: #CDB591;
+  --color-kraft-line: #A88F6A;
+  --color-terracotta: #8A6F4E;
+  --color-sage: #4B5440;
+  --color-denim: #3A3F32;
+  --color-mustard: #CDB591;
 
-  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Libre Baskerville", Georgia, serif;
-  --font-display: "Libre Baskerville", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Antonio", "Arial Narrow", sans-serif;
+  --font-condensed: "Antonio", "Arial Narrow", sans-serif;
+  --font-mono: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-hand: "Gochi Hand", "Segoe Print", cursive;
   --font-chewy: "Chewy", system-ui, sans-serif;
 
@@ -49,12 +51,12 @@
 
   /* Gently rounded surfaces with soft shadows. */
   --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
-  --radius-2xl: 10px;
-  --radius-3xl: 12px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-3xl: 10px;
 
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.26 0 0 0 0 0.19 0 0 0 0 0.16 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
@@ -63,8 +65,29 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* The Odd Board keeps its original scrapbook colours: inside it, the palette tokens switch back
+   to the pastel notes, oxblood and ivory polaroids, while the rest of the shop stays quiet. */
+.scrap-tones {
+  --color-paper: #FAF7F5;
+  --color-cream: #FDF6E8;
+  --color-accent: #9B2C2C;
+  --color-hot: #9B2C2C;
+  --color-pink: #F6E4E1;
+  --color-pink-2: #E9C3BD;
+  --color-butter: #FDF2D6;
+  --color-lilac: #F0EBE8;
+  --color-mint: #F5E8D2;
+  --color-sky: #EFE3DA;
+  --color-peach: #F4D9C6;
+  --color-plum: #7F1D1D;
+  --color-sage: #92400E;
+  --color-kraft: #C9A27A;
+  --color-mustard: #E0B44C;
+}
+
 @layer base {
   html {
+    font-feature-settings: "ss01", "tnum" 0;
     background: var(--color-paper);
     color: var(--color-graphite);
     font-family: var(--font-sans);
@@ -87,27 +110,30 @@
 
 @layer utilities {
   /* Fraunces at large optical sizes: tight, high-contrast display type. */
+  /* Tall, thin capitals: the shop's one loud voice, borrowed from gallery wall titles. */
   .font-display {
     font-family: var(--font-display);
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    font-weight: 300;
+    letter-spacing: -0.005em;
+    text-transform: uppercase;
   }
   /* A restrained italic for emphasis inside display lines. */
   .font-odd {
     font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    font-weight: 300;
+    text-transform: uppercase;
   }
   .font-serif { font-family: var(--font-serif); }
+  /* Tall, hairline-thin capitals for the product name and price. */
+  .font-condensed { font-family: var(--font-condensed); font-weight: 200; letter-spacing: -0.01em; }
   /* Small technical labels. */
+  /* Small labels read like a museum caption: sentence case, medium weight. */
   .label {
-    font-family: var(--font-mono);
-    font-weight: 400;
-    font-size: 0.72rem;
-    line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    letter-spacing: 0.005em;
   }
   /* Scrapbook voices, used by the hero, the board and the reviews phone. */
   .font-hand { font-family: var(--font-hand); font-weight: 400; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -127,7 +153,9 @@
   }
   .link-draw:hover, .link-draw:focus-visible, .link-draw[aria-current="page"] { background-size: 100% 1px; }
   /* Masks used by text reveals so lines rise from behind a baseline. */
-  .mask-line { display: block; overflow: clip; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+  /* GSAP's SplitText line masks: leave room so Antonio's Q tail and descenders aren't clipped. */
+  .split-line-mask { padding-bottom: 0.16em; margin-bottom: -0.16em; }
+  .mask-line { display: block; overflow: clip; padding-bottom: 0.16em; margin-bottom: -0.16em; }
   /* A fine light grain over dark bands. */
   .film-grain {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

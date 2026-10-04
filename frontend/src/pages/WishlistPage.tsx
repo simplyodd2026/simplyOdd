@@ -30,9 +30,9 @@ export default function WishlistPage() {
         <EmptyState title="Nothing saved yet." body="Select the heart on any piece and it will be kept here for later."
           action={<ButtonLink to="/shop" size="lg">Browse the shop</ButtonLink>} />
       ) : isLoading ? (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{ids.map((i) => <ProductCardSkeleton key={i} />)}</div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">{ids.map((i) => <ProductCardSkeleton key={i} />)}</div>
       ) : (
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-14 lg:grid-cols-4 lg:gap-x-8">
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-12 xl:grid-cols-5">
           {list.map((p) => {
             const soldOut = p.availability === 'out_of_stock'
             return (

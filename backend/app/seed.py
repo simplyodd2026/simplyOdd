@@ -159,7 +159,7 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
     from app.models.user import AddressIn, AuthUser, ProfileUpdate
 
     rng = random.Random(7)
-    admin = AuthUser(uid="dev-admin", email="admin@simplyodd.dev", name="Studio Admin", is_admin=True)
+    admin = AuthUser(uid="dev-admin", email="diveshkasyap5@gmail.com", name="Studio Admin", is_admin=True)
     await svc.accounts.ensure_profile(admin)
     people = [("demo-customer", "demo@simplyodd.dev", "Aarav Mehta"), ("c-riya", "riya@example.com", "Riya Sen"),
               ("c-kabir", "kabir@example.com", "Kabir Das"), ("c-ira", "ira@example.com", "Ira Kapoor")]

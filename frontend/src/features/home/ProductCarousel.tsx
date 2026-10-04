@@ -25,7 +25,7 @@ export function ProductCarousel({ title, query, href, linkLabel }: { title: stri
   const arrow = 'grid size-11 place-items-center rounded-full border border-ink/15 text-ink transition-colors hover:bg-ink hover:text-paper disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink'
 
   return (
-    <Container className="py-16 sm:py-24">
+    <Container className="py-20 sm:py-28"><div className="mx-auto max-w-[1440px]">
       <SectionTitle title={title} aside={<>
         <span className="hidden sm:block"><ArrowLink to={href}>{linkLabel}</ArrowLink></span>
         <div className="hidden gap-2 md:flex">
@@ -44,6 +44,6 @@ export function ProductCarousel({ title, query, href, linkLabel }: { title: stri
         </div>
       </Reveal>
       <div className="mt-8 sm:hidden"><ArrowLink to={href}>{linkLabel}</ArrowLink></div>
-    </Container>
+    </div></Container>
   )
 }

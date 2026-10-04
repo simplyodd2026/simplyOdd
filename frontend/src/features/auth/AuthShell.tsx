@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 
 export function AuthShell({ title, intro, children }: { title: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <div className="mx-auto grid max-w-[1680px] lg:min-h-[calc(100dvh-112px)] lg:grid-cols-2">
+    <div className="mx-auto grid max-w-[1520px] lg:min-h-[calc(100dvh-112px)] lg:grid-cols-2">
       <div className="film-grain relative hidden flex-col justify-between overflow-hidden bg-night p-12 text-paper lg:flex xl:p-16">
         <p className="label text-paper/50">Simply Odd — Account</p>
         <p className="max-w-lg font-display text-6xl leading-[1] text-paper">

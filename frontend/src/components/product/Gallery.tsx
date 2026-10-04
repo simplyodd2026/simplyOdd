@@ -55,7 +55,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
   )
 }
 
-function Viewer({ images, name, index, onChange }: { images: ProductImage[]; name: string; index: number | null; onChange: (i: number | null) => void }) {
+export function Viewer({ images, name, index, onChange }: { images: ProductImage[]; name: string; index: number | null; onChange: (i: number | null) => void }) {
   const open = index !== null
   const count = images.length
   const close = () => onChange(null)

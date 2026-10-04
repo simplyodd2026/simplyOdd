@@ -64,18 +64,18 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-14 lg:grid-cols-3 lg:gap-x-8">
-          {Array.from({ length: 6 }, (_, i) => <ProductCardSkeleton key={i} />)}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-12 xl:grid-cols-5">
+          {Array.from({ length: 10 }, (_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       ) : !data?.items.length ? (
         empty
       ) : (
         <>
-          <div className={cn('grid grid-cols-2 gap-x-4 gap-y-14 transition-opacity duration-500 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-20', isFetching && 'opacity-50')}>
+          <div className={cn('grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-12 xl:grid-cols-5 transition-opacity duration-500', isFetching && 'opacity-50')}>
             {data.items.map((p, i) => (
               <motion.div key={p.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -8% 0px' }}
                 transition={{ duration: 1, delay: (i % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}>
-                <ProductCard product={p} priority={i < 3} index={(data.page - 1) * data.page_size + i + 1} />
+                <ProductCard product={p} priority={i < 5} />
               </motion.div>
             ))}
           </div>

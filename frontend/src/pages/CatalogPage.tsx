@@ -27,7 +27,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
   const { data, isLoading, isFetching } = useProducts({
     category: preset === 'category' ? slug : params.category,
     flag, min_price: params.min_price, max_price: params.max_price, in_stock: params.in_stock,
-    sort: params.sort, page: params.page, page_size: 12,
+    sort: params.sort, page: params.page, page_size: 20,
   }, preset !== 'category' || !!category)
 
   const copy = preset === 'category' ? { title: category?.name ?? '', intro: category?.description ?? '' } : COPY[preset]

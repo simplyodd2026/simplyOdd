@@ -82,7 +82,7 @@ export function Process() {
 
   return (
     <section ref={root} className="film-grain relative overflow-hidden bg-night text-paper lg:h-svh">
-      <div className="mx-auto grid h-full max-w-[1680px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-10 lg:py-0">
+      <div className="mx-auto grid h-full max-w-[1520px] gap-14 px-5 py-24 sm:px-8 lg:grid-cols-12 lg:items-center lg:gap-8 lg:px-10 lg:py-0">
         <div className="lg:col-span-5">
           <p className="label mb-5 text-paper/50"><span className="text-paper">(03)</span>&nbsp;&nbsp;Process</p>
           <SplitReveal as="h2" className="font-display text-[clamp(2.25rem,4.4vw,4.75rem)] leading-[0.98]">

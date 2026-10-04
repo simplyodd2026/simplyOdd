@@ -69,7 +69,7 @@ function SearchPanel({ close }: { close: () => void }) {
 
   return (
     <div ref={ref} data-lenis-prevent className="h-full overflow-y-auto overscroll-contain">
-      <div className="mx-auto max-w-[1680px] px-5 pb-20 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-[1520px] px-5 pb-20 sm:px-8 lg:px-10">
         <div className="flex h-16 items-center justify-between lg:h-[76px]">
           <span className="label text-fog">Search the studio</span>
           <button onClick={close} className="group -mr-2 inline-flex items-center gap-2 text-[14px] text-ink" aria-label="Close search">

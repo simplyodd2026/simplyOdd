@@ -8,7 +8,7 @@ from app.repositories.memory import MemoryStore
 CUSTOMER = {"Authorization": "Bearer dev:u-test:test@example.com:Test Person"}
 OTHER = {"Authorization": "Bearer dev:u-other:other@example.com"}
 # The seeded "dev-admin" profile has is_admin=True.
-ADMIN = {"Authorization": "Bearer dev:dev-admin:admin@simplyodd.dev"}
+ADMIN = {"Authorization": "Bearer dev:dev-admin:diveshkasyap5@gmail.com"}
 
 
 @pytest.fixture

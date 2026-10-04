@@ -23,19 +23,17 @@ function Newsletter() {
   }
   return (
     <div>
-      <p className="label text-paper/50">Newsletter</p>
-      <p className="mt-4 max-w-md font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-[1.02] text-paper">
-        New pieces, first. One considered email per release.
-      </p>
+            <p className="font-display text-[clamp(2.25rem,3.8vw,3.75rem)] leading-[1] text-paper">New pieces, first</p>
+      <p className="mt-3 text-[15px] text-paper/60">One email per release. Nothing else.</p>
       {state === 'done' ? (
-        <p className="mt-8 flex items-center gap-3 text-paper/80"><span className="size-1.5 rounded-full bg-hot" /> Thank you. You're subscribed.</p>
+        <p className="mt-8 flex items-center gap-3 text-paper/80"><span className="size-1.5 rounded-full bg-tan" /> Thank you. You're subscribed.</p>
       ) : (
         <form onSubmit={submit} className="group mt-8 flex max-w-md items-center border-b border-paper/25 transition-colors focus-within:border-paper">
           <label htmlFor="ft-email" className="sr-only">Email address</label>
           <input id="ft-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email"
             className="h-14 flex-1 bg-transparent text-lg text-paper outline-none placeholder:text-paper/35" />
           <button type="submit" disabled={state === 'loading'} aria-label="Subscribe"
-            className="grid size-11 place-items-center rounded-full text-paper transition-[background-color,color,transform] duration-500 hover:bg-hot disabled:opacity-40">
+            className="grid size-11 place-items-center rounded-full text-paper transition-[background-color,color,transform] duration-500 hover:bg-tan hover:text-ink disabled:opacity-40">
             <Icon name="arrowRight" />
           </button>
         </form>
@@ -62,8 +60,8 @@ export function Footer() {
   const head = 'label mb-3 text-paper/40'
   const a = 'link-draw transition-colors hover:text-paper'
   return (
-    <footer ref={root} className="film-grain relative overflow-hidden bg-night text-paper">
-      <div className="mx-auto grid max-w-[1680px] gap-16 px-5 pb-10 pt-20 sm:px-8 md:grid-cols-12 lg:px-10 lg:pt-28">
+    <footer ref={root} className="relative overflow-hidden bg-night text-paper">
+      <div className="mx-auto grid max-w-[1520px] gap-16 px-5 pb-10 pt-20 sm:px-8 md:grid-cols-12 lg:px-10 lg:pt-28">
         <div className="md:col-span-6 lg:col-span-5"><Newsletter /></div>
         <nav className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:col-span-6 lg:col-span-6 lg:col-start-7" aria-label="Footer">
           <div className={col}>
@@ -88,7 +86,7 @@ export function Footer() {
         </nav>
       </div>
 
-      <div className="mx-auto flex max-w-[1680px] flex-wrap items-center justify-between gap-4 border-t border-paper/10 px-5 py-5 text-[13px] text-paper/50 sm:px-8 lg:px-10">
+      <div className="mx-auto flex max-w-[1520px] flex-wrap items-center justify-between gap-4 border-t border-paper/10 px-5 py-5 text-[13px] text-paper/50 sm:px-8 lg:px-10">
         <span>© {new Date().getFullYear()} Simply Odd. Printed to order, shipped across India.</span>
         <button onClick={() => scrollToY(0)} className="group inline-flex items-center gap-2 transition-colors hover:text-paper">
           Back to top <Icon name="arrowRight" size={14} className="-rotate-90 transition-transform duration-500 group-hover:-translate-y-0.5" />
@@ -96,8 +94,8 @@ export function Footer() {
       </div>
 
       <div className="overflow-hidden px-3 sm:px-6 lg:px-8" aria-hidden="true">
-        <div className="ft-mark flex justify-center pb-[3vw] pt-[2vw] text-[length:var(--text-wordmark)] leading-[1] text-paper">
-          <Wordmark />
+        <div className="ft-mark flex justify-center pb-[3vw] pt-[2vw] text-[10.5vw] leading-[1] text-paper/90">
+          <Wordmark className="font-light tracking-[0.3em] [margin-right:-0.3em]" />
         </div>
       </div>
     </footer>
