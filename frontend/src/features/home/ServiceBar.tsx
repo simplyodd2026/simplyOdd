@@ -8,7 +8,7 @@ export function ServiceBar() {
   const { data: config } = useConfig()
   const items: [IconName, string, string][] = [
     ['truck', 'Free shipping', `On orders over ${money(config?.free_shipping_threshold ?? 1999)}`],
-    ['layers', 'Made to order', 'Printed and finished by hand'],
+    ['layers', 'Made to order', 'Made and finished by hand'],
     ['returns', '14-day returns', 'On unused pieces'],
     ['shield', 'Secure checkout', 'Pay online or cash on delivery'],
   ]

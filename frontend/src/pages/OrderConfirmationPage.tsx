@@ -28,7 +28,7 @@ export default function OrderConfirmationPage() {
           <p className="mt-6 max-w-lg text-lg text-smoke">
             {order.status === 'pending'
               ? 'We’ve saved your order but haven’t received payment yet. You can finish paying from your account.'
-              : `We'll start printing shortly. Updates go to ${order.email}, and you can follow the order from your account.`}
+              : `We'll start making it shortly. Updates go to ${order.email}, and you can follow the order from your account.`}
           </p>
           <div className="mt-10"><OrderProgress order={order} /></div>
           <dl className="mt-10 grid gap-8 border-t border-rule pt-8 sm:grid-cols-2">

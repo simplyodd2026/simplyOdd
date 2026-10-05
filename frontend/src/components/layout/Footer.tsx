@@ -87,7 +87,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto flex max-w-[1520px] flex-wrap items-center justify-between gap-4 border-t border-paper/10 px-5 py-5 text-[13px] text-paper/50 sm:px-8 lg:px-10">
-        <span>© {new Date().getFullYear()} Simply Odd. Printed to order, shipped across India.</span>
+        <span>© {new Date().getFullYear()} Simply Odd. Made to order, shipped across India.</span>
         <button onClick={() => scrollToY(0)} className="group inline-flex items-center gap-2 transition-colors hover:text-paper">
           Back to top <Icon name="arrowRight" size={14} className="-rotate-90 transition-transform duration-500 group-hover:-translate-y-0.5" />
         </button>

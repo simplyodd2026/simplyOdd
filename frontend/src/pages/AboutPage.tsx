@@ -8,9 +8,9 @@ import { Process } from '@/features/home/Process'
 import { useDocumentTitle } from '@/lib/hooks'
 
 const PRINCIPLES = [
-  ['Made to order', 'We do not warehouse thousands of units. Each order is printed when it is placed, which keeps waste low and lets us keep refining a design.'],
+  ['Made to order', 'We do not warehouse thousands of units. Each order is made when it is placed, which keeps waste low and lets us keep refining a design.'],
   ['Honest surfaces', 'The fine layer lines stay. They are the record of how a piece was built, and they catch light in a way a moulded surface cannot.'],
-  ['Built to last', 'Pieces that meet heat or water are printed in PETG and sealed where needed. Anything damaged in transit is remade at no cost.'],
+  ['Built to last', 'Pieces that meet heat or water are made in PETG and sealed where needed. Anything damaged in transit is remade at no cost.'],
 ] as const
 
 export default function AboutPage() {
@@ -28,8 +28,8 @@ export default function AboutPage() {
             that people stop, look closer and ask where they came from.
           </SplitReveal>
           <Reveal className="mt-14 grid gap-8 text-[17px] leading-relaxed text-smoke sm:grid-cols-2">
-            <p>Everything we sell is designed in-house and produced on our own printers. Working this way means a new idea can go from sketch to finished prototype in days, and that we can adjust a design between batches when we learn something.</p>
-            <p>It also means we never sit on stock. When you order, your piece is printed for you, finished by hand, inspected and packed in recycled paper pulp. That takes a little longer than a warehouse, and we think it is worth it.</p>
+            <p>Everything we sell is designed in-house and produced on our own machines. Working this way means a new idea can go from sketch to finished prototype in days, and that we can adjust a design between batches when we learn something.</p>
+            <p>It also means we never sit on stock. When you order, your piece is made for you, finished by hand, inspected and packed in recycled paper pulp. That takes a little longer than a warehouse, and we think it is worth it.</p>
           </Reveal>
         </div>
       </Container>

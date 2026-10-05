@@ -35,7 +35,7 @@ export default function CollectionsPage() {
             </SplitReveal>
             <Reveal delay={0.3} y={16} className="lg:col-span-4">
               <p className="max-w-sm text-[16.5px] leading-[1.7] text-smoke">
-                Lamps for the evening, vessels for the shelf, planters for everything green. Each piece is printed to order in our studio.
+                Lamps for the evening, vessels for the shelf, planters for everything green. Each piece is made to order in our studio.
               </p>
               {categories && (
                 <ul className="mt-7 flex flex-wrap gap-2" aria-label="Jump to a collection">
@@ -61,7 +61,7 @@ export default function CollectionsPage() {
         <div className="mx-auto flex max-w-[1360px] flex-col items-start justify-between gap-8 border-t border-rule pt-14 md:flex-row md:items-end">
           <div>
             <p className="font-script text-[clamp(2.6rem,4vw,3.4rem)] leading-none text-accent">not quite it?</p>
-            <h2 className="mt-2 max-w-[18ch] font-display text-[clamp(2.2rem,4vw,3.8rem)] leading-[1.02] text-ink">Tell us the idea, and we’ll print it for you.</h2>
+            <h2 className="mt-2 max-w-[18ch] font-display text-[clamp(2.2rem,4vw,3.8rem)] leading-[1.02] text-ink">Tell us the idea, and we’ll build it for you.</h2>
           </div>
           <ButtonLink to="/customise" variant="terra" size="lg">Customise a piece</ButtonLink>
         </div>

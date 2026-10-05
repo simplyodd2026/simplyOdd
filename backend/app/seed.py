@@ -23,13 +23,13 @@ CATEGORIES = [
     ("Weird Things", "weird-things", "We couldn't categorise these. Neither can you.", "egg-on-legs"),
 ]
 
-PLA = "Plant-based PLA, printed at 0.16 mm layers and hand-finished"
+PLA = "Plant-based PLA, built up in 0.16 mm layers and hand-finished"
 
 # slug, name, category, price, compare_at, stock, tagline, description, tags, materials, (w,h,d), weight, flags, sales
 PRODUCTS = [
     ("melt-vase", "Melt Vase", "home-decor", 2490, 2990, 14,
      "A vase caught halfway through changing its mind.",
-     "The Melt Vase leans, twists and softens as it rises, as if the print was paused mid-thought. Sixteen spiralling ribs catch light differently through the day. Watertight inside, so fresh stems are fine.",
+     "The Melt Vase leans, twists and softens as it rises, as if it paused mid-thought. Sixteen spiralling ribs catch light differently through the day. Watertight inside, so fresh stems are fine.",
      ["vase", "twisted", "flowers", "pink"], [PLA, "Watertight inner coating"], (16, 24, 16), 420, "fbn", 128),
     ("spine-vase", "Spine Vase", "home-decor", 1890, None, 22,
      "Seven vertebrae, one stem.",
@@ -41,7 +41,7 @@ PRODUCTS = [
      ["vessel", "vase", "white", "fluted"], [PLA, "Matte mineral finish"], (28, 25, 28), 610, "f", 41),
     ("fungal-lamp", "Fungal Lamp", "lighting", 5490, 6490, 9,
      "Grew overnight. Glows all evening.",
-     "A mushroom table lamp with a 28-rib cap that throws a soft, scalloped halo on the table. Warm dimmable LED included; the cap is printed in translucent peach so it glows warm when lit.",
+     "A mushroom table lamp with a 28-rib cap that throws a soft, scalloped halo on the table. Warm dimmable LED included; the cap is made in translucent peach so it glows warm when lit.",
      ["lamp", "mushroom", "table lamp", "led"], ["Translucent PETG cap", "Weighted PLA base", "2700K dimmable LED"], (44, 33, 44), 1240, "fbn", 87),
     ("hanging-bell", "Hanging Bell", "lighting", 6890, None, 4,
      "A pendant that rings with light, not sound.",
@@ -53,7 +53,7 @@ PRODUCTS = [
      ["lamp", "ghost", "white", "night light"], ["Translucent PLA", "USB-C LED module"], (30, 56, 30), 900, "b", 64),
     ("pebble-tower", "Pebble Tower", "sculptures", 2790, None, 18,
      "Three stones, balanced on purpose.",
-     "A stacked-stone sculpture that sways off axis without ever tipping. Printed as a single piece, so the balance is permanent.",
+     "A stacked-stone sculpture that sways off axis without ever tipping. Made as a single piece, so the balance is permanent.",
      ["sculpture", "stones", "balance", "black"], [PLA, "Stone-texture finish"], (30, 56, 30), 700, "n", 22),
     ("egg-on-legs", "Egg on Legs", "weird-things", 1990, 2490, 25,
      "It's an egg. It has legs. Next question.",
@@ -73,7 +73,7 @@ PRODUCTS = [
      ["planter", "plants", "black", "hourglass"], [PLA, "Removable drainage insert"], (17, 20, 17), 380, "", 19),
     ("ruin-candle-column", "Ruin Candle Column", "home-decor", 2690, None, 7,
      "A classical column, slightly misremembered.",
-     "A fluted column with a flared capital that holds a single pillar candle. Printed in heat-resistant PETG.",
+     "A fluted column with a flared capital that holds a single pillar candle. Made in heat-resistant PETG.",
      ["candle", "column", "classical", "white"], ["Heat-resistant PETG"], (12, 24, 12), 350, "f", 27),
     ("tidal-bowl", "Tidal Bowl", "home-decor", 2390, 2790, 16,
      "Thirty ridges that look like they're moving.",
@@ -101,10 +101,10 @@ PRODUCTS = [
      ["tray", "organizer", "black", "jewellery"], [PLA], (24, 7, 18), 330, "", 49),
     ("box-of-nothing", "Box of Nothing", "weird-things", 990, None, 60,
      "Contains nothing. Guaranteed.",
-     "A sealed butter-yellow cube with NOTHING printed on the lid. It's the best-selling gift we make and we're still not sure why.",
+     "A sealed butter-yellow cube with NOTHING written on the lid. It's the best-selling gift we make and we're still not sure why.",
      ["gift", "weird", "yellow", "box"], [PLA], (10, 10, 10), 120, "b", 334),
     ("drip-candle-stand", "Drip Candle Stand", "home-decor", 1890, None, 13,
-     "The drips are printed. The flame is yours.",
+     "The drips are built in. The flame is yours.",
      "A candle stand with frozen drips down its stem, so it looks like it's been burning for hours from day one.",
      ["candle", "drip", "white", "stand"], ["Heat-resistant PETG", "Steel candle cup"], (13, 26, 13), 310, "n", 8),
     ("hand-of-keys", "Hand of Keys", "weird-things", 2590, None, 8,
@@ -128,7 +128,7 @@ async def seed_catalogue(svc: Services) -> None:
             name=name, slug=slug, tagline=tagline, description=desc, price=price, compare_at_price=cmp, stock=stock,
             category_id=cats[cat], tags=tags, materials=mats,
             dimensions=Dimensions(width_cm=w, height_cm=h, depth_cm=d), weight_g=wt,
-            manufacturing="Designed in-house and printed to order in small batches. "
+            manufacturing="Designed in-house and made to order in small batches. "
                           "Each piece is sanded and inspected by hand; tiny layer lines are part of the look.",
             images=[ProductImage(url=f"/seed/{slug}-{n}.svg", alt=f"{name}, {v}")
                     for n, v in ((1, "studio view"), (2, "lit view"), (3, "detail"))],

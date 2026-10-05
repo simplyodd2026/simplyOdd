@@ -25,7 +25,7 @@ const COLOURS = [
 const STEPS = [
   ['Send a brief', 'Tell us what you have in mind: a description, a reference, the space it is for.', 'bg-hot text-paper'],
   ['Design and quote', 'Within three working days we reply with questions, a first sketch and a fixed price.', 'bg-paper-2 text-ink'],
-  ['Made for you', 'Once you approve, we print, finish and inspect your piece, then ship it to you.', 'bg-olive text-paper'],
+  ['Made for you', 'Once you approve, we build, finish and inspect your piece, then ship it to you.', 'bg-olive text-paper'],
 ] as const
 
 type State = 'idle' | 'sending' | 'sent' | { error: string }
@@ -108,7 +108,7 @@ export function CustomOrder() {
             </SplitReveal>
             <Reveal delay={0.35} y={16}>
               <p className="mt-8 max-w-[30rem] text-[17px] leading-[1.7] text-graphite">
-                Lighting for a particular corner, a gift for someone hard to buy for, an object in exactly your colour. Tell us the idea and we’ll design, print and finish it by hand.
+                Lighting for a particular corner, a gift for someone hard to buy for, an object in exactly your colour. Tell us the idea and we’ll design, build and finish it by hand.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
                 <a href="#brief" className="inline-flex h-14 items-center rounded-full bg-hot px-8 text-[15px] font-medium text-paper transition-colors duration-500 hover:bg-ink">Start your brief</a>
@@ -128,7 +128,7 @@ export function CustomOrder() {
               className="absolute -bottom-8 -right-4 w-[62%] sm:-right-10">
               <Tape tone="sage" className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rotate-3" />
               <TornNote seed="your-idea" paperClassName="grid place-items-center px-5 py-7 text-center">
-                <p className="font-script text-[2.1rem] leading-[1.05] text-ink">your idea,<br />printed.</p>
+                <p className="font-script text-[2.1rem] leading-[1.05] text-ink">your idea,<br />built.</p>
               </TornNote>
             </motion.div>
           </div>

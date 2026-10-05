@@ -107,7 +107,7 @@ export function AboutSheet() {
               <Ornament className="mx-auto mt-5 flex max-w-[16rem] items-center gap-3" />
               <div className="mt-8 space-y-5 text-[16px] leading-[1.7] text-graphite">
                 <p>We design strange, beautiful objects for the home: lamps, vessels and small sculptures that make a corner feel finished.</p>
-                <p>Every piece is drawn in our studio and printed only when someone orders it, then sanded, checked and packed by hand. Our aim isn’t just a nice object, but one people stop at, look closer at, and ask about.</p>
+                <p>Every piece is drawn in our studio and made only when someone orders it, then sanded, checked and packed by hand. Our aim isn’t just a nice object, but one people stop at, look closer at, and ask about.</p>
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function AboutSheet() {
             <div className="text-center">
               <img src="/logo-mark.png" alt="Simply Odd" className="mx-auto h-9 w-auto" />
               <Ornament className="mx-auto mt-4 flex max-w-[14rem] items-center gap-3" />
-              <p className="mt-2 text-[11px] uppercase tracking-[0.28em] text-smoke">3D-printed objects for the home</p>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.28em] text-smoke">Made-to-order objects for the home</p>
             </div>
           </div>
         </div>

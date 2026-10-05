@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn'
 export const STEPS = [
   ['Digital model', 'Every piece starts as a sketch and a question. We model it in-house and prototype until the proportions feel resolved.'],
   ['First layer', 'The form is sliced into hundreds of layers, each 0.2 mm tall, and the first one is laid down on the bed.'],
-  ['Printing', 'Made to order in PLA or heat-resistant PETG, one layer on top of the last. A medium vessel takes most of a day.'],
+  ['Building', 'Made to order in PLA or heat-resistant PETG, one layer on top of the last. A medium vessel takes most of a day.'],
   ['Finished object', 'Supports removed, edges refined, interiors sealed where needed, then inspected by hand and packed in paper pulp.'],
 ] as const
 
@@ -138,7 +138,7 @@ export function Process() {
             Made layer<br /><span className="font-odd">by layer.</span>
           </SplitReveal>
           <p className="mt-5 max-w-md text-[16px] leading-[1.7] text-smoke">
-            Nothing waits in a warehouse. Your piece is printed after you order it, a fifth of a millimetre at a time.
+            Nothing waits in a warehouse. Your piece is made after you order it, a fifth of a millimetre at a time.
           </p>
           <ol className="mt-10 border-t border-ink/15">
             {STEPS.map(([title, body], i) => (

@@ -160,7 +160,7 @@ export default function CheckoutPage() {
           {/* The shop's header, printed at the top of the slip. */}
           <header className="text-center">
             <img src="/logo-mark.png" alt="Simply Odd" className="mx-auto h-8 w-auto" />
-            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-smoke">3D-printed objects for the home</p>
+            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-smoke">Made-to-order objects for the home</p>
             <h1 className="mt-6 font-display text-[clamp(2.6rem,6vw,3.6rem)] leading-none text-ink">Checkout</h1>
             <p className="font-script -mt-1 text-[2.2rem] leading-none text-accent">your receipt</p>
             <dl className="mx-auto mt-7 grid max-w-md grid-cols-3 gap-3 text-[12.5px] text-fog">
@@ -309,7 +309,7 @@ export default function CheckoutPage() {
             <p className="mt-2 text-[11px] uppercase tracking-[0.32em] text-fog">{receiptNo}</p>
             <p className="font-script mt-5 text-[2.3rem] leading-none text-ink">thank you for shopping odd</p>
             <p className="mt-4 text-[13px] leading-relaxed text-fog">
-              Printed to order and finished by hand. By placing your order you agree to our <Link to="/help/returns" className="underline underline-offset-4 hover:text-ink">returns policy</Link>.
+              Made to order and finished by hand. By placing your order you agree to our <Link to="/help/returns" className="underline underline-offset-4 hover:text-ink">returns policy</Link>.
             </p>
           </footer>
         </ReceiptPaper>

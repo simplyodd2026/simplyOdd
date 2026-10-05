@@ -25,7 +25,7 @@ export function Brand() {
             A small studio for odd, beautiful things.
           </SplitReveal>
           <div className="mt-8 max-w-[30rem] space-y-5 text-[16.5px] leading-[1.75] text-graphite">
-            <p>Simply Odd designs every object in-house and prints it only once someone orders it, so nothing is made to sit on a shelf in a warehouse.</p>
+            <p>Simply Odd designs every object in-house and makes it only once someone orders it, so nothing is made to sit on a shelf in a warehouse.</p>
             <p>We work in plant-based PLA and heat-resistant PETG, finish each piece by hand, and pack it in paper pulp, not plastic.</p>
           </div>
           <ButtonLink to="/about" variant="olive" size="lg" className="mt-10">Read our story</ButtonLink>

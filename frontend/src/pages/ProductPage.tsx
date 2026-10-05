@@ -89,7 +89,7 @@ export default function ProductPage() {
     ...(dims.some(Boolean) ? [['Dimensions', `${dims.map((d) => d ?? '–').join(' × ')} cm`] as [string, string]] : []),
     ...(p.weight_g ? [['Weight', p.weight_g >= 1000 ? `${(p.weight_g / 1000).toFixed(2)} kg` : `${p.weight_g} g`] as [string, string]] : []),
     ['Finish', 'Supports removed and edges refined by hand'],
-    ['Print time', p.manufacturing || 'Printed to order in our studio, layer by layer'],
+    ['Making time', p.manufacturing || 'Made to order in our studio, layer by layer'],
     ['Care', 'Dust with a soft, dry cloth. Keep away from direct heat and strong afternoon sun.'],
     ['Availability', availability],
   ]

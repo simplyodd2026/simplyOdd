@@ -24,9 +24,9 @@ export function Finale() {
           <div className="grid overflow-hidden rounded-[2.5rem] bg-hot text-paper sm:rounded-l-[2.5rem] sm:rounded-r-full md:grid-cols-[1.2fr_1fr]">
             <div className="p-8 sm:p-12 lg:p-16">
               <p className="text-[14px] text-paper/80">Customise</p>
-              <h3 className="mt-3 font-display text-[clamp(2.2rem,3.8vw,3.6rem)] leading-[1.02]">Have an odd idea? We’ll print it.</h3>
+              <h3 className="mt-3 font-display text-[clamp(2.2rem,3.8vw,3.6rem)] leading-[1.02]">Have an odd idea? We’ll build it.</h3>
               <p className="mt-5 max-w-md text-[16px] leading-[1.65] text-paper/85">
-                Send a sketch, a photo or a few words. We’ll model it, print a one-off and finish it by hand.
+                Send a sketch, a photo or a few words. We’ll model it, build a one-off and finish it by hand.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
                 <ButtonLink to="/customise" variant="light" size="lg">Customise a piece</ButtonLink>
