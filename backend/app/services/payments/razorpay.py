@@ -14,6 +14,11 @@ from app.models.order import Order
 from app.services.payments.base import PaymentProvider, StartResult, VerifyResult
 
 API = "https://api.razorpay.com/v1"
+MIN_AMOUNT = 100  # Razorpay rejects orders under ₹1 (100 paise)
+
+
+class RazorpayError(RuntimeError):
+    pass
 
 
 class RazorpayProvider(PaymentProvider):
@@ -31,10 +36,15 @@ class RazorpayProvider(PaymentProvider):
 
     async def start(self, order: Order) -> StartResult:
         amount = round(order.total * 100)  # smallest currency unit
+        if amount < MIN_AMOUNT:
+            raise RazorpayError(f"Order {order.number} is below Razorpay's minimum of {MIN_AMOUNT} paise")
         async with self._client() as c:
             r = await c.post("/orders", json={"amount": amount, "currency": order.currency, "receipt": order.number})
-            r.raise_for_status()
-            rp_order = r.json()
+        if r.status_code == 401:
+            raise RazorpayError("Razorpay rejected the API keys; check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET")
+        if r.is_error:
+            raise RazorpayError(f"Razorpay order creation failed ({r.status_code}): {r.text}")
+        rp_order = r.json()
         return StartResult(reference=rp_order["id"], client_payload={
             "key": self.key_id, "order_id": rp_order["id"], "amount": amount, "currency": order.currency,
             "name": self.brand_name, "description": f"Order {order.number}",

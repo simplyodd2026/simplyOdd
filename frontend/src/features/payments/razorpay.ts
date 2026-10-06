@@ -32,7 +32,10 @@ export const razorpayAdapter: PaymentAdapter = {
         handler: (res: Record<string, unknown>) => resolve(res),
         modal: { ondismiss: () => reject(new PaymentCancelled()) },
       })
-      rzp.on('payment.failed', () => reject(new Error('The payment was declined. Try another method.')))
+      rzp.on('payment.failed', (res) => {
+        const reason = (res as { error?: { description?: string } }).error?.description
+        reject(new Error(reason ? `${reason} Try again or use another method.` : 'The payment was declined. Try another method.'))
+      })
       rzp.open()
     })
   },

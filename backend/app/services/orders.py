@@ -125,7 +125,11 @@ class OrderService:
         provider = self.payments.get(order.payment.provider)
         if provider is None:
             raise BadRequest("That payment method is no longer available")
-        started = await provider.start(order)
+        try:
+            started = await provider.start(order)
+        except Exception as exc:
+            log.exception("Payment restart failed for %s", order.number)
+            raise BadRequest("We couldn't reach the payment provider. Try again in a moment.") from exc
         order.payment.reference = started.reference
         order.payment.status = "pending"
         await self._save(order)
