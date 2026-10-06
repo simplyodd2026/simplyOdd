@@ -55,11 +55,11 @@ export function Hero() {
 
             {/* Written over the piece's edges by hand once it's printed. */}
             <div aria-hidden className="pointer-events-none absolute left-0 top-[28%] z-20 lg:left-auto lg:right-[calc(100%-3.5rem)] lg:top-[30%] lg:text-right">
-              <Scribble show={printed} delay={0.1} className="text-[clamp(2.6rem,7vw,7.5rem)]" color={ODD}>Oddly</Scribble>
-              <Scribble show={printed} delay={0.9} className="-mt-1 text-[clamp(1.5rem,2.6vw,2.7rem)] text-ink lg:mr-6">build for you.</Scribble>
+              <Scribble show={printed} delay={0.05} className="text-[clamp(2.6rem,7vw,7.5rem)]" color={ODD}>Oddly</Scribble>
+              <Scribble show={printed} delay={0.55} className="-mt-1 text-[clamp(1.5rem,2.6vw,2.7rem)] text-ink lg:mr-6">build for you.</Scribble>
             </div>
             <div aria-hidden className="pointer-events-none absolute right-0 top-[62%] z-20 lg:left-[calc(100%-3.5rem)] lg:right-auto lg:top-[48%]">
-              <Scribble show={printed} delay={0.5} className="text-[clamp(2.6rem,7vw,7.5rem)]" color={ODD}>beautiful</Scribble>
+              <Scribble show={printed} delay={0.3} className="text-[clamp(2.6rem,7vw,7.5rem)]" color={ODD}>beautiful</Scribble>
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@ function Scribble({ show, delay, className, color, children }: {
     <motion.p className={cn('font-script whitespace-nowrap leading-[1.1] [text-shadow:0_2px_20px_rgb(243_237_228/0.9)]', className)} style={{ color }}
       initial={false}
       animate={show ? { clipPath: 'inset(-20% -5% -20% -5%)', opacity: 1 } : { clipPath: 'inset(-20% 105% -20% -5%)', opacity: 0 }}
-      transition={show ? { duration: 1.3, ease: [0.65, 0, 0.35, 1], delay } : { duration: 0.3 }}>
+      transition={show ? { duration: 0.9, ease: [0.65, 0, 0.35, 1], delay } : { duration: 0.3 }}>
       {children}
     </motion.p>
   )

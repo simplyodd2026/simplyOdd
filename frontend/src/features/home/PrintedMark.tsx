@@ -27,9 +27,9 @@ const RAIL = 28
 
 // The print, scheduled like a real one: bottom layer first, the nozzle travelling to the start of each layer
 // and sweeping across it, alternating direction, one layer higher each time.
-const START = 0.7
-const TRAVEL = 0.13
-const SPEED = 0.003 // seconds per logo unit of sweep
+const START = 0.4
+const TRAVEL = 0.08
+const SPEED = 0.0018 // seconds per logo unit of sweep
 function plan() {
   let t = START
   const steps = [...LAYERS].reverse().map((l, k) => {
@@ -37,12 +37,12 @@ function plan() {
     const from = ltr ? l.x1 : l.x2
     const to = ltr ? l.x2 : l.x1
     const tipY = l.y + LAYER_H / 2
-    const sweep = (l.x2 - l.x1) * SPEED + 0.08
+    const sweep = (l.x2 - l.x1) * SPEED + 0.05
     const step = { layer: LAYERS.length - 1 - k, ltr, from, to, tipY, at: t + TRAVEL, sweep }
     t += TRAVEL + sweep
     return step
   })
-  const end = t + 0.55
+  const end = t + 0.35
   // The nozzle's path: parked, then to the start of each layer and across it, then parked again.
   const xs = [PARK.x], ys = [PARK.y], ts = [0], eases: ('linear' | 'easeInOut')[] = []
   xs.push(PARK.x); ys.push(PARK.y); ts.push(START); eases.push('linear')
@@ -101,7 +101,7 @@ export function PrintedMark({ onLayer, className }: { onLayer?: (n: number) => v
               animate={{ scaleX: 1, fill: [HOT, color] }}
               transition={{
                 scaleX: { delay: s.at, duration: s.sweep, ease: 'linear' },
-                fill: { delay: s.at + s.sweep * 0.4, duration: 1.1, ease: 'easeOut' },
+                fill: { delay: s.at + s.sweep * 0.4, duration: 0.7, ease: 'easeOut' },
               }} />
           )
         })}
