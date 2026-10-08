@@ -1,7 +1,9 @@
-"""Rewrite old Drive image links (lh3.googleusercontent.com/d/<id>, which Google
-rate-limits) to the API's /api/media/drive/<id> route in Firestore.
+"""Rewrite Drive image links in Firestore to this API's /api/media/drive/<id>
+route at PUBLIC_BASE_URL: old lh3.googleusercontent.com/d/<id> links (which
+Google rate-limits) and links pointing at a previous API host (e.g. after
+moving from Render to Cloud Run).
 
-    python -m scripts.migrate_drive_urls [--dry-run]
+    PUBLIC_BASE_URL=https://<new-api-host> python -m scripts.migrate_drive_urls [--dry-run]
 
 Safe to run more than once.
 """
@@ -14,7 +16,7 @@ from app.core.config import get_settings
 from app.core.firebase import get_app
 
 COLLECTIONS = ["products", "categories", "users", "orders", "reviews"]
-OLD = re.compile(r"https://lh3\.googleusercontent\.com/d/([A-Za-z0-9_-]+)")
+OLD = re.compile(r"https://(?:lh3\.googleusercontent\.com/d|[^/\s\"']+/api/media/drive)/([A-Za-z0-9_-]+)")
 
 
 def rewrite(value, new: str):
@@ -28,7 +30,10 @@ def rewrite(value, new: str):
 
 
 def main(dry_run: bool) -> None:
-    new = get_settings().public_base_url.rstrip("/") + r"/api/media/drive/\1"
+    base = get_settings().public_base_url.rstrip("/")
+    if "localhost" in base or "127.0.0.1" in base:
+        sys.exit(f"PUBLIC_BASE_URL is {base}; set it to the deployed API URL first.")
+    new = base + r"/api/media/drive/\1"
     db = firestore.client(app=get_app())
     for coll in COLLECTIONS:
         changed = 0

@@ -18,7 +18,7 @@ def get_app() -> firebase_admin.App:
         options["projectId"] = s.firebase_project_id
     if s.firebase_storage_bucket:
         options["storageBucket"] = s.firebase_storage_bucket
-    # Inline JSON wins (Render), then a key file named in .env; otherwise
+    # Inline JSON wins, then a key file named in .env; otherwise
     # ApplicationDefault picks up the GOOGLE_APPLICATION_CREDENTIALS env var
     # locally and the attached service account on Cloud Run.
     if s.firebase_credentials_json:

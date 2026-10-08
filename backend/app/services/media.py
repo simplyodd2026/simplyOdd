@@ -139,11 +139,15 @@ class GoogleDriveMediaStorage:
     def __init__(self, client_id: str, client_secret: str, refresh_token: str, folder_id: str, base_url: str):
         from google.auth.transport.requests import AuthorizedSession
         from google.oauth2.credentials import Credentials
+        from requests.adapters import HTTPAdapter
 
         creds = Credentials(None, refresh_token=refresh_token, client_id=client_id,
                             client_secret=client_secret, token_uri="https://oauth2.googleapis.com/token",
                             scopes=DRIVE_SCOPES)
         self.session = AuthorizedSession(creds)
+        # Image requests hit Drive from asyncio.to_thread workers, often more
+        # than requests' default 10 at once; keep those connections pooled.
+        self.session.mount("https://", HTTPAdapter(pool_connections=4, pool_maxsize=32))
         self.folder_id = folder_id
         self.base_url = base_url.rstrip("/")
         self._cache: OrderedDict[str, tuple[bytes, str]] = OrderedDict()

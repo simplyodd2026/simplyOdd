@@ -1,8 +1,7 @@
-import os
 from functools import lru_cache
 from typing import Annotated, Literal
 
-from pydantic import Field, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 Csv = Annotated[list[str], NoDecode]
@@ -18,15 +17,15 @@ class Settings(BaseSettings):
     allow_dev_auth: bool = True
 
     cors_origins: Csv = ["http://localhost:5173"]
-    # Render exposes the service's public URL as RENDER_EXTERNAL_URL.
-    public_base_url: str = Field(
-        default_factory=lambda: os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:8000"))
+    # Public URL of this API, used to build image links. The deploy workflow
+    # sets it to the Cloud Run URL.
+    public_base_url: str = "http://localhost:8000"
 
     firebase_project_id: str | None = None
     firebase_storage_bucket: str | None = None
     google_application_credentials: str | None = None
     # Service-account JSON passed inline (raw or base64) for hosts without
-    # Application Default Credentials, e.g. Render.
+    # Application Default Credentials. Not needed on Cloud Run.
     firebase_credentials_json: str | None = None
 
     # Where uploaded images go. Unset = Firebase Storage on the firestore

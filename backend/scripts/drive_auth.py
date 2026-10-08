@@ -23,6 +23,12 @@ ENV_FILE = Path(".env")
 FOLDER_NAME = "simplyOdd product images"
 
 
+def get_env(key: str) -> str | None:
+    text = ENV_FILE.read_text() if ENV_FILE.exists() else ""
+    m = re.search(rf"^{key}=(.*)$", text, flags=re.M)
+    return (m.group(1).strip() or None) if m else None
+
+
 def set_env(values: dict[str, str]) -> None:
     text = ENV_FILE.read_text() if ENV_FILE.exists() else ""
     for key, value in values.items():
@@ -41,12 +47,21 @@ def main() -> None:
     # prompt=consent guarantees a refresh token even on a repeat sign-in.
     creds = flow.run_local_server(port=0, access_type="offline", prompt="consent")
 
-    # drive.file only sees files this app created, so the app makes its own folder.
-    r = AuthorizedSession(creds).post(
-        "https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
-        json={"name": FOLDER_NAME, "mimeType": "application/vnd.google-apps.folder"}, timeout=30)
-    r.raise_for_status()
-    folder = r.json()
+    session = AuthorizedSession(creds)
+    folder = None
+    # Re-authorising (e.g. after the refresh token expired) keeps the existing folder.
+    if existing := get_env("GOOGLE_DRIVE_FOLDER_ID"):
+        r = session.get(f"https://www.googleapis.com/drive/v3/files/{existing}",
+                        params={"fields": "id,webViewLink,trashed"}, timeout=30)
+        if r.ok and not r.json().get("trashed"):
+            folder = r.json()
+    if folder is None:
+        # drive.file only sees files this app created, so the app makes its own folder.
+        r = session.post(
+            "https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
+            json={"name": FOLDER_NAME, "mimeType": "application/vnd.google-apps.folder"}, timeout=30)
+        r.raise_for_status()
+        folder = r.json()
 
     set_env({
         "MEDIA_BACKEND": "drive",

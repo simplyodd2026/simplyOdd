@@ -96,26 +96,25 @@ Images go to Cloud Storage under `products/{id}/`, `categories/` and `avatars/{u
    - `CORS_ORIGINS=https://your-site`
 4. **Seed the catalogue** (optional): `DATA_BACKEND=firestore python -m scripts.seed`
 5. **Make yourself an admin:** sign in once, then run `python -m scripts.set_admin you@example.com` or set `is_admin` to `true` on your `users/{uid}` document in the Firestore console. It applies on the next request.
-6. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Render URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
+6. **Configure the frontend (`.env`):** `VITE_FIREBASE_*` from the Firebase console, and `VITE_API_URL` set to the Cloud Run URL. Once `VITE_FIREBASE_API_KEY` is set, the dev sign-in is no longer used.
 
 ## Deployment
 
-**API → Render**
+**API → Cloud Run (auto-deploys from `main`)**
 
-`render.yaml` at the repo root is a Render Blueprint for the API.
+`.github/workflows/deploy-backend.yml` runs the backend tests and deploys `backend/` to Cloud Run on every push to `main` that touches `backend/` (or on demand from the Actions tab). GitHub signs in to GCP with Workload Identity Federation, so no service-account key is stored anywhere.
 
-1. In Render: **New → Blueprint**, pick this repo. It creates `simplyodd-api` from `backend/` (Python 3.12, health check `/api/health`).
-2. Fill in the prompted values:
-   - `CORS_ORIGINS`: your frontend URL(s), comma-separated
-   - `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`
-   - `FIREBASE_CREDENTIALS_JSON`: paste the whole service-account JSON (or its base64). Render has no attached service account, so this replaces Application Default Credentials.
-   - `MEDIA_BACKEND`: leave empty for Firebase Storage, or `drive` plus the `GOOGLE_*` values. Don't use `local`, since Render's disk is wiped on every deploy.
-   - Razorpay keys if you enable it in `PAYMENT_PROVIDERS` (default `cod`)
-3. `PUBLIC_BASE_URL` defaults to Render's `RENDER_EXTERNAL_URL`, so you only need to set it for a custom domain.
+One-time setup:
 
-The free plan sleeps after 15 minutes idle, so the first request after that takes ~30–60s.
+1. In the Firebase project's GCP project: enable the Cloud Run, Artifact Registry, IAM Credentials, STS and Secret Manager APIs; create a Docker Artifact Registry repo `simplyodd`; create a runtime service account `simplyodd-api` (Datastore User, Firebase Authentication Viewer, Storage Object Admin, Secret Manager Secret Accessor) and a deployer `simplyodd-deployer` (Cloud Run Admin, Artifact Registry Writer, Service Account User on the runtime account); create a Workload Identity pool `github` with an OIDC provider for `token.actions.githubusercontent.com` limited to this repo's `main` branch, and let it impersonate the deployer. Store the Drive `GOOGLE_*` values as Secret Manager secrets of the same names.
+2. Add the repository variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA` and `GCP_RUNTIME_SA` in **GitHub → Settings → Secrets and variables → Actions → Variables**, plus `CORS_ORIGINS` (your frontend URL(s), comma-separated). `FIREBASE_STORAGE_BUCKET` (the image bucket). Optional: `MEDIA_BACKEND` (default `firebase`; `drive` for Google Drive, which needs the `GOOGLE_*` secrets), `PAYMENT_PROVIDERS` (default `cod`), `PUBLIC_BASE_URL` (only for a custom domain).
+3. Push to `main`. The workflow prints the service URL; set the frontend's `VITE_API_URL` to it.
 
-The service account needs the *Firebase Admin SDK Administrator Service Agent* role, or Datastore User + Storage Object Admin + Firebase Authentication Admin.
+Deploying in the Firebase project means the API uses its attached service account (Application Default Credentials), so `FIREBASE_CREDENTIALS_JSON` isn't needed. After refreshing the Drive token with `scripts/drive_auth.py`, add it as a new version of the `GOOGLE_DRIVE_REFRESH_TOKEN` secret, then re-run the workflow.
+
+If image links in Firestore still point at an old API host, run `PUBLIC_BASE_URL=<cloud-run-url> python -m scripts.migrate_drive_urls` (add `--dry-run` first).
+
+The service scales to zero when idle, so the first request after a quiet period takes a few seconds.
 
 **Frontend → Vercel or Netlify**
 

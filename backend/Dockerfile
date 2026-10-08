@@ -1,4 +1,4 @@
-# Container image for the Simply Odd API (Cloud Run, Render Docker, etc.)
+# Container image for the Simply Odd API (deployed to Cloud Run by .github/workflows/deploy-backend.yml)
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8080
