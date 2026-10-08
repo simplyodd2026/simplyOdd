@@ -102,17 +102,17 @@ Images go to Cloud Storage under `products/{id}/`, `categories/` and `avatars/{u
 
 **API → Cloud Run (auto-deploys from `main`)**
 
-`.github/workflows/deploy-backend.yml` runs the backend tests and deploys `backend/` to Cloud Run on every push to `main` that touches `backend/` (or on demand from the Actions tab). GitHub signs in to GCP with Workload Identity Federation, so no service-account key is stored anywhere.
+The API runs on Cloud Run as `simplyodd-api` in project `simply-odd`, region `asia-south1`: https://simplyodd-api-18861122418.asia-south1.run.app (docs at `/api/docs`).
 
-One-time setup:
+`.github/workflows/deploy-backend.yml` runs the backend tests, builds the image into Artifact Registry (`simplyodd`, which keeps the newest 2 images), and deploys it on every push to `main` that touches `backend/`, or on demand from the Actions tab. GitHub signs in with Workload Identity Federation as `simplyodd-deployer` (Cloud Run Developer, plus write access to the image repo), so there are no keys and no GitHub variables to set.
 
-1. In the Firebase project's GCP project: enable the Cloud Run, Artifact Registry, IAM Credentials, STS and Secret Manager APIs; create a Docker Artifact Registry repo `simplyodd`; create a runtime service account `simplyodd-api` (Datastore User, Firebase Authentication Viewer, Storage Object Admin, Secret Manager Secret Accessor) and a deployer `simplyodd-deployer` (Cloud Run Admin, Artifact Registry Writer, Service Account User on the runtime account); create a Workload Identity pool `github` with an OIDC provider for `token.actions.githubusercontent.com` limited to this repo's `main` branch, and let it impersonate the deployer. Store the Drive `GOOGLE_*` values as Secret Manager secrets of the same names.
-2. Add the repository variables `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA` and `GCP_RUNTIME_SA` in **GitHub → Settings → Secrets and variables → Actions → Variables**, plus `CORS_ORIGINS` (your frontend URL(s), comma-separated). `FIREBASE_STORAGE_BUCKET` (the image bucket). Optional: `MEDIA_BACKEND` (default `firebase`; `drive` for Google Drive, which needs the `GOOGLE_*` secrets), `PAYMENT_PROVIDERS` (default `cod`), `PUBLIC_BASE_URL` (only for a custom domain).
-3. Push to `main`. The workflow prints the service URL; set the frontend's `VITE_API_URL` to it.
+Everything else lives on the Cloud Run service and carries over to each new revision:
 
-Deploying in the Firebase project means the API uses its attached service account (Application Default Credentials), so `FIREBASE_CREDENTIALS_JSON` isn't needed. After refreshing the Drive token with `scripts/drive_auth.py`, add it as a new version of the `GOOGLE_DRIVE_REFRESH_TOKEN` secret, then re-run the workflow.
+- **Env vars:** `ENV=production`, `ALLOW_DEV_AUTH=false`, `DATA_BACKEND=firestore`, `SEED_DEMO_DATA=false`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET=simply-odd.firebasestorage.app`, `MEDIA_BACKEND=firebase`, `PAYMENT_PROVIDERS`, `CORS_ORIGINS`, `PUBLIC_BASE_URL`. Change them with `gcloud run services update simplyodd-api --region asia-south1 --update-env-vars KEY=value`, or in the console under **Cloud Run → simplyodd-api → Edit & deploy new revision**.
+- **Sizing:** 1 vCPU, 512Mi, CPU only during requests, min 0 and max 1 instances, concurrency 40.
+- **Access:** public (`allUsers` has Cloud Run Invoker). The service runs as `simplyodd-api`, which can use Firestore (Datastore User), check Firebase sign-ins (Firebase Authentication Viewer) and manage objects in the image bucket only. No key file or `FIREBASE_CREDENTIALS_JSON` is needed.
 
-If image links in Firestore still point at an old API host, run `PUBLIC_BASE_URL=<cloud-run-url> python -m scripts.migrate_drive_urls` (add `--dry-run` first).
+Images go to the Firebase Storage bucket `simply-odd.firebasestorage.app` in `us-central1`, the region covered by the Cloud Storage free tier. The bucket is private; `firebase/storage.rules` makes `products/`, `categories/` and `avatars/` readable through download links.
 
 The service scales to zero when idle, so the first request after a quiet period takes a few seconds.
 

@@ -1,17 +1,12 @@
 # Tests the API and deploys it to Cloud Run on every push to main that touches
-# backend/. One-time GCP setup is described in the README. Authenticates with
-# Workload Identity Federation, so no service-account key is stored in GitHub.
-# Sized for minimum cost: scales to zero, one instance at most, CPU only
-# while a request is running. The deployer only has Cloud Run Developer, so
-# public access (allUsers → run.invoker) is granted once by hand and kept.
+# backend/. Authenticates with Workload Identity Federation, so no
+# service-account key is stored in GitHub.
 #
-# Repository variables (Settings → Secrets and variables → Actions → Variables):
-#   GCP_PROJECT_ID, GCP_REGION, GCP_WIF_PROVIDER, GCP_DEPLOY_SA, GCP_RUNTIME_SA
-#   CORS_ORIGINS             frontend URL(s), comma-separated
-#   FIREBASE_STORAGE_BUCKET  image bucket, e.g. simply-odd.firebasestorage.app
-#   MEDIA_BACKEND            optional, default "firebase"; "drive" reads the GOOGLE_* Secret Manager secrets
-#   PAYMENT_PROVIDERS        optional, default "cod"
-#   PUBLIC_BASE_URL          optional, for a custom domain; defaults to the Cloud Run URL
+# The service's env vars, sizing (1 vCPU, 512Mi, min 0 / max 1 instances) and
+# public access live on the Cloud Run service itself; this only ships a new
+# image, and every new revision keeps them. Change them with
+# `gcloud run services update simplyodd-api --region asia-south1 ...` or in the
+# console (Cloud Run → simplyodd-api → Edit & deploy new revision).
 name: Deploy backend
 
 on:
@@ -27,8 +22,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  PROJECT_ID: simply-odd
+  REGION: asia-south1
   SERVICE: simplyodd-api
-  REPOSITORY: simplyodd
+  IMAGE_REPO: asia-south1-docker.pkg.dev/simply-odd/simplyodd/simplyodd-api
 
 jobs:
   test:
@@ -52,77 +49,27 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-      REGION: ${{ vars.GCP_REGION }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          workload_identity_provider: projects/18861122418/locations/global/workloadIdentityPools/github/providers/github
+          service_account: simplyodd-deployer@simply-odd.iam.gserviceaccount.com
 
       - uses: google-github-actions/setup-gcloud@v2
 
       - name: Build and push image
         run: |
-          IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE:$GITHUB_SHA"
           gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
-          docker build -t "$IMAGE" backend
-          docker push "$IMAGE"
-          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          docker build -t "$IMAGE_REPO:$GITHUB_SHA" backend
+          docker push "$IMAGE_REPO:$GITHUB_SHA"
 
       - name: Deploy to Cloud Run
-        env:
-          CORS_ORIGINS: ${{ vars.CORS_ORIGINS }}
-          FIREBASE_STORAGE_BUCKET: ${{ vars.FIREBASE_STORAGE_BUCKET }}
-          MEDIA_BACKEND: ${{ vars.MEDIA_BACKEND || 'firebase' }}
-          PAYMENT_PROVIDERS: ${{ vars.PAYMENT_PROVIDERS || 'cod' }}
-          PUBLIC_BASE_URL: ${{ vars.PUBLIC_BASE_URL }}
-          RUNTIME_SA: ${{ vars.GCP_RUNTIME_SA }}
-        run: |
-          # Image links are built from PUBLIC_BASE_URL, so default it to the
-          # service's own URL (known once the service exists).
-          if [ -z "$PUBLIC_BASE_URL" ]; then
-            PUBLIC_BASE_URL=$(gcloud run services describe "$SERVICE" --region "$REGION" \
-              --format 'value(status.url)' 2>/dev/null || true)
-          fi
-
-          # "^@^" makes @ the list separator, so CORS_ORIGINS can contain commas.
-          ENV_VARS="^@^ENV=production@ALLOW_DEV_AUTH=false@DATA_BACKEND=firestore@SEED_DEMO_DATA=false"
-          ENV_VARS+="@MEMORY_PERSIST_PATH=@FIREBASE_PROJECT_ID=$PROJECT_ID@CORS_ORIGINS=$CORS_ORIGINS"
-          ENV_VARS+="@MEDIA_BACKEND=$MEDIA_BACKEND@PAYMENT_PROVIDERS=$PAYMENT_PROVIDERS"
-          ENV_VARS+="@FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET@PUBLIC_BASE_URL=$PUBLIC_BASE_URL"
-
-          SECRETS=()
-          if [ "$MEDIA_BACKEND" = drive ]; then
-            SECRETS=(--set-secrets "GOOGLE_OAUTH_CLIENT_ID=GOOGLE_OAUTH_CLIENT_ID:latest,GOOGLE_OAUTH_CLIENT_SECRET=GOOGLE_OAUTH_CLIENT_SECRET:latest,GOOGLE_DRIVE_REFRESH_TOKEN=GOOGLE_DRIVE_REFRESH_TOKEN:latest,GOOGLE_DRIVE_FOLDER_ID=GOOGLE_DRIVE_FOLDER_ID:latest")
-          fi
-
-          gcloud run deploy "$SERVICE" \
-            --image "$IMAGE" \
-            --region "$REGION" \
-            --service-account "$RUNTIME_SA" \
-            --cpu 1 \
-            --memory 512Mi \
-            --cpu-throttling \
-            --concurrency 40 \
-            --min-instances 0 \
-            --max-instances 1 \
-            --set-env-vars "$ENV_VARS" \
-            "${SECRETS[@]}" \
-            --quiet
-
-          # First deploy: the URL didn't exist yet, so set it now.
-          if [ -z "$PUBLIC_BASE_URL" ]; then
-            URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
-            gcloud run services update "$SERVICE" --region "$REGION" \
-              --update-env-vars "PUBLIC_BASE_URL=$URL" --quiet
-          fi
+        run: gcloud run deploy "$SERVICE" --image "$IMAGE_REPO:$GITHUB_SHA" --region "$REGION" --project "$PROJECT_ID" --quiet
 
       - name: Health check
         run: |
-          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')
+          URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
           curl -fsS --retry 5 --retry-delay 5 --retry-all-errors "$URL/api/health"
           echo "Deployed: $URL"
