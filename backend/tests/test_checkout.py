@@ -1,3 +1,4 @@
+from app.core.container import LOCAL_MEDIA_ROOT
 from tests.conftest import ADMIN, CUSTOMER, OTHER, address
 
 
@@ -115,6 +116,13 @@ def test_admin_product_crud(client):
     img = client.post(f"/api/admin/products/{p['id']}/images", headers=ADMIN,
                       files=[("files", ("a.png", b"\x89PNG....", "image/png"))]).json()
     assert len(img["images"]) == 1
+    assert img["images"][0]["path"].startswith("products/odd-thing/")
+    stored = LOCAL_MEDIA_ROOT / img["images"][0]["path"]
+    assert stored.exists()
+    # Saving the product without an image deletes that image's file.
+    saved = client.patch(f"/api/admin/products/{p['id']}", json={"images": []}, headers=ADMIN)
+    assert saved.status_code == 200 and saved.json()["images"] == []
+    assert not stored.exists()
     assert client.delete(f"/api/admin/products/{p['id']}", headers=ADMIN).status_code == 204
     dash = client.get("/api/admin/dashboard", headers=ADMIN).json()
     assert "revenue_series" in dash and len(dash["revenue_series"]) == 30

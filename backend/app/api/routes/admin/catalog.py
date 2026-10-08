@@ -8,35 +8,15 @@ from app.models.catalog import (
     Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, SortKey,
 )
 from app.models.common import Page, Schema
-from app.services.catalog import PRODUCTS
-from app.services.media import Label, validate_upload
+from app.services.media import validate_upload
 
 router = APIRouter()
 
 
-# Where a product's or category's images are filed in storage (Drive builds
-# folders from these; see GoogleDriveMediaStorage).
-async def _product_label(svc: Services, product: Product) -> Label:
-    cat = await svc.catalog.get_category(product.category_id, missing_ok=True) if product.category_id else None
-    return ["Products", cat.name if cat else "Uncategorized", product.name]
-
-
-async def _refile_product(svc: Services, product: Product) -> None:
-    label = await _product_label(svc, product)
-    for img in product.images:
-        if img.path:
-            await svc.media.organize(img.path, label)
-
-
-async def _refile_category(svc: Services, before: Category | None, after: Category) -> None:
-    old, new = svc.media.path_from_url(before and before.image), svc.media.path_from_url(after.image)
-    if old and old != new:
+async def _drop_replaced_image(svc: Services, before: Category, after: Category) -> None:
+    old = svc.media.path_from_url(before.image)
+    if old and old != svc.media.path_from_url(after.image):
         await svc.media.delete(old)
-    if new:
-        await svc.media.organize(new, ["Categories", after.name])
-    if before and before.name != after.name:
-        for doc in await svc.store.list(PRODUCTS, where=[("category_id", "==", after.id)]):
-            await _refile_product(svc, Product.model_validate(doc))
 
 
 @router.get("/products", response_model=Page[Product])
@@ -81,8 +61,6 @@ async def update_product(pid: str, body: ProductUpdate, svc: Services = Depends(
         for img in before.images:
             if img.path and img.path not in kept:
                 await svc.media.delete(img.path)
-    if (before.name, before.category_id) != (product.name, product.category_id):
-        await _refile_product(svc, product)
     return product
 
 
@@ -103,8 +81,8 @@ async def upload_product_images(pid: str, files: list[UploadFile] = File(...), s
     for f in files:
         data = await f.read()
         ct = validate_upload(data, f.content_type)
-        url, path = await svc.media.upload(f"products/{pid}", f.filename or "image", data, ct,
-                                           label=await _product_label(svc, product))
+        # Filed under the product's slug so the bucket reads by item name.
+        url, path = await svc.media.upload(f"products/{product.slug or pid}", f.filename or "image", data, ct)
         images.append(ProductImage(url=url, path=path, alt=product.name))
     return await svc.catalog.update_product(pid, ProductUpdate(images=images))
 
@@ -126,16 +104,14 @@ async def upload(file: UploadFile = File(...), folder: Literal["categories", "mi
 # ------------------------------------------------------------------ categories
 @router.post("/categories", response_model=Category, status_code=201)
 async def create_category(body: CategoryCreate, svc: Services = Depends(services)):
-    category = await svc.catalog.create_category(body)
-    await _refile_category(svc, None, category)
-    return category
+    return await svc.catalog.create_category(body)
 
 
 @router.patch("/categories/{cid}", response_model=Category)
 async def update_category(cid: str, body: CategoryUpdate, svc: Services = Depends(services)):
     before = await svc.catalog.get_category(cid)
     category = await svc.catalog.update_category(cid, body)
-    await _refile_category(svc, before, category)
+    await _drop_replaced_image(svc, before, category)
     return category
 
 

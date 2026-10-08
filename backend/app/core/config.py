@@ -17,8 +17,7 @@ class Settings(BaseSettings):
     allow_dev_auth: bool = True
 
     cors_origins: Csv = ["http://localhost:5173"]
-    # Public URL of this API, used to build image links. The deploy workflow
-    # sets it to the Cloud Run URL.
+    # Public URL of this API, used to build local-disk image links.
     public_base_url: str = "http://localhost:8000"
 
     firebase_project_id: str | None = None
@@ -30,11 +29,7 @@ class Settings(BaseSettings):
 
     # Where uploaded images go. Unset = Firebase Storage on the firestore
     # backend, local disk on the memory backend.
-    media_backend: Literal["local", "firebase", "drive"] | None = None
-    google_oauth_client_id: str | None = None
-    google_oauth_client_secret: str | None = None
-    google_drive_refresh_token: str | None = None
-    google_drive_folder_id: str | None = None
+    media_backend: Literal["local", "firebase"] | None = None
 
     currency: str = "INR"
     tax_rate: float = 0.18
@@ -56,8 +51,7 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("memory_persist_path", "firebase_project_id", "firebase_storage_bucket",
-                     "google_application_credentials", "firebase_credentials_json", "media_backend", "google_oauth_client_id",
-                     "google_oauth_client_secret", "google_drive_refresh_token", "google_drive_folder_id",
+                     "google_application_credentials", "firebase_credentials_json", "media_backend",
                      "razorpay_key_id", "razorpay_key_secret", mode="before")
     @classmethod
     def _empty_to_none(cls, v):
