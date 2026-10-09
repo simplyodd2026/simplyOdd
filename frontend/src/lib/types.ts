@@ -245,3 +245,17 @@ export interface Dashboard {
   low_stock: { id: string; name: string; stock: number }[]
   recent_orders: Pick<Order, 'id' | 'number' | 'email' | 'total' | 'status' | 'created_at'>[]
 }
+
+/** A product placed on the home page, optionally with a particular photo (any image URL). */
+export interface HomeSlot { product_id: string; image?: string | null }
+export interface HomepageLayout {
+  spotlight: HomeSlot | null
+  spotlight_inset: string | null
+  collection: HomeSlot[]
+  collection_row: HomeSlot[]
+  room: HomeSlot | null
+  moodboard: HomeSlot[]
+  studio_image: string | null
+  updated_at?: string | null
+}
+export interface Homepage { layout: HomepageLayout; products: Product[] }

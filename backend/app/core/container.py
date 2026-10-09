@@ -11,6 +11,7 @@ from app.repositories.store import DocumentStore
 from app.services.accounts import AccountService
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
+from app.services.homepage import HomepageService
 from app.services.insights import InsightsService
 from app.services.media import FirebaseMediaStorage, LocalMediaStorage, MediaStorage
 from app.services.orders import OrderService
@@ -34,11 +35,15 @@ class Services:
     accounts: AccountService
     reviews: ReviewService
     insights: InsightsService
+    homepage: HomepageService
 
 
 def build_media(settings: Settings) -> MediaStorage:
     backend = settings.resolved_media_backend
     if backend == "firebase":
+        if not settings.firebase_storage_bucket:
+            raise RuntimeError("MEDIA_BACKEND resolved to firebase but FIREBASE_STORAGE_BUCKET is not set "
+                               "(e.g. <project>.firebasestorage.app); set it or use MEDIA_BACKEND=local")
         return FirebaseMediaStorage()
     return LocalMediaStorage(str(LOCAL_MEDIA_ROOT), settings.public_base_url)
 
@@ -61,7 +66,9 @@ def build_services(settings: Settings, store: DocumentStore | None = None) -> Se
     accounts = AccountService(store)
     reviews = ReviewService(store, catalog, orders)
     insights = InsightsService(store, catalog, orders, accounts)
-    return Services(settings, store, media, catalog, coupons, pricing, payments, orders, accounts, reviews, insights)
+    homepage = HomepageService(store, catalog)
+    return Services(settings, store, media, catalog, coupons, pricing, payments, orders, accounts, reviews, insights,
+                    homepage)
 
 
 def services(request: Request) -> Services:

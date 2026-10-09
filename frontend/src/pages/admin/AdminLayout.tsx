@@ -12,6 +12,7 @@ const NAV = [
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/products', label: 'Products' },
   { to: '/admin/categories', label: 'Categories' },
+  { to: '/admin/homepage', label: 'Home page' },
   { to: '/admin/customers', label: 'Customers' },
   { to: '/admin/coupons', label: 'Coupons' },
   { to: '/admin/reviews', label: 'Reviews' },

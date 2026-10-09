@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api, qs } from './api'
 import type {
-  Category, CartLine, Order, Page, Product, ProductDetail, Quote, Review, ReviewEligibility, ReviewWithProduct, ShippingMethod,
+  Category, CartLine, Homepage, Order, Page, Product, ProductDetail, Quote, Review, ReviewEligibility, ReviewWithProduct, ShippingMethod,
   SortKey, StorefrontConfig, UserProfile,
 } from './types'
 import { useSession } from '@/stores/session'
@@ -26,6 +26,9 @@ export const useProducts = (params: ProductQuery, enabled = true) =>
     placeholderData: keepPreviousData,
     enabled,
   })
+
+export const useHomepage = () =>
+  useQuery({ queryKey: ['homepage'], queryFn: () => api<Homepage>('/homepage', { auth: false }), staleTime: 5 * 60_000 })
 
 export const useProductsByIds = (ids: string[]) =>
   useQuery({

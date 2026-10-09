@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from app.core.container import Services, services
 from app.models.catalog import Category, Product, SortKey
 from app.models.common import Page
+from app.models.homepage import Homepage
 from app.models.marketing import CustomRequestIn, NewsletterIn
 
 router = APIRouter(tags=["catalog"])
@@ -19,6 +20,11 @@ async def storefront_config(svc: Services = Depends(services)):
         "free_shipping_threshold": s.free_shipping_threshold,
         "payment_providers": svc.payments.public(),
     }
+
+
+@router.get("/homepage", response_model=Homepage)
+async def homepage(svc: Services = Depends(services)):
+    return await svc.homepage.public()
 
 
 @router.get("/products", response_model=Page[Product])

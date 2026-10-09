@@ -5,11 +5,11 @@ import { Container } from '@/components/layout/Container'
 import { Wordmark } from '@/components/brand/Wordmark'
 import { TornNote } from '@/components/scrapbook/Torn'
 import { PaperClip, PushPin, Tape } from '@/components/paper/Fasteners'
-import { useProducts } from '@/lib/queries'
+import { useHomePieces, type Piece } from './pieces'
 import { useWishlist } from '@/stores/wishlist'
 import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
-import type { Product } from '@/lib/types'
+import { useImageAspect } from '@/lib/hooks'
 
 type Note =
   | { kind: 'note'; text: string; tone: keyof typeof NOTE_TONES; voice: 'serif' | 'script' }
@@ -45,17 +45,16 @@ const ASPECTS = ['aspect-[4/5]', 'aspect-square', 'aspect-[3/4]', 'aspect-[4/5]'
  * up with pins, washi tape or a paperclip. Hover a photo to save it to your wishlist.
  */
 export function Moodboard() {
-  const { data } = useProducts({ sort: 'popular', page_size: 12 })
-  const products = data?.items ?? []
+  const products = useHomePieces().moodboard.slice(0, 12)
   const root = useRef<HTMLDivElement>(null)
   useScrapMotion(root, [products.length])
   if (!products.length) return null
 
   // Weave a note in after every second photo; with only a few photos, after every one, so the board never looks bare.
-  const tiles: ({ kind: 'product'; product: Product; i: number } | Note)[] = []
+  const tiles: ({ kind: 'product'; piece: Piece; i: number } | Note)[] = []
   const sparse = products.length < 6
-  products.forEach((product, i) => {
-    tiles.push({ kind: 'product', product, i })
+  products.forEach((piece, i) => {
+    tiles.push({ kind: 'product', piece, i })
     const note = NOTES[sparse ? i : Math.floor(i / 2)]
     if ((sparse || i % 2 === 1) && note) tiles.push(note)
   })
@@ -80,7 +79,7 @@ export function Moodboard() {
                 {tiles.map((t, k) => (
                   <div key={k} data-drop className="relative mb-10 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
                     <Hold kind={HOLDS[k % HOLDS.length]} k={k} />
-                    {t.kind === 'product' ? <Polaroid product={t.product} i={t.i} />
+                    {t.kind === 'product' ? <Polaroid piece={t.piece} i={t.i} />
                       : t.kind === 'brand' ? <BrandCard />
                         : <NoteCard note={t} />}
                   </div>
@@ -100,15 +99,17 @@ function Hold({ kind, k }: { kind: (typeof HOLDS)[number]; k: number }) {
   return <PaperClip className="absolute -top-7 left-5 z-10 w-6 rotate-[6deg] drop-shadow-[0_2px_2px_rgb(0_0_0/0.25)]" />
 }
 
-function Polaroid({ product, i }: { product: Product; i: number }) {
+function Polaroid({ piece, i }: { piece: Piece; i: number }) {
+  const { product } = piece
   const saved = useWishlist((s) => s.ids.includes(product.id))
   const toggle = useWishlist((s) => s.toggle)
-  const img = product.images[i % 2 === 0 ? 1 : 0] ?? product.images[0]
+  const img = piece.image ?? product.images[i % 2 === 0 ? 1 : 0] ?? product.images[0]
+  const fit = useImageAspect(0.6, 1.5)
 
   return (
     <Link to={`/product/${product.slug}`} className="group relative block bg-[#FBFAF7] p-2.5 pb-3 shadow-[0_14px_22px_-12px_rgb(66_44_28/0.55)] sm:p-3">
       <div className="relative overflow-hidden bg-ash">
-        {img && <img src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
+        {img && <img {...fit.img} style={fit.style} src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
           className={cn('w-full object-cover transition-transform duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]', ASPECTS[i % ASPECTS.length])} />}
         <button type="button" aria-pressed={saved} aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggle(product.id, product.name) }}

@@ -2,22 +2,23 @@ import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
 import { Reveal, SplitReveal } from '@/components/motion/Reveal'
 import { useHomePieces } from './pieces'
+import { useImageAspect } from '@/lib/hooks'
 
 /**
  * The studio. A photograph in a pebble-shaped frame, a sage pebble behind it, and a few plain sentences
  * about who makes these things and how. Uses a photo the page hasn't shown yet, where there is one.
  */
 export function Brand() {
-  const { room, hero } = useHomePieces()
-  const unused = room?.product.images[2] ?? room?.product.images[1] ?? hero?.images[0]
+  const { studio } = useHomePieces()
+  const fit = useImageAspect(0.7, 1.4)
 
   return (
     <Container className="py-28 sm:py-36">
       <div className="mx-auto grid max-w-[1300px] items-center gap-16 lg:grid-cols-12 lg:gap-10">
         <Reveal y={50} className="relative mx-auto w-full max-w-[30rem] lg:col-span-5">
           <span aria-hidden className="pebble absolute -right-[4%] -top-[8%] -z-10 aspect-square w-[70%] bg-sage/60 sm:-right-[10%]" />
-          <div className="pebble-3 aspect-[1/1.05] overflow-hidden bg-ash">
-            {unused && <img src={unused.url} alt={unused.alt || 'A piece from the studio'} loading="lazy" decoding="async" className="size-full object-cover" />}
+          <div className="pebble-3 aspect-[1/1.05] overflow-hidden bg-ash" style={fit.style}>
+            {studio && <img {...fit.img} src={studio} alt="A piece from the studio" loading="lazy" decoding="async" className="size-full object-cover" />}
           </div>
         </Reveal>
         <div className="lg:col-span-6 lg:col-start-7">

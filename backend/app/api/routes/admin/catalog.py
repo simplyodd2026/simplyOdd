@@ -8,6 +8,8 @@ from app.models.catalog import (
     Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, SortKey,
 )
 from app.models.common import Page, Schema
+from app.models.homepage import HomepageLayout
+from app.services.homepage import images_in
 from app.services.media import validate_upload
 
 router = APIRouter()
@@ -93,7 +95,7 @@ class UploadOut(Schema):
 
 
 @router.post("/uploads", response_model=UploadOut)
-async def upload(file: UploadFile = File(...), folder: Literal["categories", "misc"] = "misc",
+async def upload(file: UploadFile = File(...), folder: Literal["categories", "homepage", "misc"] = "misc",
                  svc: Services = Depends(services)):
     data = await file.read()
     ct = validate_upload(data, file.content_type)
@@ -130,3 +132,21 @@ class Reorder(Schema):
 @router.put("/categories/order", response_model=list[Category])
 async def reorder_categories(body: Reorder, svc: Services = Depends(services)):
     return await svc.catalog.reorder_categories(body.ids)
+
+
+# ------------------------------------------------------------------ home page
+@router.get("/homepage", response_model=HomepageLayout)
+async def get_homepage(svc: Services = Depends(services)):
+    return await svc.homepage.layout()
+
+
+@router.put("/homepage", response_model=HomepageLayout)
+async def save_homepage(body: HomepageLayout, svc: Services = Depends(services)):
+    before = await svc.homepage.layout()
+    layout = await svc.homepage.save(body)
+    # Photos uploaded just for the home page are removed once nothing uses them; product photos are left alone.
+    for url in images_in(before) - images_in(layout):
+        path = svc.media.path_from_url(url)
+        if path and path.startswith("homepage/"):
+            await svc.media.delete(path)
+    return layout

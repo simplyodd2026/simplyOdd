@@ -46,6 +46,7 @@ export default function ProductEditPage() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pairSearch, setPairSearch] = useState('')
+  const [pairCategory, setPairCategory] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   useDocumentTitle(isNew ? 'New product' : product?.name)
 
@@ -131,7 +132,8 @@ export default function ProductEditPage() {
   const h2 = 'text-lg font-semibold'
   const others = allProducts?.items.filter((p) => p.id !== id) ?? []
   // The search narrows the pairing list by name; the order stays fixed so rows don't jump as you tick them.
-  const pairOptions = others.filter((p) => p.name.toLowerCase().includes(pairSearch.trim().toLowerCase()))
+  const pairOptions = others.filter((p) => p.name.toLowerCase().includes(pairSearch.trim().toLowerCase())
+    && (!pairCategory || p.category_id === pairCategory))
 
   return (
     <div>
@@ -231,12 +233,19 @@ export default function ProductEditPage() {
                 {form.frequently_bought_with.length > 0 && <span className="text-[13px] text-fog">{form.frequently_bought_with.length} selected</span>}
               </span>
               <div className="border border-rule">
-                <label className="flex items-center gap-2 border-b border-rule px-3">
-                  <Icon name="search" size={15} className="shrink-0 text-fog" />
-                  <span className="sr-only">Search products</span>
-                  <input type="search" value={pairSearch} onChange={(e) => setPairSearch(e.target.value)} placeholder="Search products"
-                    className="h-10 w-full bg-transparent text-sm text-ink outline-none placeholder:text-fog" />
-                </label>
+                <div className="flex items-center border-b border-rule">
+                  <label className="flex min-w-0 flex-1 items-center gap-2 px-3">
+                    <Icon name="search" size={15} className="shrink-0 text-fog" />
+                    <span className="sr-only">Search products</span>
+                    <input type="search" value={pairSearch} onChange={(e) => setPairSearch(e.target.value)} placeholder="Search products"
+                      className="h-10 w-full bg-transparent text-sm text-ink outline-none placeholder:text-fog" />
+                  </label>
+                  <select value={pairCategory} onChange={(e) => setPairCategory(e.target.value)} aria-label="Filter by category"
+                    className="h-10 max-w-[45%] shrink-0 border-l border-rule bg-transparent px-2 text-sm text-ink outline-none">
+                    <option value="">All categories</option>
+                    {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
                 <ul className="max-h-56 overflow-y-auto py-1">
                   {pairOptions.map((p) => (
                     <li key={p.id}>
@@ -244,7 +253,7 @@ export default function ProductEditPage() {
                         onChange={(e) => set('frequently_bought_with', e.target.checked ? [...form.frequently_bought_with, p.id] : form.frequently_bought_with.filter((x) => x !== p.id))} />
                     </li>
                   ))}
-                  {pairOptions.length === 0 && <li className="px-3 py-3 text-sm text-fog">{others.length ? `No products match “${pairSearch}”.` : 'No other products yet.'}</li>}
+                  {pairOptions.length === 0 && <li className="px-3 py-3 text-sm text-fog">{others.length ? (pairSearch.trim() ? `No products match “${pairSearch}”.` : 'No products in this category.') : 'No other products yet.'}</li>}
                 </ul>
               </div>
             </div>
