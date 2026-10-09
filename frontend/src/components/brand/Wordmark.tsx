@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 export function Wordmark({ className, light = false }: { className?: string; light?: boolean }) {
   return (
     <img src="/logo-mark.png" alt="Simply Odd" width={700} height={160} draggable={false}
-      className={cn('block h-[1.5em] w-auto select-none', light && 'brightness-0 invert', className)} />
+      // A passed className replaces the default sizing; cn does not resolve conflicting utilities.
+      className={cn('block select-none', className ?? 'h-[1.5em] w-auto', light && 'brightness-0 invert')} />
   )
 }

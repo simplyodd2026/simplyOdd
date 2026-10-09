@@ -3,7 +3,6 @@ import { Spotlight } from '@/features/home/Spotlight'
 import { Collection } from '@/features/home/Collection'
 import { InYourSpace } from '@/features/home/InYourSpace'
 import { Kinds } from '@/features/home/Kinds'
-import { ServiceBar } from '@/features/home/ServiceBar'
 import { Moodboard } from '@/features/home/Moodboard'
 import { Brand } from '@/features/home/Brand'
 import { Reviews } from '@/features/home/Reviews'
@@ -25,7 +24,6 @@ export default function HomePage() {
       <Collection />
       <InYourSpace />
       <Kinds />
-      <ServiceBar />
       <Moodboard />
       <Brand />
       <Reviews />

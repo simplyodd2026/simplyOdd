@@ -174,11 +174,6 @@ export default function ProductPage() {
                   </Button>
                 )}
               </div>
-              <ul className="mt-7 grid grid-cols-3 gap-3 text-[13px] text-smoke">
-                <li><span className="block text-ink">Made to order</span>in our studio</li>
-                <li><span className="block text-ink">Free shipping</span>over {freeOver}</li>
-                <li><span className="block text-ink">Easy returns</span>within 14 days</li>
-              </ul>
             </div>
           </div>
         </div>

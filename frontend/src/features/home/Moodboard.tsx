@@ -37,6 +37,8 @@ const NOTE_TONES = {
 const HOLDS = ['pin', 'tape', 'clip', 'pin', 'tape'] as const
 const PIN_COLOURS = ['#A9532F', '#5E6647', '#D4A574', '#C98774']
 // Varied heights are what make a masonry board feel collected rather than gridded.
+// How many photos the board shows on a phone before it gets too long to scroll past.
+const MOBILE_PIECES = 6
 const ASPECTS = ['aspect-[4/5]', 'aspect-square', 'aspect-[3/4]', 'aspect-[4/5]', 'aspect-[5/6]']
 
 /**
@@ -59,6 +61,9 @@ export function Moodboard() {
     if ((sparse || i % 2 === 1) && note) tiles.push(note)
   })
   if (sparse) NOTES.slice(products.length, 4).forEach((n) => tiles.push(n))
+  // Phones get a shorter board: the first few photos and the notes between them.
+  const afterLast = tiles.findIndex((t) => t.kind === 'product' && t.i === MOBILE_PIECES)
+  const mobileCut = afterLast === -1 ? tiles.length : afterLast
   const columns = tiles.length >= 10 ? 'columns-2 sm:columns-3 lg:columns-4 xl:columns-5'
     : tiles.length > 4 ? 'columns-2 sm:columns-3 lg:columns-4'
       : ['columns-1', 'columns-1', 'columns-2', 'columns-2 sm:columns-3', 'columns-2 sm:columns-3 lg:columns-4'][tiles.length]
@@ -77,7 +82,7 @@ export function Moodboard() {
             <div className="slab linen bg-sand px-3.5 pb-4 pt-9 shadow-[inset_0_3px_12px_rgb(66_44_28/0.25)] sm:px-9 sm:pb-8 sm:pt-12">
               <div className={cn('gap-4 sm:gap-8', columns)}>
                 {tiles.map((t, k) => (
-                  <div key={k} data-drop className="relative mb-10 break-inside-avoid" style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
+                  <div key={k} data-drop className={cn('relative mb-8 break-inside-avoid sm:mb-10', k >= mobileCut && 'max-sm:hidden')} style={{ rotate: `${((k * 37) % 7) - 3}deg` }}>
                     <Hold kind={HOLDS[k % HOLDS.length]} k={k} />
                     {t.kind === 'product' ? <Polaroid piece={t.piece} i={t.i} />
                       : t.kind === 'brand' ? <BrandCard />
@@ -119,8 +124,9 @@ function Polaroid({ piece, i }: { piece: Piece; i: number }) {
         </button>
       </div>
       {/* The caption written on the polaroid's wide bottom edge. */}
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1 pt-3">
-        <span className="min-w-0 truncate font-script text-[1.5rem] leading-[1.15] text-ink sm:text-[1.9rem]">{product.name}</span>
+      {/* On a phone the name sits above the price in plain type, since the script is unreadable that small. */}
+      <div className="flex flex-col gap-0.5 px-1 pt-2.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-3 sm:pt-3">
+        <span className="min-w-0 truncate font-odd text-[1.05rem] leading-[1.2] text-ink sm:font-script sm:text-[1.9rem] sm:leading-[1.15]">{product.name}</span>
         <span className="shrink-0 text-[12px] tabular-nums text-smoke sm:text-[13px]">{money(product.price)}</span>
       </div>
     </Link>
