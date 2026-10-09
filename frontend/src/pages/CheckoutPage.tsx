@@ -296,28 +296,33 @@ export default function CheckoutPage() {
                     })}
                   </div>
                 )}
-                <h3 className="mt-2 text-[15px] font-medium text-ink">Pay with</h3>
-                <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
-                  {config?.payment_providers.map((pr) => {
-                    const a = getAdapter(pr.id)
-                    const active = provider === pr.id
-                    const Panel = a?.Panel
-                    return (
-                      <div key={pr.id} className={option(active)}>
-                        <button role="radio" aria-checked={active} disabled={!!pending && pending.payment.provider !== pr.id}
-                          onClick={() => { setProvider(pr.id); setPanelState(a?.initialState) }}
-                          className="flex w-full items-start gap-3 text-left disabled:opacity-40">
-                          {tick(active)}
-                          <span>
-                            <span className="block text-[16px] font-medium text-ink">{pr.label}</span>
-                            <span className="text-[13.5px] text-smoke">{pr.description}</span>
-                          </span>
-                        </button>
-                        {active && Panel && <Panel value={panelState} onChange={setPanelState} />}
-                      </div>
-                    )
-                  })}
-                </div>
+                {/* With a single gateway there's nothing to choose, so the plan is the only choice shown. */}
+                {(config?.payment_providers.length ?? 0) > 1 && (
+                  <>
+                  <h3 className="mt-2 text-[15px] font-medium text-ink">Pay with</h3>
+                  <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
+                    {config?.payment_providers.map((pr) => {
+                      const a = getAdapter(pr.id)
+                      const active = provider === pr.id
+                      const Panel = a?.Panel
+                      return (
+                        <div key={pr.id} className={option(active)}>
+                          <button role="radio" aria-checked={active} disabled={!!pending && pending.payment.provider !== pr.id}
+                            onClick={() => { setProvider(pr.id); setPanelState(a?.initialState) }}
+                            className="flex w-full items-start gap-3 text-left disabled:opacity-40">
+                            {tick(active)}
+                            <span>
+                              <span className="block text-[16px] font-medium text-ink">{pr.label}</span>
+                              <span className="text-[13.5px] text-smoke">{pr.description}</span>
+                            </span>
+                          </button>
+                          {active && Panel && <Panel value={panelState} onChange={setPanelState} />}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  </>
+                )}
                 {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
                 <Button size="lg" variant="terra" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
                   {pending ? `Try payment again` : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
