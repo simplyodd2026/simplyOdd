@@ -20,6 +20,9 @@ import { AddressFields, emptyAddress, validateAddress, type AddressErrors } from
 import { getAdapter, PaymentCancelled } from '@/features/payments'
 
 type Step = 'address' | 'shipping' | 'payment'
+// Partial payment is paused for now; flip this to offer it again.
+const PARTIAL_PAYMENT_AVAILABLE = false
+
 const STEPS: { id: Step; label: string }[] = [
   { id: 'address', label: 'Address' },
   { id: 'shipping', label: 'Delivery' },
@@ -282,13 +285,14 @@ export default function CheckoutPage() {
                       ['partial', 'Partial payment', `Pay 50% now and ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
                     ] as const).map(([id, label, note, amount]) => {
                       const active = (pending?.payment.plan ?? plan) === id
+                      const unavailable = id === 'partial' && !PARTIAL_PAYMENT_AVAILABLE
                       return (
-                        <button key={id} role="radio" aria-checked={active} disabled={!!pending && !active} onClick={() => setPlan(id)}
-                          className={cn(option(active), 'flex items-center gap-3 disabled:opacity-40')}>
+                        <button key={id} role="radio" aria-checked={active} disabled={unavailable || (!!pending && !active)} onClick={() => setPlan(id)}
+                          className={cn(option(active), 'flex items-center gap-3 disabled:cursor-not-allowed disabled:opacity-40')}>
                           {tick(active)}
                           <span className="flex-1">
                             <span className="block text-[16px] font-medium text-ink">{label}</span>
-                            <span className="text-[13.5px] text-smoke">{note}</span>
+                            <span className="text-[13.5px] text-smoke">{unavailable ? 'Unavailable for some time. Please choose full payment.' : note}</span>
                           </span>
                           <span className="text-[16px] tabular-nums text-ink">{money(amount)}</span>
                         </button>
