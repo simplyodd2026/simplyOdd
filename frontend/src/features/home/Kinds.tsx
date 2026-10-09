@@ -39,8 +39,16 @@ export function Kinds() {
               <div key={c.id} className="relative">
                 {i % 3 === 1 && <span aria-hidden className="slab absolute -bottom-12 left-[12%] right-[-14%] top-[30%] -z-0 bg-tan/70 max-md:hidden" />}
                 <Link to={`/collections/${c.slug}`}
-                  className={cn('group relative flex min-h-[15rem] flex-col justify-between p-7 transition-transform duration-700 ease-[var(--ease-out-quint)] hover:-translate-y-1.5 sm:p-9 md:aspect-[5/4.4] md:min-h-0',
-                    i % 2 ? 'slab-r' : 'slab', TONES[i % TONES.length], i % 3 === 1 && 'ring-1 ring-ink/5')}>
+                  className={cn('group relative isolate flex min-h-[15rem] flex-col justify-between overflow-hidden p-7 transition-transform duration-700 ease-[var(--ease-out-quint)] hover:-translate-y-1.5 sm:p-9 md:aspect-[5/4.4] md:min-h-0',
+                    i % 2 ? 'slab-r' : 'slab', c.image ? 'bg-ash text-paper' : TONES[i % TONES.length], !c.image && i % 3 === 1 && 'ring-1 ring-ink/5')}>
+                  {c.image && (
+                    <>
+                      <img src={c.image} alt="" loading="lazy" decoding="async"
+                        className="absolute inset-0 -z-10 size-full object-cover transition-transform duration-[1.4s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]" />
+                      {/* Darken the top and foot so the count and the name stay legible over any photo. */}
+                      <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/35 via-ink/0 via-40% to-ink/70" />
+                    </>
+                  )}
                   <span className="flex items-center justify-between text-[14px] opacity-80">
                     {c.product_count ? `${c.product_count} ${c.product_count === 1 ? 'piece' : 'pieces'}` : 'Coming soon'}
                     <Icon name="arrowUpRight" size={20} className="transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
