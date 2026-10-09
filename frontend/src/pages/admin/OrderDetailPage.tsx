@@ -53,7 +53,7 @@ export default function AdminOrderDetailPage() {
   }), `Marked as ${ORDER_STATUS_LABEL[status].toLowerCase()}`)
 
   const canCancel = ['pending', 'confirmed', 'processing'].includes(order.status)
-  const canRefund = ['delivered', 'cancelled'].includes(order.status) && ['paid', 'refund_pending'].includes(order.payment.status)
+  const canRefund = ['delivered', 'cancelled'].includes(order.status) && ['paid', 'partially_paid', 'refund_pending'].includes(order.payment.status)
 
   return (
     <div>
@@ -116,7 +116,9 @@ export default function AdminOrderDetailPage() {
             <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
               <dt className="text-fog">Method</dt><dd>{order.payment.provider}</dd>
               <dt className="text-fog">Status</dt><dd>{PAYMENT_STATUS_LABEL[order.payment.status]}</dd>
-              <dt className="text-fog">Amount</dt><dd className="tabular-nums">{money(order.payment.amount)}</dd>
+              <dt className="text-fog">Plan</dt><dd>{order.payment.plan === 'partial' ? 'Partial (50% now, rest on delivery)' : 'Full payment'}</dd>
+              <dt className="text-fog">Paid online</dt><dd className="tabular-nums">{money(order.payment.amount)}</dd>
+              {order.payment.balance > 0 && <><dt className="text-fog">On delivery</dt><dd className="tabular-nums">{money(order.payment.balance)}</dd></>}
               {order.payment.reference && <><dt className="text-fog">Reference</dt><dd className="break-all">{order.payment.reference}</dd></>}
               {order.payment.transaction_id && <><dt className="text-fog">Transaction</dt><dd className="break-all">{order.payment.transaction_id}</dd></>}
               {order.payment.paid_at && <><dt className="text-fog">Paid</dt><dd>{dateTime(order.payment.paid_at)}</dd></>}
@@ -127,22 +129,22 @@ export default function AdminOrderDetailPage() {
       </div>
 
       <Modal open={dialog === 'cancel'} onClose={() => setDialog(null)} title={`Cancel ${order.number}?`}>
-        <p className="text-smoke">Stock is returned to inventory. {order.payment.status === 'paid' ? 'The payment will be marked as awaiting refund.' : 'Nothing was collected, so there is nothing to refund.'}</p>
+        <p className="text-smoke">Stock is returned to inventory. {['paid', 'partially_paid'].includes(order.payment.status) ? 'The payment will be marked as awaiting refund.' : 'Nothing was collected, so there is nothing to refund.'}</p>
         <Input className="mt-4" label="Reason (shown in history)" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/cancel`, { body: { status: 'cancelled', note: note || null } }), 'Order cancelled')}>Cancel order</Button>
           <Button variant="ghost" onClick={() => setDialog(null)}>Keep order</Button>
         </div>
       </Modal>
-      <Modal open={dialog === 'refund'} onClose={() => setDialog(null)} title={`Refund ${money(order.total)}?`}>
+      <Modal open={dialog === 'refund'} onClose={() => setDialog(null)} title={`Refund ${money(order.payment.amount)}?`}>
         <p className="text-smoke">
-          {order.payment.provider === 'cod' ? 'This was a cash-on-delivery order. Transfer the refund manually, then mark it refunded here.'
-            : 'The refund is sent through the payment provider to the original payment method.'}
+          The amount paid online goes back through the payment provider to the original payment method.
+          {order.payment.balance > 0 && order.status === 'delivered' && ` The ${money(order.payment.balance)} collected on delivery has to be returned manually.`}
         </p>
         <Input className="mt-4" label="Note" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="mt-6 flex flex-wrap gap-3">
           <Button loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/refund`, { body: { status: 'refunded', note: note || null } }), 'Refund processed')}>
-            {order.payment.provider === 'cod' ? 'Mark as refunded' : 'Refund now'}
+            Refund now
           </Button>
           {order.payment.status !== 'refund_pending' && (
             <Button variant="outline" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/refund`, { body: { status: 'refund_pending', note: note || null } }), 'Marked as refund pending')}>Mark refund pending</Button>

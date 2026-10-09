@@ -14,7 +14,7 @@ ADMIN = {"Authorization": "Bearer dev:dev-admin:diveshkasyap5@gmail.com"}
 @pytest.fixture
 def client():
     settings = Settings(_env_file=None, env="test", memory_persist_path=None, catalog_cache_seconds=0,
-                        payment_providers=["mock", "cod"])
+                        payment_providers=["mock"])
     with TestClient(create_app(settings, MemoryStore())) as c:
         yield c
 

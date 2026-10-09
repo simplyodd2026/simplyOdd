@@ -59,7 +59,7 @@ export function Stars({ value, size = 14, className }: { value: number; size?: n
 export function StatusPill({ status, label }: { status: string; label: string }) {
   const tone =
     ['cancelled', 'refunded', 'failed', 'void'].includes(status) ? 'text-fog border-rule'
-      : ['pending', 'refund_pending', 'cod_due'].includes(status) ? 'text-accent border-accent/50'
+      : ['pending', 'partially_paid', 'refund_pending', 'cod_due'].includes(status) ? 'text-accent border-accent/50'
         : status === 'delivered' || status === 'paid' ? 'text-ink border-graphite/40'
           : 'text-graphite border-graphite/25'
   return <span className={cn('inline-flex h-6 items-center rounded-full border px-2.5 text-xs font-medium', tone)}>{label}</span>

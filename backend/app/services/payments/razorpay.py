@@ -35,7 +35,7 @@ class RazorpayProvider(PaymentProvider):
         return httpx.AsyncClient(base_url=API, auth=(self.key_id, self.key_secret), timeout=15)
 
     async def start(self, order: Order) -> StartResult:
-        amount = round(order.total * 100)  # smallest currency unit
+        amount = round(order.payment.amount * 100)  # due now, in the smallest currency unit
         if amount < MIN_AMOUNT:
             raise RazorpayError(f"Order {order.number} is below Razorpay's minimum of {MIN_AMOUNT} paise")
         async with self._client() as c:
@@ -67,6 +67,6 @@ class RazorpayProvider(PaymentProvider):
             return None
         async with self._client() as c:
             r = await c.post(f"/payments/{order.payment.transaction_id}/refund",
-                             json={"amount": round(order.total * 100)})
+                             json={"amount": round(order.payment.amount * 100)})
             r.raise_for_status()
             return r.json().get("id")

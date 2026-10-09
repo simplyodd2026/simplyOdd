@@ -57,9 +57,8 @@ class Quote(Schema):
     shipping_method: ShippingMethod
     shipping: float
     shipping_options: list[ShippingOption]
-    tax: float
-    tax_rate: float
     total: float
+    deposit: float  # paid online up front on the partial plan
     currency: str
     item_count: int
     has_issues: bool

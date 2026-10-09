@@ -12,7 +12,7 @@ class MockProvider(PaymentProvider):
     description = "Development only. No money moves."
 
     async def start(self, order: Order) -> StartResult:
-        return StartResult(reference=new_id("mock_"), client_payload={"amount": order.total, "currency": order.currency})
+        return StartResult(reference=new_id("mock_"), client_payload={"amount": order.payment.amount, "currency": order.currency})
 
     async def verify(self, order: Order, payload: dict) -> VerifyResult:
         if payload.get("outcome") == "success":
@@ -22,14 +22,3 @@ class MockProvider(PaymentProvider):
     async def refund(self, order: Order) -> str | None:
         return new_id("mockrf_")
 
-
-class CashOnDeliveryProvider(PaymentProvider):
-    id = "cod"
-    label = "Cash on delivery"
-    description = "Pay in cash or UPI when your order arrives."
-
-    async def start(self, order: Order) -> StartResult:
-        return StartResult(reference=None, status="cod_due")
-
-    async def verify(self, order: Order, payload: dict) -> VerifyResult:
-        return VerifyResult(ok=True)

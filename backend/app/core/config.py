@@ -32,12 +32,11 @@ class Settings(BaseSettings):
     media_backend: Literal["local", "firebase"] | None = None
 
     currency: str = "INR"
-    tax_rate: float = 0.18
     free_shipping_threshold: float = 1999
     standard_shipping_fee: float = 99
     express_shipping_fee: float = 249
 
-    payment_providers: Csv = ["mock", "cod"]
+    payment_providers: Csv = ["mock"]
     razorpay_key_id: str | None = None
     razorpay_key_secret: str | None = None
 

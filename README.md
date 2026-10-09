@@ -61,10 +61,11 @@ cd frontend && npm run build                  # typecheck + production build
 | Layer | File |
 |---|---|
 | Backend contract (`start` / `verify` / `refund`) | `backend/app/services/payments/base.py` |
-| Providers: `mock`, `cod`, `razorpay` | `backend/app/services/payments/*.py` |
+| Providers: `mock`, `razorpay` | `backend/app/services/payments/*.py` |
 | Frontend adapters (open provider UI, return payload) | `frontend/src/features/payments/*` |
 
-Enable providers with `PAYMENT_PROVIDERS=razorpay,cod` plus `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET`.
+Enable providers with `PAYMENT_PROVIDERS=razorpay` plus `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET`.
+Customers pay the full total online, or 50% online and the rest on delivery (the order's `payment.plan`).
 Razorpay signatures are verified server-side with HMAC-SHA256.
 
 To add Stripe:

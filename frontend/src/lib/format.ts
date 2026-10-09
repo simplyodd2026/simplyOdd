@@ -32,6 +32,7 @@ export const PAYMENT_STATUS_LABEL: Record<string, string> = {
   pending: 'Awaiting payment',
   authorized: 'Authorised',
   paid: 'Paid',
+  partially_paid: '50% paid',
   failed: 'Failed',
   refund_pending: 'Refund pending',
   refunded: 'Refunded',

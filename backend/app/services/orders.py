@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 from app.core.errors import BadRequest, Conflict, Forbidden, NotFound
-from app.core.utils import new_id, now
+from app.core.utils import money, new_id, now
 from app.models.order import (
     STATUS_FLOW, CheckoutRequest, Order, OrderItem, PaymentInfo, StatusEvent,
 )
@@ -84,6 +84,7 @@ class OrderService:
             raise Conflict(f"Only {e.available} left of one of your items. Update your bag and try again.") from e
         self.catalog.invalidate()
 
+        due_now = quote.deposit if req.payment_plan == "partial" else quote.total
         ts = now()
         seq = await self.store.next_sequence("orders", start=10000)
         order = Order(
@@ -92,9 +93,10 @@ class OrderService:
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
             address=req.address, shipping_method=req.shipping_method, subtotal=quote.subtotal,
-            discount=quote.discount, coupon_code=quote.coupon_code, shipping=quote.shipping, tax=quote.tax,
+            discount=quote.discount, coupon_code=quote.coupon_code, shipping=quote.shipping,
             total=quote.total, currency=quote.currency, notes=req.notes,
-            payment=PaymentInfo(provider=provider.id, amount=quote.total, currency=quote.currency),
+            payment=PaymentInfo(provider=provider.id, plan=req.payment_plan, amount=due_now,
+                                balance=money(quote.total - due_now), currency=quote.currency),
             history=[StatusEvent(status="pending", at=ts, note="Order placed")],
             created_at=ts, updated_at=ts,
         )
@@ -111,10 +113,6 @@ class OrderService:
             raise BadRequest("We couldn't reach the payment provider. Your bag is unchanged; try again.") from exc
 
         order.payment.reference = started.reference
-        if started.status == "cod_due":
-            order.payment.status = "cod_due"
-            self._event(order, "confirmed", "Cash on delivery")
-            await self._on_confirmed(order)
         await self._save(order)
         return order, {"provider": provider.id, **started.client_payload}
 
@@ -137,7 +135,7 @@ class OrderService:
 
     async def confirm_payment(self, user: AuthUser, order_id: str, payload: dict) -> Order:
         order = await self.get_for_user(user, order_id)
-        if order.payment.status == "paid":
+        if order.payment.status in ("paid", "partially_paid"):
             return order  # idempotent
         if order.status != "pending":
             raise Conflict("This order can no longer be paid")
@@ -149,10 +147,11 @@ class OrderService:
             order.payment.status = "failed"
             await self._save(order)
             raise BadRequest(result.message or "Payment failed. Try again or use another method.")
-        order.payment.status = "paid"
+        partial = order.payment.balance > 0
+        order.payment.status = "partially_paid" if partial else "paid"
         order.payment.transaction_id = result.transaction_id
         order.payment.paid_at = now()
-        self._event(order, "confirmed", "Payment received")
+        self._event(order, "confirmed", "50% advance received" if partial else "Payment received")
         await self._on_confirmed(order)
         return await self._save(order)
 
@@ -204,7 +203,7 @@ class OrderService:
         if tracking:
             order.tracking_number = tracking
         self._event(order, status, note, by=admin.uid)
-        if status == "delivered" and order.payment.status == "cod_due":
+        if status == "delivered" and order.payment.status in ("partially_paid", "cod_due"):
             order.payment.status = "paid"
             order.payment.paid_at = now()
         return await self._save(order)
@@ -214,7 +213,7 @@ class OrderService:
             raise Conflict("Shipped orders can't be cancelled; process a refund once returned")
         await self._release_stock(order)
         self._event(order, "cancelled", note, by=by)
-        if order.payment.status == "paid":
+        if order.payment.status in ("paid", "partially_paid"):
             order.payment.status = "refund_pending"
         elif order.payment.status in ("pending", "failed", "cod_due"):
             order.payment.status = "void"  # nothing was collected
@@ -230,7 +229,7 @@ class OrderService:
             order.payment.status = "refund_pending"
             return await self._save(order)
         provider = self.payments.get(order.payment.provider)
-        if provider and order.payment.transaction_id and order.payment.status in ("paid", "refund_pending"):
+        if provider and order.payment.transaction_id and order.payment.status in ("paid", "partially_paid", "refund_pending"):
             try:
                 order.payment.refund_reference = await provider.refund(order)
             except Exception as exc:

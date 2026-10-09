@@ -10,7 +10,11 @@ OrderStatus = Literal[
     "pending", "confirmed", "processing", "shipped",
     "out_for_delivery", "delivered", "cancelled", "refunded",
 ]
-PaymentStatus = Literal["pending", "authorized", "paid", "failed", "refund_pending", "refunded", "cod_due", "void"]
+# "cod_due" only appears on orders placed before cash on delivery was removed.
+PaymentStatus = Literal["pending", "authorized", "paid", "partially_paid", "failed", "refund_pending", "refunded",
+                        "cod_due", "void"]
+# full: the whole total online. partial: half online now, the rest on delivery.
+PaymentPlan = Literal["full", "partial"]
 
 # Which transitions an admin may make. Cancel/refund have dedicated endpoints.
 STATUS_FLOW: dict[str, list[str]] = {
@@ -57,9 +61,11 @@ class StatusEvent(Schema):
 class PaymentInfo(Schema):
     provider: str
     status: PaymentStatus = "pending"
+    plan: PaymentPlan = "full"
     reference: str | None = None       # provider order/intent id
     transaction_id: str | None = None  # provider payment id
-    amount: float
+    amount: float                      # charged online at checkout
+    balance: float = 0                 # collected on delivery (partial plan)
     currency: str
     paid_at: datetime | None = None
     refund_reference: str | None = None
@@ -71,6 +77,7 @@ class CheckoutRequest(Schema):
     shipping_method: ShippingMethod = "standard"
     coupon_code: str | None = None
     payment_provider: str
+    payment_plan: PaymentPlan = "full"
     notes: str | None = Field(default=None, max_length=500)
 
 
@@ -86,7 +93,6 @@ class Order(Schema):
     discount: float
     coupon_code: str | None = None
     shipping: float
-    tax: float
     total: float
     currency: str
     status: OrderStatus = "pending"

@@ -85,9 +85,9 @@ export interface Quote {
   shipping_method: ShippingMethod
   shipping: number
   shipping_options: ShippingOption[]
-  tax: number
-  tax_rate: number
   total: number
+  /** Paid online up front on the partial plan. */
+  deposit: number
   currency: string
   item_count: number
   has_issues: boolean
@@ -122,7 +122,9 @@ export interface UserProfile {
 export type OrderStatus =
   | 'pending' | 'confirmed' | 'processing' | 'shipped'
   | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded'
-export type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'failed' | 'refund_pending' | 'refunded' | 'cod_due' | 'void'
+export type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'partially_paid' | 'failed' | 'refund_pending' | 'refunded' | 'cod_due' | 'void'
+/** full: the whole total online. partial: 50% online now, the rest on delivery. */
+export type PaymentPlan = 'full' | 'partial'
 
 export interface ShippingAddress {
   full_name: string
@@ -158,7 +160,6 @@ export interface Order {
   discount: number
   coupon_code: string | null
   shipping: number
-  tax: number
   total: number
   currency: string
   status: OrderStatus
@@ -166,9 +167,13 @@ export interface Order {
   payment: {
     provider: string
     status: PaymentStatus
+    plan: PaymentPlan
     reference: string | null
     transaction_id: string | null
+    /** Charged online at checkout. */
     amount: number
+    /** Collected on delivery (partial plan). */
+    balance: number
     currency: string
     paid_at: string | null
     refund_reference: string | null
@@ -199,7 +204,6 @@ export interface ReviewEligibility { can_review: boolean; reason: string | null;
 export interface PaymentProviderInfo { id: string; label: string; description: string }
 export interface StorefrontConfig {
   currency: string
-  tax_rate: number
   free_shipping_threshold: number
   payment_providers: PaymentProviderInfo[]
 }

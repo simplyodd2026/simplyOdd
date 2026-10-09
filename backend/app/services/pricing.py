@@ -9,6 +9,8 @@ from app.models.marketing import Coupon
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
 
+PARTIAL_SHARE = 0.5  # share of the total paid online on the partial plan
+
 
 class PricingService:
     def __init__(self, settings: Settings, catalog: CatalogService, coupons: CouponService):
@@ -60,13 +62,12 @@ class PricingService:
             applied, discount, shipping, message = self.coupons.evaluate(found, req.coupon_code, subtotal, shipping)
             coupon = found if applied else None
 
-        tax = money((subtotal - discount) * self.s.tax_rate)
-        total = money(subtotal - discount + shipping + tax)
+        total = money(subtotal - discount + shipping)
         quote = Quote(
             lines=lines, subtotal=subtotal, discount=discount,
             coupon_code=coupon.code if coupon else None, coupon_message=message,
             shipping_method=req.shipping_method, shipping=shipping, shipping_options=options,
-            tax=tax, tax_rate=self.s.tax_rate, total=total, currency=self.s.currency,
+            total=total, deposit=money(total * PARTIAL_SHARE), currency=self.s.currency,
             item_count=sum(line.quantity for line in lines if line.available),
             has_issues=any(not line.available for line in lines),
         )

@@ -161,6 +161,8 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
     rng = random.Random(7)
     admin = AuthUser(uid="dev-admin", email="diveshkasyap5@gmail.com", name="Studio Admin", is_admin=True)
     await svc.accounts.ensure_profile(admin)
+    if svc.payments.get("mock") is None:
+        return  # demo orders are paid with the test card, which production never enables
     people = [("demo-customer", "demo@simplyodd.dev", "Aarav Mehta"), ("c-riya", "riya@example.com", "Riya Sen"),
               ("c-kabir", "kabir@example.com", "Kabir Das"), ("c-ira", "ira@example.com", "Ira Kapoor")]
     reviews = [
@@ -182,7 +184,7 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
             picks = rng.sample([s for s in slugs if s not in ("ghost-lamp",)], rng.randint(1, 2))
             req = CheckoutRequest(items=[CartLine(product_id=ids[s], quantity=1) for s in picks],
                                   address=ShippingAddress(**addr, email=email),
-                                  payment_provider="cod" if svc.payments.get("cod") else "mock")
+                                  payment_provider="mock", payment_plan="partial" if n % 2 else "full")
             order, _ = await svc.orders.checkout(user, req)
             placed = now() - timedelta(days=rng.randint(2, 28), hours=rng.randint(0, 23))
             status = rng.choice(["delivered", "delivered", "shipped", "processing"])
@@ -193,7 +195,9 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
                 order.history.append(StatusEvent(status="processing", at=placed + timedelta(hours=20)))
             order.history.append(StatusEvent(status=status, at=placed + timedelta(days=2)))
             order.status = status
-            order.payment.status = "paid" if status == "delivered" else order.payment.status
+            settled = status == "delivered" or order.payment.plan == "full"
+            order.payment.status = "paid" if settled else "partially_paid"
+            order.payment.paid_at = placed
             order.tracking_number = f"DTDC{rng.randint(10**8, 10**9)}" if status in ("shipped", "delivered") else None
             await svc.store.set("orders", order.id, order.model_dump())
             if status == "delivered":

@@ -31,7 +31,7 @@ export function CartDrawer() {
             <span className="label text-smoke">Subtotal</span>
             <span className="font-display text-3xl tabular-nums text-ink">{money(quote.subtotal)}</span>
           </div>
-          <p className="-mt-2 text-[13px] text-fog">Shipping and tax are calculated at checkout.</p>
+          <p className="-mt-2 text-[13px] text-fog">Shipping is calculated at checkout.</p>
           <div className="grid grid-cols-2 gap-2">
             <ButtonLink to="/cart" variant="outline" size="lg" onClick={close}>View bag</ButtonLink>
             <Button size="lg" disabled={quote.has_issues} onClick={() => { close(); navigate('/checkout') }}>Check out</Button>

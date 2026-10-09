@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { refreshProfile, useConfig, useQuote } from '@/lib/queries'
-import type { AddressInput, CheckoutResponse, Order, ShippingAddress } from '@/lib/types'
+import type { AddressInput, CheckoutResponse, Order, PaymentPlan, ShippingAddress } from '@/lib/types'
 import { useCart } from '@/stores/cart'
 import { useSession } from '@/stores/session'
 import { toastError } from '@/stores/toast'
@@ -42,6 +42,7 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState(user?.email ?? '')
   const [saveAddress, setSaveAddress] = useState(true)
   const [errors, setErrors] = useState<AddressErrors>({})
+  const [plan, setPlan] = useState<PaymentPlan>('full')
   const [provider, setProvider] = useState<string>('')
   const [panelState, setPanelState] = useState<unknown>(undefined)
   const [busy, setBusy] = useState(false)
@@ -122,7 +123,7 @@ export default function CheckoutPage() {
         const res = await api<CheckoutResponse>('/checkout', {
           body: {
             items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode,
-            payment_provider: provider, notes: null,
+            payment_provider: provider, payment_plan: plan, notes: null,
           },
         })
         setPending(res.order)
@@ -139,7 +140,9 @@ export default function CheckoutPage() {
   const stepIndex = STEPS.findIndex((s) => s.id === step)
   const adapter = getAdapter(provider)
   const shippingOptions = quote?.shipping_options ?? []
-  const totalLabel = quote ? money(pending?.total ?? quote.total) : ''
+  // What the customer pays now: the whole total, or the 50% advance on the partial plan.
+  const dueNow = pending?.payment.amount ?? (quote && (plan === 'partial' ? quote.deposit : quote.total))
+  const totalLabel = dueNow != null ? money(dueNow) : ''
 
   const receiptNo = pending?.number ?? 'Draft'
   const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -272,6 +275,28 @@ export default function CheckoutPage() {
                     Order {pending.number} is saved and waiting for payment. Your items are held for you.
                   </p>
                 )}
+                {quote && (
+                  <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment plan">
+                    {([
+                      ['full', 'Full payment', 'Pay the whole amount now.', quote.total],
+                      ['partial', 'Partial payment', `Pay 50% now and ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
+                    ] as const).map(([id, label, note, amount]) => {
+                      const active = (pending?.payment.plan ?? plan) === id
+                      return (
+                        <button key={id} role="radio" aria-checked={active} disabled={!!pending && !active} onClick={() => setPlan(id)}
+                          className={cn(option(active), 'flex items-center gap-3 disabled:opacity-40')}>
+                          {tick(active)}
+                          <span className="flex-1">
+                            <span className="block text-[16px] font-medium text-ink">{label}</span>
+                            <span className="text-[13.5px] text-smoke">{note}</span>
+                          </span>
+                          <span className="text-[16px] tabular-nums text-ink">{money(amount)}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <h3 className="mt-2 text-[15px] font-medium text-ink">Pay with</h3>
                 <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
                   {config?.payment_providers.map((pr) => {
                     const a = getAdapter(pr.id)

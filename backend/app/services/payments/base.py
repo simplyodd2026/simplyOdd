@@ -10,18 +10,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Literal
-
 from app.models.order import Order
 
 
 @dataclass
 class StartResult:
     reference: str | None
+    # The client completes payment with this, then calls /confirm.
     client_payload: dict = field(default_factory=dict)
-    # "pending"  → client must complete payment then call /confirm
-    # "cod_due"  → nothing to collect online; order is confirmed immediately
-    status: Literal["pending", "cod_due"] = "pending"
 
 
 @dataclass

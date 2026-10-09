@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useMyOrder } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
-import { PAYMENT_STATUS_LABEL } from '@/lib/format'
+import { PAYMENT_STATUS_LABEL, money } from '@/lib/format'
 import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
 import { PageSpinner } from '@/components/ui/Spinner'
@@ -39,6 +39,7 @@ export default function OrderConfirmationPage() {
             <div>
               <dt className="mb-2 text-sm text-fog">Payment</dt>
               <dd>{PAYMENT_STATUS_LABEL[order.payment.status]}</dd>
+              {order.payment.plan === 'partial' && <dd className="mt-1 text-sm text-smoke">{money(order.payment.balance)} due on delivery</dd>}
               <dt className="mb-2 mt-4 text-sm text-fog">Delivery</dt>
               <dd className="capitalize">{order.shipping_method}</dd>
             </div>

@@ -19,6 +19,12 @@ export function OrderItems({ order, linkProducts = true }: { order: Order; linkP
         ))}
       </ul>
       <Totals quote={order} />
+      {order.payment.plan === 'partial' && (
+        <dl className="-mt-2 flex flex-col gap-2.5 text-[15px]">
+          <div className="flex justify-between gap-4 tabular-nums"><dt className="text-smoke">Paid online (50%)</dt><dd>{money(order.payment.amount)}</dd></div>
+          <div className="flex justify-between gap-4 tabular-nums"><dt className="text-smoke">Due on delivery</dt><dd>{money(order.payment.balance)}</dd></div>
+        </dl>
+      )}
     </div>
   )
 }

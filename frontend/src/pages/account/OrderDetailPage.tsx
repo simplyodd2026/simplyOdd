@@ -6,7 +6,7 @@ import { useMyOrder } from '@/lib/queries'
 import type { Order } from '@/lib/types'
 import { toast, toastError } from '@/stores/toast'
 import { useDocumentTitle } from '@/lib/hooks'
-import { ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, date } from '@/lib/format'
+import { ORDER_STATUS_LABEL, PAYMENT_STATUS_LABEL, date, money } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Overlay'
 import { StatusPill } from '@/components/ui/misc'
@@ -64,7 +64,8 @@ export default function OrderDetailPage() {
             </div>
             <div>
               <dt className="mb-2 text-sm text-fog">Payment</dt>
-              <dd>{PAYMENT_STATUS_LABEL[order.payment.status]}<span className="text-smoke">, {order.payment.provider === 'cod' ? 'cash on delivery' : order.payment.provider === 'mock' ? 'test card' : order.payment.provider}</span></dd>
+              <dd>{PAYMENT_STATUS_LABEL[order.payment.status]}<span className="text-smoke">, {order.payment.provider === 'mock' ? 'test card' : order.payment.provider}</span></dd>
+              {order.payment.plan === 'partial' && <dd className="mt-1 text-sm text-smoke">50% paid online, {money(order.payment.balance)} on delivery</dd>}
               {order.tracking_number && <><dt className="mb-2 mt-4 text-sm text-fog">Tracking number</dt><dd className="tabular-nums">{order.tracking_number}</dd></>}
             </div>
           </dl>
@@ -77,7 +78,7 @@ export default function OrderDetailPage() {
 
       <Modal open={confirming} onClose={() => setConfirming(false)} title={`Cancel ${order.number}?`}>
         <p className="text-smoke">
-          {order.payment.status === 'paid' ? "We'll refund the full amount to your original payment method within 5–7 business days." : "You haven't been charged, so there's nothing to refund."}
+          {['paid', 'partially_paid'].includes(order.payment.status) ? `We'll refund ${money(order.payment.amount)} to your original payment method within 5–7 business days.` : "You haven't been charged, so there's nothing to refund."}
         </p>
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={cancel}>Cancel order</Button>

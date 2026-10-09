@@ -16,7 +16,6 @@ async def storefront_config(svc: Services = Depends(services)):
     s = svc.settings
     return {
         "currency": s.currency,
-        "tax_rate": s.tax_rate,
         "free_shipping_threshold": s.free_shipping_threshold,
         "payment_providers": svc.payments.public(),
     }

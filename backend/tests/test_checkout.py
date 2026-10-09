@@ -2,10 +2,11 @@ from app.core.container import LOCAL_MEDIA_ROOT
 from tests.conftest import ADMIN, CUSTOMER, OTHER, address
 
 
-def test_quote_applies_shipping_tax_and_coupon(client, products):
+def test_quote_applies_shipping_and_coupon(client, products):
     pid = products["vortex-pen-cup"]["id"]  # 1290
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 1}]}).json()
-    assert q["subtotal"] == 1290 and q["shipping"] == 99 and q["tax"] == 232.2 and q["total"] == 1621.2
+    assert q["subtotal"] == 1290 and q["shipping"] == 99 and q["total"] == 1389 and q["deposit"] == 694.5
+    assert "tax" not in q
 
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 2}], "coupon_code": "oddone"}).json()
     assert q["coupon_code"] == "ODDONE" and q["discount"] == 258 and q["shipping"] == 0
@@ -32,6 +33,7 @@ def test_mock_payment_flow_reserves_and_releases_stock(client, products):
     assert r.status_code == 201, r.text
     order = r.json()["order"]
     assert order["status"] == "pending" and order["number"].startswith("OM-")
+    assert order["payment"]["plan"] == "full" and order["payment"]["amount"] == order["total"]
     assert client.get("/api/products/facet-planter").json()["product"]["stock"] == 1
 
     # Can't oversell the remaining 1
@@ -57,9 +59,14 @@ def test_mock_payment_flow_reserves_and_releases_stock(client, products):
 
 def test_admin_status_flow_and_reviews(client, products):
     pid = products["grid-tray"]["id"]
-    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "cod"}
+    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
+            "payment_plan": "partial"}
     order = client.post("/api/checkout", json=body, headers=CUSTOMER).json()["order"]
-    assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
+    assert order["payment"]["amount"] + order["payment"]["balance"] == order["total"]
+    assert order["payment"]["amount"] == round(order["total"] / 2, 2)
+    order = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "success"}},
+                        headers=CUSTOMER).json()
+    assert order["status"] == "confirmed" and order["payment"]["status"] == "partially_paid"
 
     # Non-admins are refused
     assert client.post(f"/api/admin/orders/{order['id']}/status", json={"status": "processing"}, headers=CUSTOMER).status_code == 403
