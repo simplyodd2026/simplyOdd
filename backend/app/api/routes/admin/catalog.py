@@ -3,7 +3,6 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 
 from app.core.container import Services, services
-from app.core.errors import BadRequest
 from app.models.catalog import (
     Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, SortKey,
 )
@@ -77,8 +76,6 @@ async def delete_product(pid: str, svc: Services = Depends(services)):
 @router.post("/products/{pid}/images", response_model=Product)
 async def upload_product_images(pid: str, files: list[UploadFile] = File(...), svc: Services = Depends(services)):
     product = await svc.catalog.get_product(pid, include_unpublished=True)
-    if len(product.images) + len(files) > 12:
-        raise BadRequest("A product can have up to 12 images")
     images = list(product.images)
     for f in files:
         data = await f.read()
