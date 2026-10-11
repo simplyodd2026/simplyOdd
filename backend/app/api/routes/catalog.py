@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from app.core.container import Services, services
 from app.models.catalog import Category, Product, SortKey
 from app.models.common import Page
+from app.models.filament import FILAMENTS
 from app.models.homepage import Homepage
 from app.models.marketing import CustomRequestIn, NewsletterIn
 
@@ -18,6 +19,7 @@ async def storefront_config(svc: Services = Depends(services)):
         "currency": s.currency,
         "free_shipping_threshold": s.free_shipping_threshold,
         "payment_providers": svc.payments.public(),
+        "filaments": FILAMENTS,
     }
 
 

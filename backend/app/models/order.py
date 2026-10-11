@@ -5,6 +5,7 @@ from pydantic import EmailStr, Field
 
 from app.models.cart import CartLine, ShippingMethod
 from app.models.common import Schema
+from app.models.filament import FilamentChoice
 
 OrderStatus = Literal[
     "pending", "confirmed", "processing", "shipped",
@@ -43,6 +44,8 @@ class ShippingAddress(Schema):
 
 class OrderItem(Schema):
     product_id: str
+    color: str | None = None
+    filament: FilamentChoice | None = None  # snapshot of the colour and finish at the time of purchase
     name: str
     slug: str
     image: str | None

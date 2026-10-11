@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import timedelta
 
-from app.core.errors import Conflict, NotFound
+from app.core.errors import BadRequest, Conflict, NotFound
 from app.core.utils import money, new_id, now
 from app.models.marketing import CustomRequest, CustomRequestIn, CustomRequestUpdate, Subscriber
 from app.repositories.store import DocumentStore
@@ -105,6 +105,13 @@ class InsightsService:
         body = data.model_dump()
         body["email"] = body["email"].strip().lower()
         body["colours"] = [c.strip()[:20] for c in body["colours"] if c.strip()]
+        body["changes"] = list(dict.fromkeys(body["changes"]))
+        if data.product_id:
+            products = await self.catalog.get_products([data.product_id])
+            product = products.get(data.product_id)
+            if product is None or not product.is_published:
+                raise BadRequest("That product isn't available to customise")
+            body.update(product_name=product.name, product_slug=product.slug)
         req = CustomRequest(id=new_id("cr_"), created_at=ts, updated_at=ts, **body)
         await self.store.set(CUSTOM_REQUESTS, req.id, req.model_dump())
         return req

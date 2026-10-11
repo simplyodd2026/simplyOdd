@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useProductsByIds } from '@/lib/queries'
 import { useWishlist } from '@/stores/wishlist'
 import { useCart } from '@/stores/cart'
+import { defaultColor } from '@/lib/filaments'
 import { useSession } from '@/stores/session'
 import { toast } from '@/stores/toast'
 import { useDocumentTitle } from '@/lib/hooks'
@@ -44,7 +45,7 @@ export default function WishlistPage() {
                 <Price price={p.price} compareAt={p.compare_at_price} className="mt-1 tabular-nums text-[13px] text-fog" />
                 <div className="mt-4 flex flex-col gap-2">
                   <Button size="sm" disabled={soldOut} onClick={() => {
-                    add(p.id)
+                    add(p.id, 1, defaultColor(p))
                     void remove(p.id)
                     toast(`Moved ${p.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
                   }}>{soldOut ? 'Sold out' : 'Move to bag'}</Button>

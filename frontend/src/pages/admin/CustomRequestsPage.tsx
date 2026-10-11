@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useDocumentTitle } from '@/lib/hooks'
@@ -10,6 +11,7 @@ type Status = 'new' | 'replied' | 'closed'
 interface CustomRequest {
   id: string; name: string; email: string; idea: string; kind: string; size: string; colours: string[]
   budget: string; reference_url: string | null; status: Status; created_at: string
+  product_name?: string | null; product_slug?: string | null; changes?: string[]
 }
 
 const LABELS: Record<string, string> = {
@@ -17,6 +19,7 @@ const LABELS: Record<string, string> = {
   small: 'Small', medium: 'Medium', large: 'Large', not_sure: 'Not sure',
   under_1000: 'Under ₹1,000', '1000_2500': '₹1,000–2,500', '2500_5000': '₹2,500–5,000', '5000_plus': '₹5,000+',
 }
+const CHANGE_LABELS: Record<string, string> = { size: 'Size', colour: 'Colour', personalise: 'Name or text', other: 'Something else' }
 const STATUS_LABEL: Record<Status, string> = { new: 'New', replied: 'Replied', closed: 'Closed' }
 // StatusPill colours by status name; map ours onto its tones.
 const PILL: Record<Status, string> = { new: 'pending', replied: 'processing', closed: 'delivered' }
@@ -38,7 +41,7 @@ export default function CustomRequestsPage() {
   return (
     <div>
       <AdminHeader title="Custom requests" sub={data ? `${data.length} requests, ${open} waiting for a reply` : undefined} />
-      {data && data.length === 0 && <EmptyState title="No custom requests yet." body="Ideas sent from the “Made just for you” form on the homepage show up here." />}
+      {data && data.length === 0 && <EmptyState title="No custom requests yet." body="Ideas sent from the Customise page, and from “Customise this piece” on product pages, show up here." />}
       <ul className="grid gap-4 lg:grid-cols-2">
         {data?.map((r) => (
           <li key={r.id} className="flex flex-col gap-3 rounded-2xl border border-rule bg-paper p-5">
@@ -49,6 +52,14 @@ export default function CustomRequestsPage() {
               </div>
               <StatusPill status={PILL[r.status]} label={STATUS_LABEL[r.status]} />
             </div>
+            {r.product_name && (
+              <p className="text-sm text-smoke">
+                Customise{' '}
+                {r.product_slug ? <Link to={`/product/${r.product_slug}`} target="_blank" className="text-accent underline-offset-4 hover:underline">{r.product_name}</Link>
+                  : <span className="text-ink">{r.product_name}</span>}
+                {r.changes?.length ? <>: {r.changes.map((c) => CHANGE_LABELS[c] ?? c).join(', ')}</> : null}
+              </p>
+            )}
             <p className="whitespace-pre-line text-graphite">{r.idea}</p>
             <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
               {[['Type', LABELS[r.kind]], ['Size', LABELS[r.size]], ['Budget', LABELS[r.budget]], ['Colours', r.colours.join(', ') || '—']].map(([k, v]) => (

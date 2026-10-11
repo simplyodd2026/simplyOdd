@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '@/lib/types'
 import { useCart } from '@/stores/cart'
+import { defaultColor, useFilaments } from '@/lib/filaments'
 import { toast } from '@/stores/toast'
 import { cn } from '@/lib/cn'
 import { Price } from './Price'
@@ -13,6 +14,7 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
   size?: 'md' | 'lg'
 }) {
   const add = useCart((s) => s.add)
+  const filaments = useFilaments()
   const tilt = useTilt<HTMLDivElement>(3)
   const soldOut = product.availability === 'out_of_stock'
   const [primary, secondary] = product.images
@@ -20,8 +22,10 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
 
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
-    add(product.id)
-    toast(`${product.name} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
+    const color = defaultColor(product)
+    add(product.id, 1, color)
+    const shade = color && filaments.byId.get(color)
+    toast(`${product.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }
 
   // The wall label's second line: what it's made of and how big it is, the way a gallery captions an object.

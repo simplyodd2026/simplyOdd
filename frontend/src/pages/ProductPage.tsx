@@ -11,6 +11,7 @@ import { useTilt } from '@/lib/useTilt'
 import { Container } from '@/components/layout/Container'
 import { Viewer } from '@/components/product/Gallery'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
+import { ColorSwatches, Swatch } from '@/components/product/ColorSwatches'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { Button } from '@/components/ui/Button'
 import { Accordion } from '@/components/ui/Accordion'
@@ -19,10 +20,12 @@ import { Icon } from '@/components/ui/Icon'
 import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 import { Reviews } from '@/features/product/Reviews'
 import { BoughtTogether } from '@/features/product/BoughtTogether'
+import { CustomiseThis } from '@/features/product/CustomiseThis'
 import { ProductRail } from '@/features/home/ProductRail'
 import { ProcessStrip } from '@/features/home/Process'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { filamentLabel, productFilaments, useFilaments } from '@/lib/filaments'
 import NotFoundPage from './NotFoundPage'
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -49,8 +52,10 @@ export default function ProductPage() {
   const [dock, setDock] = useState(false)
   const [shot, setShot] = useState(0)
   const [viewer, setViewer] = useState<number | null>(null)
+  const [color, setColor] = useState<string | null>(null)
+  const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
-  useEffect(() => { setQty(1); setShot(0) }, [slug])
+  useEffect(() => { setQty(1); setShot(0); setColor(null) }, [slug])
 
   // On small screens, a slim purchase bar docks to the bottom once the main buttons scroll away.
   useEffect(() => {
@@ -75,13 +80,27 @@ export default function ProductPage() {
   const soldOut = p.availability === 'out_of_stock'
   const discounted = !!p.compare_at_price && p.compare_at_price > p.price
   const dims = [p.dimensions.width_cm, p.dimensions.height_cm, p.dimensions.depth_cm]
-  const hero = p.images[shot] ?? p.images[0]
   const paragraphs = (p.description || '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean)
   const [lede, ...story] = paragraphs
-  const room = p.images.slice(1)
   const freeOver = money(config?.free_shipping_threshold ?? 1999)
-  const addToBag = () => { add(p.id, qty); setCart(true) }
-  const buyNow = () => { add(p.id, qty); navigate('/checkout') }
+  // Colour: only what this piece is offered in. Until the shopper picks, the product's default stands.
+  const options = productFilaments(p, filaments.byId)
+  const chosen = options.find((f) => f.id === color) ?? options.find((f) => f.id === p.default_color) ?? options[0] ?? null
+  // The photographs: the chosen colour's own photos first, then the general ones (tagged with no colour).
+  // Photos of other colours are left out. A colour without photos of its own shows the general set,
+  // or everything if there is no general set, and says so plainly below the swatches.
+  const ownPhotos = chosen ? p.images.filter((img) => img.color === chosen.id) : []
+  const generalPhotos = p.images.filter((img) => !img.color)
+  const gallery = ownPhotos.length ? [...ownPhotos, ...generalPhotos] : generalPhotos.length ? generalPhotos : p.images
+  const hero = gallery[shot] ?? gallery[0]
+  const room = gallery.slice(1)
+  const chooseColor = (id: string) => { setColor(id); setShot(0) }
+  const pictured = hero?.color ? filaments.byId.get(hero.color) : undefined
+  const colorNote = chosen && hero && !ownPhotos.length
+    ? `${pictured ? `Pictured in ${pictured.name}` : 'Pictured in our studio sample'}. Yours is printed in ${filamentLabel(chosen)}.`
+    : null
+  const addToBag = () => { add(p.id, qty, chosen?.id ?? null); setCart(true) }
+  const buyNow = () => { add(p.id, qty, chosen?.id ?? null); navigate('/checkout') }
   const availability = soldOut ? 'Sold out' : p.availability === 'low_stock' ? `Only ${p.stock} left` : 'In stock, ships in 2–4 days'
 
   const details: [string, string][] = [
@@ -104,7 +123,7 @@ export default function ProductPage() {
             <motion.div key={p.id} initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} transition={{ duration: 1.3, ease: EASE }}
               className="mx-auto w-full max-w-[calc((100svh-10rem)*0.8)]">
               <div ref={tilt}>
-                <button type="button" onClick={() => setViewer(shot)} aria-label={`Open image ${shot + 1} of ${p.images.length}`}
+                <button type="button" onClick={() => setViewer(shot)} aria-label={`Open image ${shot + 1} of ${gallery.length}`}
                   className={cn('table-shadow relative block aspect-[4/5] w-full overflow-hidden bg-ash', SLAB)}>
                   <AnimatePresence mode="popLayout" initial={false}>
                     {hero ? (
@@ -116,9 +135,9 @@ export default function ProductPage() {
                 </button>
               </div>
             </motion.div>
-            {p.images.length > 1 && (
+            {gallery.length > 1 && (
               <div className="mx-auto mt-5 flex w-full max-w-[calc((100svh-10rem)*0.8)] flex-wrap gap-3" role="tablist" aria-label="Product images">
-                {p.images.map((img, i) => (
+                {gallery.map((img, i) => (
                   <button key={img.url} type="button" role="tab" aria-selected={i === shot} aria-label={`Show image ${i + 1}`} onClick={() => setShot(i)}
                     className={cn('plate size-16 overflow-hidden ring-1 ring-offset-2 ring-offset-paper transition-[box-shadow,opacity] duration-300',
                       i === shot ? 'ring-ink' : 'opacity-60 ring-transparent hover:opacity-100')}>
@@ -157,6 +176,10 @@ export default function ProductPage() {
                 {availability}
               </p>
 
+              {options.length > 0 && !soldOut && (
+                <ColorSwatches className="mt-7" options={options} value={chosen?.id ?? null} onChange={chooseColor} note={colorNote} />
+              )}
+
               <div ref={buyBox} className="mt-7">
                 {!soldOut ? (
                   <>
@@ -174,6 +197,8 @@ export default function ProductPage() {
                   </Button>
                 )}
               </div>
+
+              <CustomiseThis className="mt-8" product={p} category={category} />
             </div>
           </div>
         </div>
@@ -204,11 +229,11 @@ export default function ProductPage() {
           <div className="mx-auto grid max-w-[1300px] gap-14 lg:grid-cols-12 lg:gap-10">
             <div className="lg:col-span-5">
               <h2 className="font-display text-[clamp(2.4rem,4vw,4rem)] leading-[1] text-ink">The details</h2>
-              {p.images[0] && (
+              {gallery[0] && (
                 <figure className="mt-10 max-w-[22rem]">
                   {/* A close crop of the main photograph: the layer lines and the hand finish. */}
                   <div className="plate aspect-square overflow-hidden bg-ash">
-                    <img src={p.images[0].url} alt={`${p.name}, close up`} loading="lazy" className="size-full scale-[1.5] object-cover" />
+                    <img src={gallery[0].url} alt={`${p.name}, close up`} loading="lazy" className="size-full scale-[1.5] object-cover" />
                   </div>
                   <figcaption className="mt-4 font-odd text-[1.05rem] text-smoke">Up close: the surface, layer by layer.</figcaption>
                 </figure>
@@ -251,7 +276,7 @@ export default function ProductPage() {
             <h2 className="mb-12 font-display text-[clamp(2.4rem,4vw,4rem)] leading-[1] text-ink">In your space</h2>
             <div className="grid gap-5 sm:grid-cols-12 sm:gap-6">
               {room.slice(0, 3).map((img, i) => (
-                <button key={img.url} type="button" onClick={() => setViewer(i + 1)} aria-label={`Open image ${i + 2} of ${p.images.length}`}
+                <button key={img.url} type="button" onClick={() => setViewer(i + 1)} aria-label={`Open image ${i + 2} of ${gallery.length}`}
                   className={cn('block overflow-hidden bg-ash',
                     i === 0 ? 'pebble-2 aspect-[4/3] sm:col-span-7' : i === 1 ? 'arch aspect-[3/4] sm:col-span-4 sm:col-start-9 sm:mt-24' : 'slab aspect-[16/9] sm:col-span-6 sm:col-start-3')}>
                   <img src={img.url} alt={img.alt || `${p.name} at home`} loading="lazy" decoding="async"
@@ -263,7 +288,7 @@ export default function ProductPage() {
         </Container>
       )}
 
-      <Viewer images={p.images} name={p.name} index={viewer} onChange={setViewer} />
+      <Viewer images={gallery} name={p.name} index={viewer} onChange={setViewer} />
 
       <Container><div className="mx-auto max-w-[1440px]">
         <BoughtTogether key={p.id} product={p} others={frequently_bought} />
@@ -279,10 +304,13 @@ export default function ProductPage() {
         {dock && !soldOut && (
           <motion.div initial={{ y: '110%' }} animate={{ y: 0 }} exit={{ y: '110%' }} transition={{ duration: 0.6, ease: EASE }}
             className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-rule bg-paper px-5 py-3 lg:hidden">
-            <img src={p.images[0]?.url} alt="" className="plate size-12 bg-ash object-cover" />
+            <img src={gallery[0]?.url} alt="" className="plate size-12 bg-ash object-cover" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-display text-[16px] text-ink">{p.name}</p>
-              <p className="text-[13px] tabular-nums text-fog">{money(p.price)}</p>
+              <p className="flex items-center gap-2 text-[13px] tabular-nums text-fog">
+                {money(p.price)}
+                {chosen && <><Swatch filament={chosen} className="size-2.5" /><span className="truncate">{chosen.name}</span></>}
+              </p>
             </div>
             <Button onClick={addToBag}>Add to bag</Button>
           </motion.div>

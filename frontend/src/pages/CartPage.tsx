@@ -12,6 +12,7 @@ import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { Totals } from '@/features/checkout/OrderSummary'
 import { CouponField } from '@/features/checkout/CouponField'
 import { ProductRail } from '@/features/home/ProductRail'
+import { LineColor } from '@/features/checkout/LineColor'
 
 export default function CartPage() {
   const { items, couponCode, shippingMethod, setQuantity, remove } = useCart()
@@ -40,25 +41,26 @@ export default function CartPage() {
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-8">
           {isLoading || !quote ? (
-            <div className="flex flex-col gap-4">{items.map((i) => <Skeleton key={i.product_id} className="h-40" />)}</div>
+            <div className="flex flex-col gap-4">{items.map((i) => <Skeleton key={`${i.product_id}:${i.color ?? ''}`} className="h-40" />)}</div>
           ) : (
             <ul className="divide-y divide-rule border-y border-rule">
               {quote.lines.map((l) => (
-                <li key={l.product_id} className="grid grid-cols-[6rem_1fr] gap-5 py-8 sm:grid-cols-[9rem_1fr_auto] sm:gap-8">
+                <li key={`${l.product_id}:${l.color ?? ''}`} className="grid grid-cols-[6rem_1fr] gap-5 py-8 sm:grid-cols-[9rem_1fr_auto] sm:gap-8">
                   <Link to={`/product/${l.slug}`} className="overflow-hidden bg-ash">{l.image && <img src={l.image} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}</Link>
                   <div className="flex flex-col">
                     <Link to={`/product/${l.slug}`} className="font-display text-3xl leading-tight text-ink hover:text-accent">{l.name}</Link>
                     <span className="mt-2 tabular-nums text-[12px] text-fog">
                       {money(l.unit_price)}{l.compare_at_price && l.compare_at_price > l.unit_price && <s className="ml-2 text-fog">{money(l.compare_at_price)}</s>}
                     </span>
-                    {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}{l.stock > 0 && '. Reduce the quantity to continue.'}</p>}
+                    <LineColor line={l} />
+                    {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}{l.stock > 0 && l.issue.startsWith('Only') && '. Reduce the quantity to continue.'}</p>}
                     <div className="mt-auto flex flex-wrap items-center gap-4 pt-4">
                       {l.available || l.stock > 0 ? (
-                        <QuantityStepper size="sm" value={l.quantity} max={Math.max(1, l.stock)} onChange={(n) => setQuantity(l.product_id, n)} />
+                        <QuantityStepper size="sm" value={l.quantity} max={Math.max(1, l.stock)} onChange={(n) => setQuantity(l.product_id, l.color, n)} />
                       ) : null}
-                      <button onClick={() => remove(l.product_id)} className="link-draw text-sm text-smoke hover:text-ink">Remove</button>
+                      <button onClick={() => remove(l.product_id, l.color)} className="link-draw text-sm text-smoke hover:text-ink">Remove</button>
                       {l.slug && (
-                        <button onClick={() => { void toggleWish(l.product_id, l.name); remove(l.product_id) }}
+                        <button onClick={() => { void toggleWish(l.product_id, l.name); remove(l.product_id, l.color) }}
                           className="link-draw text-sm text-smoke hover:text-ink">Save for later</button>
                       )}
                     </div>

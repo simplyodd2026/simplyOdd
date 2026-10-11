@@ -1,6 +1,14 @@
 export type Availability = 'in_stock' | 'low_stock' | 'out_of_stock'
 
-export interface ProductImage { url: string; path?: string | null; alt: string }
+/** `color` tags a photo as showing a particular filament, so choosing that colour can show it. */
+export interface ProductImage { url: string; path?: string | null; alt: string; color?: string | null }
+
+export type FilamentGroup = 'essential' | 'extended' | 'special'
+/** solid is a flat colour; the others are looks a flat swatch can't show, drawn as textures over `hex`. */
+export type FilamentFinish = 'solid' | 'transparent' | 'translucent' | 'silk'
+export interface Filament { id: string; name: string; group: FilamentGroup; finish: FilamentFinish; finish_label: string; hex: string }
+/** The chosen filament as recorded on a quote line or order item. */
+export interface FilamentChoice { id: string; name: string; finish: FilamentFinish; finish_label: string; hex: string }
 export interface Dimensions { width_cm?: number | null; height_cm?: number | null; depth_cm?: number | null }
 export interface RatingSummary { average: number; count: number; distribution: Record<string, number> }
 
@@ -25,6 +33,9 @@ export interface Product {
   is_new_arrival: boolean
   is_published: boolean
   frequently_bought_with: string[]
+  /** Filament ids this piece is offered in; empty means it comes as pictured. */
+  colors: string[]
+  default_color: string | null
   rating: RatingSummary
   sales_count: number
   discount_percent: number
@@ -56,12 +67,18 @@ export interface ProductDetail {
   frequently_bought: Product[]
 }
 
-export interface CartLine { product_id: string; quantity: number }
+/** One line per product and colour. */
+export interface CartLine { product_id: string; quantity: number; color?: string | null }
 export interface Cart { items: CartLine[] }
 export type ShippingMethod = 'standard' | 'express'
 
 export interface QuoteLine {
   product_id: string
+  /** The filament id as sent, so the line can be matched back to the bag. */
+  color: string | null
+  filament: FilamentChoice | null
+  /** What the product can be printed in, for changing the choice from the bag. */
+  colors: string[]
   name: string
   slug: string
   image: string | null
@@ -140,6 +157,8 @@ export interface ShippingAddress {
 
 export interface OrderItem {
   product_id: string
+  color?: string | null
+  filament?: FilamentChoice | null
   name: string
   slug: string
   image: string | null
@@ -206,6 +225,7 @@ export interface StorefrontConfig {
   currency: string
   free_shipping_threshold: number
   payment_providers: PaymentProviderInfo[]
+  filaments: Filament[]
 }
 
 export interface Coupon {

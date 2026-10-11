@@ -13,18 +13,24 @@ import { Icon } from '@/components/ui/Icon'
 import { Modal } from '@/components/ui/Overlay'
 import { PageSpinner } from '@/components/ui/Spinner'
 import { cn } from '@/lib/cn'
+import { useFilaments } from '@/lib/filaments'
+import { Swatch } from '@/components/product/ColorSwatches'
 
 const EMPTY: ProductInput = {
   name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, stock: 0, category_id: null,
   tags: [], materials: [], dimensions: {}, weight_g: null, manufacturing: '', images: [],
   is_featured: false, is_bestseller: false, is_new_arrival: true, is_published: false, frequently_bought_with: [],
+  colors: [], default_color: null,
 }
+
+const GROUPS = [['essential', 'Essentials'], ['extended', 'Extended'], ['special', 'Special finishes']] as const
 
 const toInput = (p: Product): ProductInput => ({
   name: p.name, slug: p.slug, tagline: p.tagline, description: p.description, price: p.price, compare_at_price: p.compare_at_price,
   stock: p.stock, category_id: p.category_id, tags: p.tags, materials: p.materials, dimensions: p.dimensions, weight_g: p.weight_g,
   manufacturing: p.manufacturing, images: p.images, is_featured: p.is_featured, is_bestseller: p.is_bestseller,
   is_new_arrival: p.is_new_arrival, is_published: p.is_published, frequently_bought_with: p.frequently_bought_with,
+  colors: p.colors, default_color: p.default_color,
 })
 
 const numOrNull = (v: string) => (v.trim() === '' || Number.isNaN(Number(v)) ? null : Number(v))
@@ -48,6 +54,8 @@ export default function ProductEditPage() {
   const [pairSearch, setPairSearch] = useState('')
   const [pairCategory, setPairCategory] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const filaments = useFilaments()
+  const [tab, setPhotoTab] = useState<string | null>(null)
   useDocumentTitle(isNew ? 'New product' : product?.name)
 
   useEffect(() => {
@@ -97,14 +105,18 @@ export default function ProductEditPage() {
 
   const upload = async (files: FileList) => {
     if (!id) return
+    // Read the files now: the input is cleared as soon as this returns, which empties the live FileList.
+    const picked = Array.from(files)
     const fd = new FormData()
-    Array.from(files).forEach((f) => fd.append('files', f))
+    picked.forEach((f) => fd.append('files', f))
     setUploading(true)
     try {
       const updated = await api<Product>(`/admin/products/${id}/images`, { form: fd })
-      setForm((f) => ({ ...f, images: updated.images }))
-      qc.setQueryData(['admin', 'product', id], updated)
-      toast(`Uploaded ${files.length} image${files.length > 1 ? 's' : ''}`)
+      // Keep unsaved edits to the existing photos; the new ones join the colour tab they were uploaded into.
+      setForm((f) => ({ ...f, images: [...f.images, ...updated.images
+        .filter((img) => !f.images.some((x) => x.url === img.url)).map((img) => ({ ...img, color: photoTab }))] }))
+      const n = `${picked.length} image${picked.length > 1 ? 's' : ''}`
+      toast(photoTab ? `Uploaded ${n} for ${tabName}. Save to apply.` : `Uploaded ${n}`)
     } catch (e) { toastError(e) } finally { setUploading(false) }
   }
 
@@ -116,6 +128,22 @@ export default function ProductEditPage() {
     set('images', imgs)
   }
   const updateImage = (i: number, patch: Partial<ProductImage>) => set('images', form.images.map((img, j) => (j === i ? { ...img, ...patch } : img)))
+
+  // Colour options. Presets set the plain colours and leave special finishes as they are: those are opted into one by one.
+  const special = (ids: string[]) => ids.filter((c) => filaments.byId.get(c)?.group === 'special')
+  const groupIds = (...groups: string[]) => filaments.list.filter((f) => groups.includes(f.group)).map((f) => f.id)
+  const setColors = (colors: string[]) => setForm((f) => ({
+    ...f, colors,
+    default_color: f.default_color && colors.includes(f.default_color) ? f.default_color : colors[0] ?? null,
+    images: f.images.map((img) => (img.color && !colors.includes(img.color) ? { ...img, color: null } : img)),
+  }))
+  // Photos by colour: the open tab is a colour still offered, or General (untagged photos).
+  const photoTab = tab && form.colors.includes(tab) ? tab : null
+  const tabName = photoTab ? filaments.byId.get(photoTab)?.name ?? photoTab : ''
+  const shown = form.images.filter((img) => (img.color ?? null) === photoTab)
+
+  const toggleColor = (id: string) => setColors(form.colors.includes(id) ? form.colors.filter((c) => c !== id)
+    : filaments.list.map((f) => f.id).filter((c) => c === id || form.colors.includes(c)))
 
   const remove = async () => {
     setBusy(true)
@@ -155,36 +183,112 @@ export default function ProductEditPage() {
           </section>
 
           <section className={card}>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className={h2}>Colours</h2>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => setColors([...groupIds('essential'), ...special(form.colors)])}>Essentials</Button>
+                <Button variant="outline" size="sm" onClick={() => setColors([...groupIds('essential', 'extended'), ...special(form.colors)])}>Essentials + extended</Button>
+                <Button variant="ghost" size="sm" disabled={!form.colors.length} onClick={() => setColors([])}>Clear</Button>
+              </div>
+            </div>
+            <p className="text-sm text-fog">
+              The filaments customers can choose for this piece. Leave all unticked if it only comes as pictured. Special finishes
+              are only offered where ticked here. Then add each colour's own photos under Images below.
+            </p>
+            {GROUPS.map(([group, title]) => (
+              <fieldset key={group} className="flex flex-col gap-2">
+                <legend className="mb-2 text-sm opacity-80">{title}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {filaments.list.filter((f) => f.group === group).map((f) => {
+                    const on = form.colors.includes(f.id)
+                    return (
+                      <button key={f.id} type="button" aria-pressed={on} onClick={() => toggleColor(f.id)}
+                        className={cn('flex h-9 items-center gap-2 rounded-full border pl-1.5 pr-3 text-[13px] transition-colors',
+                          on ? 'border-ink bg-ink/[0.04] text-ink' : 'border-rule text-smoke hover:border-ink/40')}>
+                        <Swatch filament={f} className="size-6" />
+                        {f.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
+            ))}
+            {form.colors.length > 0 && (
+              <Select label="Selected by default" value={form.default_color ?? ''} onChange={(e) => set('default_color', e.target.value)}
+                hint={`${form.colors.length} of ${filaments.list.length} offered. Quick add from listings uses the default.`}>
+                {form.colors.map((c) => <option key={c} value={c}>{filaments.byId.get(c)?.name ?? c}</option>)}
+              </Select>
+            )}
+          </section>
+
+          <section className={card}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Images</h2>
               <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.length) void upload(e.target.files); e.target.value = '' }} />
-              <Button variant="outline" size="sm" disabled={isNew} loading={uploading} onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} /> Upload</Button>
+              <Button variant="outline" size="sm" disabled={isNew} loading={uploading} onClick={() => fileRef.current?.click()}>
+                <Icon name="upload" size={16} /> {photoTab ? `Upload ${tabName} photos` : 'Upload'}
+              </Button>
             </div>
-            {isNew ? <p className="text-sm text-smoke">Create the product first, then upload images.</p> : form.images.length === 0 ? (
-              <button onClick={() => fileRef.current?.click()} className="flex h-40 items-center justify-center border border-dashed border-rule text-smoke hover:border-accent">Upload the first image</button>
+            {form.colors.length > 0 && !isNew && (
+              <div role="tablist" aria-label="Photos by colour" className="-mx-1 flex flex-wrap gap-1.5">
+                {[null, ...form.colors].map((c) => {
+                  const f = c ? filaments.byId.get(c) : null
+                  const count = form.images.filter((img) => (img.color ?? null) === c).length
+                  const on = c === photoTab
+                  return (
+                    <button key={c ?? 'general'} type="button" role="tab" aria-selected={on} onClick={() => setPhotoTab(c)}
+                      className={cn('flex h-8 items-center gap-1.5 rounded-full border pl-1.5 pr-2.5 text-[13px] transition-colors',
+                        !f && 'pl-2.5', on ? 'border-ink bg-ink text-paper' : 'border-rule text-smoke hover:border-ink/40')}>
+                      {f && <Swatch filament={f} className="size-5" />}
+                      {f?.name ?? 'General'}
+                      <span className={cn('tabular-nums text-[12px]', on ? 'text-paper/70' : 'text-fog')}>{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {isNew ? <p className="text-sm text-smoke">Create the product first, then upload images.</p> : shown.length === 0 ? (
+              <button onClick={() => fileRef.current?.click()} className="flex h-40 flex-col items-center justify-center gap-1 border border-dashed border-rule px-6 text-center text-smoke hover:border-accent">
+                {photoTab ? <>Upload photos of the {tabName} version<span className="text-[13px] text-fog">Until then, customers choosing {tabName} see the general photos.</span></>
+                  : form.images.length ? <>Upload general photos<span className="text-[13px] text-fog">Shown with every colour, after that colour&rsquo;s own photos.</span></> : 'Upload the first image'}
+              </button>
             ) : (
               <>
-                <p className="text-sm text-fog">Drag to reorder. The first image is the main one; the second shows on hover. Save to apply changes.</p>
+                <p className="text-sm text-fog">
+                  {photoTab ? `Shown when a customer chooses ${tabName}, before the general photos. ` : form.colors.length ? 'Shown with every colour, after that colour’s own photos. ' : ''}
+                  Drag to reorder. The first image overall is the main one in listings; the second shows on hover. Save to apply changes.
+                </p>
                 <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                  {form.images.map((img, i) => (
+                  {shown.map((img, k) => {
+                    const i = form.images.indexOf(img)
+                    return (
                     <li key={img.url} draggable onDragStart={() => setDragIndex(i)} onDragOver={(e) => e.preventDefault()}
                       onDrop={() => { if (dragIndex !== null) moveImage(dragIndex, i); setDragIndex(null) }}
                       className={cn('flex flex-col gap-2', dragIndex === i && 'opacity-40')}>
                       <div className="relative cursor-grab bg-ash">
                         <img src={img.url} alt={img.alt} className="aspect-[4/5] w-full object-cover" />
-                        {i === 0 && <span className="absolute left-2 top-2 bg-accent px-1.5 py-0.5 text-xs text-paper">Main</span>}
+                        {i === 0 ? <span className="absolute left-2 top-2 bg-accent px-1.5 py-0.5 text-xs text-paper">Main</span>
+                          : k === 0 && photoTab ? <span className="absolute left-2 top-2 bg-ink px-1.5 py-0.5 text-xs text-paper">First for {tabName}</span> : null}
                       </div>
                       <input value={img.alt} onChange={(e) => updateImage(i, { alt: e.target.value })} placeholder="Describe the image"
-                        aria-label={`Alt text for image ${i + 1}`} className="h-8 border border-rule bg-transparent px-2 text-xs outline-none focus:border-accent" />
+                        aria-label={`Alt text for image ${k + 1}`} className="h-8 border border-rule bg-transparent px-2 text-xs outline-none focus:border-accent" />
+                      {form.colors.length > 0 && (
+                        <select value={img.color ?? ''} onChange={(e) => updateImage(i, { color: e.target.value || null })}
+                          aria-label={`Colour of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-accent">
+                          <option value="">General (every colour)</option>
+                          {form.colors.map((c) => <option key={c} value={c}>{filaments.byId.get(c)?.name ?? c} only</option>)}
+                        </select>
+                      )}
                       <div className="flex items-center justify-between text-smoke">
                         <div className="flex">
-                          <button onClick={() => moveImage(i, i - 1)} disabled={i === 0} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move earlier"><Icon name="chevronLeft" size={16} /></button>
-                          <button onClick={() => moveImage(i, i + 1)} disabled={i === form.images.length - 1} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move later"><Icon name="chevronRight" size={16} /></button>
+                          <button onClick={() => moveImage(i, form.images.indexOf(shown[k - 1]))} disabled={k === 0} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move earlier"><Icon name="chevronLeft" size={16} /></button>
+                          <button onClick={() => moveImage(i, form.images.indexOf(shown[k + 1]))} disabled={k === shown.length - 1} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move later"><Icon name="chevronRight" size={16} /></button>
                         </div>
                         <button onClick={() => set('images', form.images.filter((_, j) => j !== i))} className="p-1 hover:text-accent" aria-label="Remove image"><Icon name="trash" size={16} /></button>
                       </div>
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </>
             )}

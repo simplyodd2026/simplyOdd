@@ -10,6 +10,7 @@ class ProductImage(Schema):
     url: str
     path: str | None = None  # Storage object path, used for deletion
     alt: str = ""
+    color: str | None = None  # filament id this photo shows, if it shows a specific colour
 
 
 class Dimensions(Schema):
@@ -44,6 +45,10 @@ class ProductBase(Schema):
     is_new_arrival: bool = False
     is_published: bool = True
     frequently_bought_with: list[str] = []
+    # Filament ids (app.models.filament) this piece can be printed in. Empty means
+    # it comes as pictured and the storefront shows no colour choice.
+    colors: list[str] = []
+    default_color: str | None = None
 
 
 class ProductCreate(ProductBase):
@@ -70,6 +75,8 @@ class ProductUpdate(Schema):
     is_new_arrival: bool | None = None
     is_published: bool | None = None
     frequently_bought_with: list[str] | None = None
+    colors: list[str] | None = None
+    default_color: str | None = None
 
 
 class Product(ProductBase):

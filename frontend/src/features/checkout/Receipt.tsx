@@ -3,6 +3,7 @@ import type { Quote } from '@/lib/types'
 import { useCart } from '@/stores/cart'
 import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { ColorTag } from '@/components/product/ColorSwatches'
 
 const TEETH = 46
 const DEPTH = '9px'
@@ -51,11 +52,12 @@ export function ReceiptLines({ quote }: { quote: Quote }) {
     <>
       <ul className="flex flex-col gap-4">
         {quote.lines.filter((l) => l.available).map((l) => (
-          <li key={l.product_id} className="flex items-center gap-3">
+          <li key={`${l.product_id}:${l.color ?? ''}`} className="flex items-center gap-3">
             <span className="plate size-10 shrink-0 overflow-hidden bg-ash">{l.image && <img src={l.image} alt="" className="size-full object-cover" />}</span>
             <dl className="min-w-0 flex-1">
               <Leader label={<><span className="text-fog">{l.quantity} ×</span> <span className="font-display text-[1.15rem] text-ink">{l.name}</span></>}
                 value={money(l.line_total)} />
+              {l.filament && <ColorTag filament={l.filament} className="mt-1 text-[12.5px] text-fog" />}
               {l.quantity > 1 && <p className="mt-0.5 text-[12.5px] text-fog">{money(l.unit_price)} each</p>}
             </dl>
           </li>

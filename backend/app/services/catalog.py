@@ -12,12 +12,13 @@ import math
 import time
 from typing import Literal
 
-from app.core.errors import Conflict, NotFound
+from app.core.errors import BadRequest, Conflict, NotFound
 from app.core.utils import new_id, now, slugify
 from app.models.catalog import (
-    Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductUpdate, SortKey,
+    Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, SortKey,
 )
 from app.models.common import Page
+from app.models.filament import FILAMENTS_BY_ID
 from app.repositories.store import DocumentStore
 
 PRODUCTS = "products"
@@ -142,6 +143,7 @@ class CatalogService:
         return slug
 
     async def create_product(self, data: ProductCreate) -> Product:
+        data.colors, data.default_color, data.images = _check_colors(data.colors, data.default_color, data.images)
         ts = now()
         pid = new_id("p_")
         product = Product(
@@ -163,8 +165,12 @@ class CatalogService:
                 patch.pop("slug", None)
         if "dimensions" in patch and patch["dimensions"] is not None:
             patch["dimensions"] = data.dimensions.model_dump()
-        if "images" in patch:
-            patch["images"] = [i.model_dump() for i in data.images or []]
+        if {"colors", "default_color", "images"} & patch.keys():
+            colors, default, images = _check_colors(
+                current.colors if data.colors is None else data.colors,
+                data.default_color if "default_color" in patch else current.default_color,
+                current.images if data.images is None else data.images)
+            patch.update(colors=colors, default_color=default, images=[i.model_dump() for i in images])
         patch["updated_at"] = now()
         doc = await self.store.update(PRODUCTS, pid, patch)
         self.invalidate()
@@ -250,6 +256,20 @@ class CatalogService:
         docs = await self.store.list(SEARCH_STATS, order_by="count", descending=True, limit=limit)
         terms = [d["term"] for d in docs if d.get("term") and d.get("count", 0) >= 3]
         return (terms + [t for t in DEFAULT_POPULAR if t not in terms])[:limit]
+
+
+def _check_colors(colors: list[str], default: str | None, images: list[ProductImage]
+                  ) -> tuple[list[str], str | None, list[ProductImage]]:
+    """Colour options must come from the central palette. The default falls back
+    to the first option, and photos stop claiming a colour that's no longer offered."""
+    unknown = [c for c in colors if c not in FILAMENTS_BY_ID]
+    if unknown:
+        raise BadRequest(f"Unknown filament colour: {', '.join(unknown)}")
+    colors = list(dict.fromkeys(colors))
+    if default not in colors:
+        default = colors[0] if colors else None
+    images = [i if i.color is None or i.color in colors else i.model_copy(update={"color": None}) for i in images]
+    return colors, default, images
 
 
 def _score(p: Product, q: str, category_name: str) -> float:

@@ -13,14 +13,20 @@ interface CartState {
   items: CartLine[]
   couponCode: string | null
   shippingMethod: ShippingMethod
-  add: (productId: string, quantity?: number) => void
-  setQuantity: (productId: string, quantity: number) => void
-  remove: (productId: string) => void
+  /** `color` is a filament id; the same product in two colours is two lines. */
+  add: (productId: string, quantity?: number, color?: string | null) => void
+  setQuantity: (productId: string, color: string | null, quantity: number) => void
+  remove: (productId: string, color: string | null) => void
+  /** Move a line to another colour, folding it into that colour's line if there already is one. */
+  setColor: (productId: string, from: string | null, to: string) => void
   clear: () => void
   replace: (items: CartLine[]) => void
   setCoupon: (code: string | null) => void
   setShipping: (m: ShippingMethod) => void
 }
+
+/** A line is a product in a colour; a line without a colour is stored as null. */
+const same = (l: CartLine, productId: string, color: string | null) => l.product_id === productId && (l.color ?? null) === color
 
 let syncTimer: ReturnType<typeof setTimeout> | undefined
 const scheduleSync = (items: CartLine[]) => {
@@ -42,25 +48,41 @@ export const useCart = create<CartState>()(
         items: [],
         couponCode: null,
         shippingMethod: 'standard',
-        add: (productId, quantity = 1) => {
+        add: (productId, quantity = 1, color = null) => {
           const items = get().items
-          const existing = items.find((i) => i.product_id === productId)
-          commit(existing
-            ? items.map((i) => (i.product_id === productId ? { ...i, quantity: Math.min(99, i.quantity + quantity) } : i))
-            : [...items, { product_id: productId, quantity }])
+          commit(items.some((i) => same(i, productId, color))
+            ? items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(99, i.quantity + quantity) } : i))
+            : [...items, { product_id: productId, quantity, color }])
         },
-        setQuantity: (productId, quantity) =>
+        setQuantity: (productId, color, quantity) =>
           commit(quantity <= 0
-            ? get().items.filter((i) => i.product_id !== productId)
-            : get().items.map((i) => (i.product_id === productId ? { ...i, quantity: Math.min(99, quantity) } : i))),
-        remove: (productId) => commit(get().items.filter((i) => i.product_id !== productId)),
+            ? get().items.filter((i) => !same(i, productId, color))
+            : get().items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(99, quantity) } : i))),
+        remove: (productId, color) => commit(get().items.filter((i) => !same(i, productId, color))),
+        setColor: (productId, from, to) => {
+          if (from === to) return
+          const items = get().items
+          const moving = items.find((i) => same(i, productId, from))
+          if (!moving) return
+          const target = items.find((i) => same(i, productId, to))
+          commit(target
+            ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(99, i.quantity + moving.quantity) } : i))
+            : items.map((i) => (i === moving ? { ...i, color: to } : i)))
+        },
         clear: () => set({ items: [], couponCode: null, shippingMethod: 'standard' }),
         replace: (items) => set({ items }),
         setCoupon: (couponCode) => set({ couponCode }),
         setShipping: (shippingMethod) => set({ shippingMethod }),
       }
     },
-    { name: 'om.cart', storage: createJSONStorage(() => localStorage), version: 1 },
+    {
+      name: 'om.cart', storage: createJSONStorage(() => localStorage), version: 2,
+      // v1 bags predate colours: every line becomes the product with no colour chosen.
+      migrate: (state, version) => {
+        const s = state as CartState
+        return version < 2 ? { ...s, items: (s.items ?? []).map((i) => ({ ...i, color: i.color ?? null })) } : s
+      },
+    },
   ),
 )
 

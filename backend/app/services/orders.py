@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 
 from app.core.errors import BadRequest, Conflict, Forbidden, NotFound
 from app.core.utils import money, new_id, now
@@ -19,6 +20,14 @@ ORDERS = "orders"
 # Orders in these states count as a purchase for "verified purchaser" reviews.
 PURCHASED = {"confirmed", "processing", "shipped", "out_for_delivery", "delivered"}
 CANCELLABLE_BY_CUSTOMER = {"pending", "confirmed"}
+
+
+def _per_product(deltas: Iterable[tuple[str, int]]) -> dict[str, int]:
+    """Sum stock changes per product: one product can appear on several lines, one per colour."""
+    out: dict[str, int] = {}
+    for pid, delta in deltas:
+        out[pid] = out.get(pid, 0) + delta
+    return out
 
 
 class OrderService:
@@ -54,7 +63,7 @@ class OrderService:
 
     async def _release_stock(self, order: Order) -> None:
         if order.stock_reserved:
-            await self.store.adjust_stock({i.product_id: i.quantity for i in order.items})
+            await self.store.adjust_stock(_per_product((i.product_id, i.quantity) for i in order.items))
             order.stock_reserved = False
             self.catalog.invalidate()
 
@@ -79,7 +88,7 @@ class OrderService:
             raise BadRequest(quote.coupon_message or "That coupon can't be applied")
 
         try:
-            await self.store.adjust_stock({line.product_id: -line.quantity for line in quote.lines})
+            await self.store.adjust_stock(_per_product((line.product_id, -line.quantity) for line in quote.lines))
         except InsufficientStock as e:
             raise Conflict(f"Only {e.available} left of one of your items. Update your bag and try again.") from e
         self.catalog.invalidate()
@@ -89,7 +98,7 @@ class OrderService:
         seq = await self.store.next_sequence("orders", start=10000)
         order = Order(
             id=new_id("o_"), number=f"OM-{seq}", user_id=user.uid, email=req.address.email,
-            items=[OrderItem(product_id=line.product_id, name=line.name, slug=line.slug, image=line.image,
+            items=[OrderItem(product_id=line.product_id, color=line.color, filament=line.filament, name=line.name, slug=line.slug, image=line.image,
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
             address=req.address, shipping_method=req.shipping_method, subtotal=quote.subtotal,

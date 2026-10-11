@@ -9,6 +9,7 @@ from datetime import timedelta
 from app.core.container import Services
 from app.core.utils import now
 from app.models.catalog import CategoryCreate, Dimensions, ProductCreate, ProductImage
+from app.models.filament import FILAMENTS
 from app.models.marketing import CouponCreate
 from app.models.order import StatusEvent
 
@@ -113,6 +114,20 @@ PRODUCTS = [
      ["keys", "wall", "hooks", "black", "weird"], [PLA, "Wall fixings included"], (30, 40, 6), 410, "n", 5),
 ]
 
+ESSENTIALS = [f.id for f in FILAMENTS if f.group == "essential"]
+EXTENDED = [f.id for f in FILAMENTS if f.group == "extended"]
+# Which filaments each demo piece is offered in. Pieces not listed come as pictured.
+# Special finishes go only where they suit the object: clear and amber for lamps, silk for sculptural pieces.
+COLORS = {
+    "melt-vase": ESSENTIALS + EXTENDED + ["silk-gold", "silk-silver"],
+    "spine-vase": ESSENTIALS,
+    "tidal-bowl": ESSENTIALS,
+    "fungal-lamp": ["pure-white", "ivory", "warm-beige", "clear", "translucent-amber"],
+    "hanging-bell": ["pure-white", "ivory", "matte-black", "terracotta", "sage-green", "translucent-amber"],
+    "pebble-tower": ESSENTIALS + ["silk-gold", "silk-silver"],
+    "egg-on-legs": ESSENTIALS + EXTENDED,
+}
+
 
 async def seed_catalogue(svc: Services) -> None:
     cats = {}
@@ -133,6 +148,7 @@ async def seed_catalogue(svc: Services) -> None:
             images=[ProductImage(url=f"/seed/{slug}-{n}.svg", alt=f"{name}, {v}")
                     for n, v in ((1, "studio view"), (2, "lit view"), (3, "detail"))],
             is_featured="f" in flags, is_bestseller="b" in flags, is_new_arrival="n" in flags,
+            colors=COLORS.get(slug, []),
         ))
         created = base + timedelta(days=idx * 2 + (40 if "n" in flags else 0))
         await svc.store.update("products", p.id, {"sales_count": sales, "created_at": min(created, now())})
@@ -182,7 +198,8 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
         await svc.accounts.add_address(user, AddressIn(**addr, is_default=True))
         for n in range(rng.randint(1, 3)):
             picks = rng.sample([s for s in slugs if s not in ("ghost-lamp",)], rng.randint(1, 2))
-            req = CheckoutRequest(items=[CartLine(product_id=ids[s], quantity=1) for s in picks],
+            req = CheckoutRequest(items=[CartLine(product_id=ids[s], quantity=1, color=(COLORS.get(s) or [None])[0])
+                                         for s in picks],
                                   address=ShippingAddress(**addr, email=email),
                                   payment_provider="mock", payment_plan="partial" if n % 2 else "full")
             order, _ = await svc.orders.checkout(user, req)

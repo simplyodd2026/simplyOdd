@@ -18,7 +18,7 @@ export default function OrderConfirmationPage() {
   const a = order.address
 
   return (
-    <Container className="pt-10 sm:pt-16">
+    <Container className="pb-24 pt-10 sm:pb-32 sm:pt-16">
       <div className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <p className="text-smoke">Order {order.number}</p>

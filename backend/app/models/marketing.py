@@ -56,6 +56,8 @@ CustomKind = Literal["decor", "lighting", "desk", "gift", "other"]
 CustomSize = Literal["small", "medium", "large", "not_sure"]
 CustomBudget = Literal["under_1000", "1000_2500", "2500_5000", "5000_plus", "not_sure"]
 CustomStatus = Literal["new", "replied", "closed"]
+# What a customer wants changed when customising an existing product.
+CustomChange = Literal["size", "colour", "personalise", "other"]
 
 
 class CustomRequestIn(Schema):
@@ -68,6 +70,8 @@ class CustomRequestIn(Schema):
     colours: list[str] = Field(default_factory=list, max_length=8)
     budget: CustomBudget = "not_sure"
     reference_url: str | None = Field(default=None, max_length=500)
+    product_id: str | None = Field(default=None, max_length=60)  # set when customising an existing piece
+    changes: list[CustomChange] = Field(default_factory=list, max_length=4)
 
 
 class CustomRequestUpdate(Schema):
@@ -76,6 +80,9 @@ class CustomRequestUpdate(Schema):
 
 class CustomRequest(CustomRequestIn):
     id: str
+    # Copied from the catalogue when the request is made, so it reads correctly if the product changes later.
+    product_name: str | None = None
+    product_slug: str | None = None
     status: CustomStatus = "new"
     created_at: datetime
     updated_at: datetime

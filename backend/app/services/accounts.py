@@ -98,20 +98,23 @@ class AccountService:
         return Cart.model_validate(doc) if doc else Cart()
 
     async def put_cart(self, uid: str, items: list[CartLine]) -> Cart:
-        merged: dict[str, int] = {}
+        merged: dict[tuple[str, str | None], int] = {}
         for line in items:
-            merged[line.product_id] = min(99, merged.get(line.product_id, 0) + line.quantity)
-        cart = Cart(items=[CartLine(product_id=k, quantity=v) for k, v in merged.items()])
+            key = (line.product_id, line.color)
+            merged[key] = min(99, merged.get(key, 0) + line.quantity)
+        cart = Cart(items=[CartLine(product_id=pid, color=color, quantity=q) for (pid, color), q in merged.items()])
         await self.store.set(CARTS, uid, {**cart.model_dump(), "updated_at": now()})
         return cart
 
     async def merge_cart(self, uid: str, guest_items: list[CartLine]) -> Cart:
         """Guest bag + saved bag. Takes the larger quantity for duplicates so a
-        re-login doesn't double quantities."""
-        current = {line.product_id: line.quantity for line in (await self.get_cart(uid)).items}
+        re-login doesn't double quantities. Different colours are different lines."""
+        current = {(line.product_id, line.color): line.quantity for line in (await self.get_cart(uid)).items}
         for line in guest_items:
-            current[line.product_id] = max(current.get(line.product_id, 0), line.quantity)
-        return await self.put_cart(uid, [CartLine(product_id=k, quantity=v) for k, v in current.items()])
+            key = (line.product_id, line.color)
+            current[key] = max(current.get(key, 0), line.quantity)
+        return await self.put_cart(uid, [CartLine(product_id=pid, color=color, quantity=q)
+                                         for (pid, color), q in current.items()])
 
     # -------------------------------------------------------------- wishlist
     async def get_wishlist(self, uid: str) -> list[str]:

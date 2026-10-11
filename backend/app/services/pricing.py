@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.core.config import Settings
 from app.core.utils import money
 from app.models.cart import CartLine, Quote, QuoteLine, QuoteRequest, ShippingOption
+from app.models.filament import FILAMENTS_BY_ID, FilamentChoice
 from app.models.marketing import Coupon
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
@@ -28,26 +29,43 @@ class PricingService:
         ]
 
     async def quote(self, req: QuoteRequest) -> tuple[Quote, Coupon | None]:
-        merged: dict[str, int] = {}
+        products = await self.catalog.get_products(list(dict.fromkeys(line.product_id for line in req.items)))
+        # One line per product and colour. A colour sent for a piece that has no
+        # colour options is dropped, so it can't split or fail an otherwise valid line.
+        merged: dict[tuple[str, str | None], int] = {}
         for line in req.items:
-            merged[line.product_id] = merged.get(line.product_id, 0) + line.quantity
-        products = await self.catalog.get_products(list(merged))
+            p = products.get(line.product_id)
+            key = (line.product_id, line.color if p is None or p.colors else None)
+            merged[key] = merged.get(key, 0) + line.quantity
+        # Stock is shared by every colour of a product.
+        per_product: dict[str, int] = {}
+        for (pid, _), qty in merged.items():
+            per_product[pid] = per_product.get(pid, 0) + qty
 
         lines: list[QuoteLine] = []
-        for pid, qty in merged.items():
+        for (pid, color), qty in merged.items():
             p = products.get(pid)
             if p is None or not p.is_published:
-                lines.append(QuoteLine(product_id=pid, name="Unavailable item", slug="", image=None, unit_price=0,
-                                       compare_at_price=None, quantity=qty, line_total=0, stock=0,
+                lines.append(QuoteLine(product_id=pid, color=color, name="Unavailable item", slug="", image=None,
+                                       unit_price=0, compare_at_price=None, quantity=qty, line_total=0, stock=0,
                                        available=False, issue="This item is no longer available"))
                 continue
+            offered = [c for c in p.colors if c in FILAMENTS_BY_ID]
+            filament = FILAMENTS_BY_ID.get(color) if color in offered else None
             issue = None
-            if p.stock <= 0:
+            if offered and color is None:
+                issue = "Choose a colour"
+            elif color is not None and filament is None:
+                issue = "This colour isn't available for this piece. Choose another"
+            elif p.stock <= 0:
                 issue = "Out of stock"
-            elif qty > p.stock:
+            elif per_product[pid] > p.stock:
                 issue = f"Only {p.stock} left"
+            image = next((i.url for i in p.images if color and i.color == color), None) \
+                or (p.images[0].url if p.images else None)
             lines.append(QuoteLine(
-                product_id=pid, name=p.name, slug=p.slug, image=p.images[0].url if p.images else None,
+                product_id=pid, color=color, filament=FilamentChoice.of(filament) if filament else None,
+                colors=offered, name=p.name, slug=p.slug, image=image,
                 unit_price=p.price, compare_at_price=p.compare_at_price, quantity=qty,
                 line_total=money(p.price * qty), stock=p.stock, available=issue is None, issue=issue,
             ))

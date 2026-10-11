@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '@/stores/cart'
+import { defaultColor, useFilaments } from '@/lib/filaments'
 import { toast } from '@/stores/toast'
 import { money } from '@/lib/format'
 import { useTilt } from '@/lib/useTilt'
@@ -17,6 +18,7 @@ export function Spotlight() {
   const { spotlight, spotlightInset, all } = useHomePieces()
   const p = spotlight?.product
   const add = useCart((s) => s.add)
+  const filaments = useFilaments()
   const tilt = useTilt<HTMLDivElement>(4)
   const shape = useImageAspect(0.75, 1.6)
   if (!p) return null
@@ -25,8 +27,10 @@ export function Spotlight() {
   const soldOut = p.availability === 'out_of_stock'
   const index = Math.max(0, all.findIndex((x) => x.id === p.id))
   const addToBag = () => {
-    add(p.id)
-    toast(`${p.name} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
+    const color = defaultColor(p)
+    add(p.id, 1, color)
+    const shade = color && filaments.byId.get(color)
+    toast(`${p.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }
 
   return (
