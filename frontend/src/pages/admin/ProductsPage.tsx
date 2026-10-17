@@ -56,7 +56,7 @@ export default function ProductsPage() {
                 <Link to={`/admin/products/${p.id}`} className="font-medium hover:text-accent">{p.name}</Link>
                 <div className="text-xs text-fog">/{p.slug}</div>
               </td>
-              <td className={`${td} text-smoke`}>{catName(p.category_id)}</td>
+              <td className={`${td} text-smoke`}>{p.category_ids.map(catName).join(', ') || catName(null)}</td>
               <td className={`${td} tabular-nums`}>{money(p.price)}{p.discount_percent > 0 && <span className="ml-2 text-xs text-accent">−{p.discount_percent}%</span>}</td>
               <td className={cn(td, 'tabular-nums', p.stock === 0 ? 'text-accent' : p.stock <= 5 ? 'text-graphite' : 'text-smoke')}>{p.stock}</td>
               <td className={`${td} text-xs text-smoke`}>{[p.is_featured && 'Featured', p.is_bestseller && 'Best seller', p.is_new_arrival && 'New'].filter(Boolean).join(', ') || '—'}</td>

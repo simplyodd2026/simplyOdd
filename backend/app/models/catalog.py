@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, model_validator
 
 from app.models.common import Schema
 
@@ -33,7 +33,8 @@ class ProductBase(Schema):
     price: float = Field(ge=0)
     compare_at_price: float | None = Field(default=None, ge=0)
     stock: int = Field(default=0, ge=0)
-    category_id: str | None = None
+    # A piece can sit in several categories; the first is its home, used for breadcrumbs and "more like this".
+    category_ids: list[str] = []
     tags: list[str] = []
     materials: list[str] = []
     dimensions: Dimensions = Dimensions()
@@ -50,6 +51,18 @@ class ProductBase(Schema):
     colors: list[str] = []
     default_color: str | None = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def _single_category(cls, data):
+        # Products saved before multi-category support carry a single `category_id`.
+        if isinstance(data, dict) and "category_ids" not in data and data.get("category_id"):
+            data = {**data, "category_ids": [data["category_id"]]}
+        return data
+
+    @property
+    def category_id(self) -> str | None:
+        return self.category_ids[0] if self.category_ids else None
+
 
 class ProductCreate(ProductBase):
     pass
@@ -63,7 +76,7 @@ class ProductUpdate(Schema):
     price: float | None = Field(default=None, ge=0)
     compare_at_price: float | None = None
     stock: int | None = Field(default=None, ge=0)
-    category_id: str | None = None
+    category_ids: list[str] | None = None
     tags: list[str] | None = None
     materials: list[str] | None = None
     dimensions: Dimensions | None = None

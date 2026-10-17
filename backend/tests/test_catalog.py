@@ -42,3 +42,30 @@ def test_recent_reviews_across_catalogue(client):
     hidden = first["product_id"]
     client.patch(f"/api/admin/products/{hidden}", json={"is_published": False}, headers=ADMIN)
     assert all(r["product_id"] != hidden for r in client.get("/api/reviews/recent").json())
+
+
+def test_product_in_several_categories(client):
+    cats = {c["slug"]: c for c in client.get("/api/categories").json()}
+    lighting, decor = cats["lighting"], cats["home-decor"]
+    pid = client.get("/api/products/melt-vase").json()["product"]["id"]
+
+    r = client.patch(f"/api/admin/products/{pid}", json={"category_ids": [decor["id"], lighting["id"], decor["id"]]},
+                     headers=ADMIN).json()
+    assert r["category_ids"] == [decor["id"], lighting["id"]]
+
+    in_lighting = [p["id"] for p in client.get("/api/products", params={"category": "lighting"}).json()["items"]]
+    in_decor = [p["id"] for p in client.get("/api/products", params={"category": "home-decor"}).json()["items"]]
+    assert pid in in_lighting and pid in in_decor
+    counts = {c["slug"]: c["product_count"] for c in client.get("/api/categories").json()}
+    assert counts["lighting"] == lighting["product_count"] + 1 and counts["home-decor"] == decor["product_count"]
+    assert client.get("/api/products/melt-vase").json()["category"]["slug"] == "home-decor"  # the first is its home
+
+
+def test_single_category_products_still_read(client):
+    store = client.app.state.services.store
+    pid = client.get("/api/products/melt-vase").json()["product"]["id"]
+    doc = client.portal.call(store.get, "products", pid)
+    legacy = {k: v for k, v in doc.items() if k != "category_ids"} | {"category_id": doc["category_ids"][0]}
+    client.portal.call(store.set, "products", pid, legacy)
+    client.app.state.services.catalog.invalidate()
+    assert client.get("/api/products/melt-vase").json()["product"]["category_ids"] == doc["category_ids"]

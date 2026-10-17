@@ -141,7 +141,7 @@ async def seed_catalogue(svc: Services) -> None:
             in enumerate(PRODUCTS):
         p = await svc.catalog.create_product(ProductCreate(
             name=name, slug=slug, tagline=tagline, description=desc, price=price, compare_at_price=cmp, stock=stock,
-            category_id=cats[cat], tags=tags, materials=mats,
+            category_ids=[cats[cat]], tags=tags, materials=mats,
             dimensions=Dimensions(width_cm=w, height_cm=h, depth_cm=d), weight_g=wt,
             manufacturing="Designed in-house and made to order in small batches. "
                           "Each piece is sanded and inspected by hand; tiny layer lines are part of the look.",

@@ -6,13 +6,14 @@ import { useTilt } from '@/lib/useTilt'
 import { useImageAspect } from '@/lib/hooks'
 import { Container } from '@/components/layout/Container'
 import { ArrowLink } from '@/components/ui/ArrowLink'
+import { ButtonLink } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { Reveal } from '@/components/motion/Reveal'
-import { useHomePieces, objectNo, type Piece } from './pieces'
+import { useHomePieces, type Piece } from './pieces'
 
-/** One object as a magazine would caption it: the picture first, then a small index, its name, a line, the price. */
-function ObjectTile({ piece, index, frame, aspect, className, shape }: {
-  piece: Piece; index: number; frame: string; aspect: string; className?: string; shape?: string
+/** One object as a magazine would caption it: the picture first, then its name, a line, the price. */
+function ObjectTile({ piece, frame, aspect, className, shape }: {
+  piece: Piece; frame: string; aspect: string; className?: string; shape?: string
 }) {
   const p = piece.product
   const tilt = useTilt<HTMLDivElement>(4)
@@ -35,8 +36,7 @@ function ObjectTile({ piece, index, frame, aspect, className, shape }: {
       </div>
       <div className="mt-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[13px] text-accent">{objectNo(index)}</p>
-          <h3 className="mt-1 font-display text-[clamp(1.6rem,2.2vw,2.1rem)] leading-[1.05] text-ink">
+          <h3 className="font-display text-[clamp(1.6rem,2.2vw,2.1rem)] leading-[1.05] text-ink">
             <Link to={`/product/${p.slug}`} className="link-draw">{p.name}</Link>
           </h3>
           {p.tagline && <p className="mt-1 font-odd text-[1.05rem] text-smoke">{p.tagline}</p>}
@@ -86,7 +86,7 @@ function Slider({ pieces }: { pieces: Piece[] }) {
       <div ref={track} onScroll={measure}
         className="-mx-5 flex snap-x snap-mandatory scroll-px-5 items-start gap-5 overflow-x-auto px-5 pb-10 pt-2 scrollbar-none sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:gap-8 lg:scroll-px-0 lg:px-0">
         {pieces.map((p, i) => (
-          <ObjectTile key={p.product.id} piece={p} index={i + 2} frame={FRAMES[i % FRAMES.length]} aspect="aspect-[4/5]"
+          <ObjectTile key={p.product.id} piece={p} frame={FRAMES[i % FRAMES.length]} aspect="aspect-[4/5]"
             className={cn('w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[calc((100%-6rem)/4)]', OFFSETS[i % OFFSETS.length])} />
         ))}
       </div>
@@ -118,13 +118,13 @@ export function Collection() {
 
           <div className="grid gap-20 lg:grid-cols-12 lg:gap-8">
             <Reveal y={60} className="mx-auto w-full max-w-[calc((100svh-12rem)*0.8)] lg:col-span-6">
-              <ObjectTile piece={a} index={0} frame="pebble-3" aspect="aspect-[4/5]" />
+              <ObjectTile piece={a} frame="pebble-3" aspect="aspect-[4/5]" />
             </Reveal>
 
             <div className="flex flex-col gap-16 lg:col-span-5 lg:col-start-8 lg:pt-40">
               {b && (
                 <Reveal y={60} className="px-6 sm:px-10 lg:px-0">
-                  <ObjectTile piece={b} index={1} frame="slab" aspect="aspect-[4/5]" className="mx-auto max-w-[24rem] lg:mx-0"
+                  <ObjectTile piece={b} frame="slab" aspect="aspect-[4/5]" className="mx-auto max-w-[24rem] lg:mx-0"
                     shape="-bottom-6 -right-6 top-10 left-10 slab-r bg-clay/70 sm:-right-10" />
                 </Reveal>
               )}
@@ -135,6 +135,10 @@ export function Collection() {
           </div>
 
           {more.length > 0 && <Slider pieces={more} />}
+
+          <div className="mt-16 flex justify-center sm:mt-20">
+            <ButtonLink to="/shop" variant="terra" size="md">View all {total ? `${total} products` : 'products'}</ButtonLink>
+          </div>
         </div>
       </Container>
     </section>

@@ -17,7 +17,7 @@ import { useFilaments } from '@/lib/filaments'
 import { Swatch } from '@/components/product/ColorSwatches'
 
 const EMPTY: ProductInput = {
-  name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, stock: 0, category_id: null,
+  name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, stock: 0, category_ids: [],
   tags: [], materials: [], dimensions: {}, weight_g: null, manufacturing: '', images: [],
   is_featured: false, is_bestseller: false, is_new_arrival: true, is_published: false, frequently_bought_with: [],
   colors: [], default_color: null,
@@ -27,7 +27,7 @@ const GROUPS = [['essential', 'Essentials'], ['extended', 'Extended'], ['special
 
 const toInput = (p: Product): ProductInput => ({
   name: p.name, slug: p.slug, tagline: p.tagline, description: p.description, price: p.price, compare_at_price: p.compare_at_price,
-  stock: p.stock, category_id: p.category_id, tags: p.tags, materials: p.materials, dimensions: p.dimensions, weight_g: p.weight_g,
+  stock: p.stock, category_ids: p.category_ids, tags: p.tags, materials: p.materials, dimensions: p.dimensions, weight_g: p.weight_g,
   manufacturing: p.manufacturing, images: p.images, is_featured: p.is_featured, is_bestseller: p.is_bestseller,
   is_new_arrival: p.is_new_arrival, is_published: p.is_published, frequently_bought_with: p.frequently_bought_with,
   colors: p.colors, default_color: p.default_color,
@@ -161,7 +161,7 @@ export default function ProductEditPage() {
   const others = allProducts?.items.filter((p) => p.id !== id) ?? []
   // The search narrows the pairing list by name; the order stays fixed so rows don't jump as you tick them.
   const pairOptions = others.filter((p) => p.name.toLowerCase().includes(pairSearch.trim().toLowerCase())
-    && (!pairCategory || p.category_id === pairCategory))
+    && (!pairCategory || p.category_ids.includes(pairCategory)))
 
   return (
     <div>
@@ -326,10 +326,31 @@ export default function ProductEditPage() {
 
           <section className={card}>
             <h2 className={h2}>Organisation</h2>
-            <Select label="Category" value={form.category_id ?? ''} onChange={(e) => set('category_id', e.target.value || null)}>
-              <option value="">No category</option>
-              {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </Select>
+            <div className="flex flex-col gap-1.5">
+              <span className="flex items-baseline justify-between text-sm">
+                <span className="opacity-80">Categories</span>
+                {form.category_ids.length > 1 && <span className="text-[13px] text-fog">{form.category_ids.length} selected</span>}
+              </span>
+              <ul className="max-h-56 overflow-y-auto border border-rule py-1">
+                {categories?.map((c) => {
+                  const checked = form.category_ids.includes(c.id)
+                  const main = form.category_ids[0] === c.id
+                  return (
+                    <li key={c.id} className="flex items-center justify-between gap-2 pr-3 hover:bg-ink/[0.04]">
+                      <Checkbox className="flex min-w-0 flex-1 px-3 py-2 text-sm" label={c.name} checked={checked}
+                        onChange={(e) => set('category_ids', e.target.checked ? [...form.category_ids, c.id] : form.category_ids.filter((x) => x !== c.id))} />
+                      {main && form.category_ids.length > 1 && <span className="text-[12px] text-fog">Main</span>}
+                      {checked && !main && (
+                        <button type="button" className="text-[12px] text-fog hover:text-ink"
+                          onClick={() => set('category_ids', [c.id, ...form.category_ids.filter((x) => x !== c.id)])}>Make main</button>
+                      )}
+                    </li>
+                  )
+                })}
+                {!categories?.length && <li className="px-3 py-3 text-sm text-fog">No categories yet.</li>}
+              </ul>
+              <span className="text-[13px] text-fog">The piece shows up in every category ticked. The main one is used for its breadcrumb and “more like this”.</span>
+            </div>
             <Input label="Tags" value={tagsText} onChange={(e) => setTagsText(e.target.value)} hint="Comma separated; used by search" />
             <div className="flex flex-col gap-1.5">
               <span className="flex items-baseline justify-between text-sm">

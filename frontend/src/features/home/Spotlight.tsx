@@ -8,14 +8,14 @@ import { useImageAspect } from '@/lib/hooks'
 import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion/Reveal'
-import { useHomePieces, objectNo } from './pieces'
+import { useHomePieces } from './pieces'
 
 /**
  * The object. One piece, very large, in a pebble-shaped frame on a linen band, with its own name set huge
  * and pale behind it. The words stay small and to one side: what it is, what it costs, how to have it.
  */
 export function Spotlight() {
-  const { spotlight, spotlightInset, all } = useHomePieces()
+  const { spotlight, spotlightInset } = useHomePieces()
   const p = spotlight?.product
   const add = useCart((s) => s.add)
   const filaments = useFilaments()
@@ -25,7 +25,6 @@ export function Spotlight() {
 
   const main = spotlight?.image ?? p.images[0]
   const soldOut = p.availability === 'out_of_stock'
-  const index = Math.max(0, all.findIndex((x) => x.id === p.id))
   const addToBag = () => {
     const color = defaultColor(p)
     add(p.id, 1, color)
@@ -54,8 +53,7 @@ export function Spotlight() {
           </Reveal>
 
           <div className="lg:col-span-4 lg:col-start-9 lg:pb-6">
-            <p className="text-[14px] text-accent">{objectNo(index)}</p>
-            <h2 className="mt-3 font-display text-[clamp(2.75rem,4.6vw,4.5rem)] leading-[0.98] text-ink">
+            <h2 className="font-display text-[clamp(2.75rem,4.6vw,4.5rem)] leading-[0.98] text-ink">
               <Link to={`/product/${p.slug}`} className="link-draw">{p.name}</Link>
             </h2>
             {p.tagline && <p className="mt-3 font-odd text-[clamp(1.35rem,1.8vw,1.65rem)] leading-snug text-smoke">{p.tagline}</p>}

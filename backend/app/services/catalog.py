@@ -67,7 +67,7 @@ class CatalogService:
         if category:
             cat = await self.get_category(category, missing_ok=True)
             cat_id = cat.id if cat else category
-            items = [p for p in items if p.category_id == cat_id]
+            items = [p for p in items if cat_id in p.category_ids]
         if min_price is not None:
             items = [p for p in items if p.price >= min_price]
         if max_price is not None:
@@ -85,7 +85,7 @@ class CatalogService:
         if q and q.strip():
             cats = {c.id: c.name for c in await self.list_categories()}
             for p in items:
-                s = _score(p, q, cats.get(p.category_id or "", ""))
+                s = _score(p, q, " ".join(cats.get(c, "") for c in p.category_ids))
                 if s > 0:
                     scores[p.id] = s
             items = [p for p in items if p.id in scores]
@@ -115,10 +115,10 @@ class CatalogService:
 
     async def related(self, product: Product, limit: int = 4) -> list[Product]:
         pool = [p for p in await self._all_products() if p.is_published and p.id != product.id]
-        tags = set(product.tags)
+        tags, cats = set(product.tags), set(product.category_ids)
 
         def affinity(p: Product) -> tuple:
-            return (p.category_id == product.category_id, len(tags & set(p.tags)), p.sales_count)
+            return (bool(cats & set(p.category_ids)), len(tags & set(p.tags)), p.sales_count)
 
         return sorted(pool, key=affinity, reverse=True)[:limit]
 
@@ -129,7 +129,7 @@ class CatalogService:
             # Fall back to bestsellers from other categories: complementary, not duplicates.
             pool = [p for p in await self._all_products()
                     if p.is_published and p.stock > 0 and p.id != product.id
-                    and p.category_id != product.category_id and p not in items]
+                    and not set(p.category_ids) & set(product.category_ids) and p not in items]
             pool.sort(key=lambda p: p.sales_count, reverse=True)
             items += pool[: limit - len(items)]
         return items[:limit]
@@ -143,6 +143,7 @@ class CatalogService:
         return slug
 
     async def create_product(self, data: ProductCreate) -> Product:
+        data.category_ids = list(dict.fromkeys(data.category_ids))
         data.colors, data.default_color, data.images = _check_colors(data.colors, data.default_color, data.images)
         ts = now()
         pid = new_id("p_")
@@ -163,6 +164,8 @@ class CatalogService:
                 patch["slug"] = await self._unique_slug(patch.get("slug") or patch["name"], PRODUCTS, pid)
             else:
                 patch.pop("slug", None)
+        if patch.get("category_ids") is not None:
+            patch["category_ids"] = list(dict.fromkeys(patch["category_ids"]))
         if "dimensions" in patch and patch["dimensions"] is not None:
             patch["dimensions"] = data.dimensions.model_dump()
         if {"colors", "default_color", "images"} & patch.keys():
@@ -191,8 +194,9 @@ class CatalogService:
         docs = await self.store.list(CATEGORIES)
         counts: dict[str, int] = {}
         for p in await self._all_products():
-            if p.is_published and p.category_id:
-                counts[p.category_id] = counts.get(p.category_id, 0) + 1
+            if p.is_published:
+                for c in p.category_ids:
+                    counts[c] = counts.get(c, 0) + 1
         cats = [Category.model_validate({**d, "product_count": counts.get(d["id"], 0)}) for d in docs]
         return sorted(cats, key=lambda c: (c.position, c.name))
 
@@ -226,7 +230,7 @@ class CatalogService:
 
     async def delete_category(self, cid: str) -> None:
         cat = await self.get_category(cid)
-        if any(p.category_id == cat.id for p in await self._all_products()):
+        if any(cat.id in p.category_ids for p in await self._all_products()):
             raise Conflict("Move or delete this category's products first")
         await self.store.delete(CATEGORIES, cat.id)
 

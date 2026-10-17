@@ -63,5 +63,3 @@ function photo(product: Product, url: string): ProductImage {
   return product.images.find((i) => i.url === url) ?? { url, alt: product.name }
 }
 
-/** "Object 01": a gallery-style index, by position in the shop's own ordering. */
-export const objectNo = (i: number) => `Object ${String(i + 1).padStart(2, '0')}`

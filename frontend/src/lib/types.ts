@@ -21,7 +21,8 @@ export interface Product {
   price: number
   compare_at_price: number | null
   stock: number
-  category_id: string | null
+  /** Every category the piece appears in; the first is its home (breadcrumbs, "more like this"). */
+  category_ids: string[]
   tags: string[]
   materials: string[]
   dimensions: Dimensions
