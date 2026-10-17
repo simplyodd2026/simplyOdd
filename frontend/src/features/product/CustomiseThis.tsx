@@ -68,13 +68,9 @@ export function CustomiseThis({ product, category, className }: { product: Produ
 
   return (
     <>
-      <button type="button" onClick={start}
-        className={cn('group flex w-full items-center justify-between gap-4 border-t border-rule pt-5 text-left', className)}>
-        <span>
-          <span className="block text-[15px] font-medium text-ink">Customise this piece</span>
-          <span className="mt-0.5 block text-[13.5px] text-fog">A different size or colour, or a name on it. We’ll quote before you pay.</span>
-        </span>
-        <Icon name="arrowRight" size={18} className="shrink-0 text-ink transition-transform duration-300 group-hover:translate-x-1" />
+      <button type="button" onClick={start} title="A different size or colour, or a name on it. We’ll quote before you pay."
+        className={cn('inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-ink/15 px-4 text-[14px] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper', className)}>
+        <Icon name="edit" size={15} /> Customise this piece
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title={state === 'sent' ? 'Thank you' : 'Customise this piece'}>

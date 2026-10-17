@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import type { Category } from '@/lib/types'
 import { useCategories, useProducts } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
-import { money, plural } from '@/lib/format'
+import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
@@ -105,7 +105,7 @@ function Chapter({ category: c, index }: { category: Category; index: number }) 
           </Reveal>
 
           <div className={cn('lg:row-start-1', flip ? 'lg:col-span-6 lg:col-start-1' : 'lg:col-span-6 lg:col-start-7')}>
-            <p className="text-[14px] text-accent">{empty ? 'On the workbench' : plural(c.product_count, 'piece')}</p>
+            {empty && <p className="text-[14px] text-accent">On the workbench</p>}
             <h2 className="mt-2 font-display text-[clamp(3rem,6.4vw,6.25rem)] leading-[0.96] text-ink">{c.name}</h2>
             {c.description && <p className="mt-5 max-w-[30rem] font-odd text-[clamp(1.25rem,1.7vw,1.55rem)] leading-snug text-smoke">{c.description}</p>}
 

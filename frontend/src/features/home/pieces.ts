@@ -53,7 +53,6 @@ export function useHomePieces() {
     moodboard: moodboard.length ? moodboard : all.map((product) => ({ product })),
     room,
     studio,
-    total: popular.data?.total ?? 0,
     loading: featured.isLoading || popular.isLoading || home.isLoading,
   }
 }

@@ -192,7 +192,7 @@ export function Navbar() {
                     <li key={c.id}>
                       <Link to={`/collections/${c.slug}`} className="group flex items-baseline gap-5 border-b border-rule py-3.5 text-ink">
                         <span className="flex-1 font-display text-[1.35rem] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 group-hover:text-accent">{c.name}</span>
-                        <span className="text-[13px] tabular-nums text-fog">{c.product_count ? `${c.product_count} ${c.product_count === 1 ? 'piece' : 'pieces'}` : 'Coming soon'}</span>
+                        <span className="text-[13px] tabular-nums text-fog">{!c.product_count && 'Coming soon'}</span>
                       </Link>
                     </li>
                   ))}

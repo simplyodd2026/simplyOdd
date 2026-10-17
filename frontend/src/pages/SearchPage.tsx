@@ -33,7 +33,7 @@ export default function SearchPage() {
 
   return (
     <Container className="pb-28 pt-12 sm:pt-20">
-      <p className="label mb-6 text-fog">{q && data ? `${data.total} results` : 'Search'}</p>
+      <p className="label mb-6 text-fog">Search</p>
       <h1 className="sr-only">{q ? `Search results for ${q}` : 'Search'}</h1>
       <form onSubmit={(e) => { e.preventDefault(); submit(draft) }}
         className="mb-12 flex items-center gap-4 border-b border-ink pb-4">

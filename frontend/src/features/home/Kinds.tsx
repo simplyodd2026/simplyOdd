@@ -45,12 +45,12 @@ export function Kinds() {
                     <>
                       <img src={c.image} alt="" loading="lazy" decoding="async"
                         className="absolute inset-0 -z-10 size-full object-cover transition-transform duration-[1.4s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]" />
-                      {/* Darken the top and foot so the count and the name stay legible over any photo. */}
+                      {/* Darken the top and foot so the label and the name stay legible over any photo. */}
                       <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/35 via-ink/0 via-40% to-ink/70" />
                     </>
                   )}
                   <span className="flex items-center justify-between text-[14px] opacity-80">
-                    {c.product_count ? `${c.product_count} ${c.product_count === 1 ? 'piece' : 'pieces'}` : 'Coming soon'}
+                    <span>{!c.product_count && 'Coming soon'}</span>
                     <Icon name="arrowUpRight" size={20} className="transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                   </span>
                   <span>

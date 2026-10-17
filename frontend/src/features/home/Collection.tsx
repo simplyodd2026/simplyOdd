@@ -100,12 +100,12 @@ function Slider({ pieces }: { pieces: Piece[] }) {
  * The word "collected" runs behind the whole composition in pale sage.
  */
 export function Collection() {
-  const { collectionLarge, collectionRow: more, total } = useHomePieces()
+  const { collectionLarge, collectionRow: more } = useHomePieces()
   if (!collectionLarge.length) return null
   const [a, b] = collectionLarge
 
   return (
-    <section className="relative isolate overflow-hidden py-28 sm:py-40">
+    <section className="relative isolate overflow-hidden pb-16 pt-28 sm:pb-20 sm:pt-40">
       <p aria-hidden className="pointer-events-none absolute left-1/2 top-[clamp(6rem,12vw,11rem)] -z-10 -translate-x-1/2 select-none whitespace-nowrap font-odd text-[clamp(7rem,22vw,24rem)] leading-none text-sage/25">
         collected
       </p>
@@ -113,7 +113,7 @@ export function Collection() {
         <div className="mx-auto max-w-[1360px]">
           <div className="mb-16 flex flex-wrap items-end justify-between gap-6 sm:mb-24">
             <p className="text-[14px] text-fog">The collection</p>
-            <ArrowLink to="/shop">See all {total ? `${total} objects` : 'objects'}</ArrowLink>
+            <ArrowLink to="/shop">See all objects</ArrowLink>
           </div>
 
           <div className="grid gap-20 lg:grid-cols-12 lg:gap-8">
@@ -136,8 +136,8 @@ export function Collection() {
 
           {more.length > 0 && <Slider pieces={more} />}
 
-          <div className="mt-16 flex justify-center sm:mt-20">
-            <ButtonLink to="/shop" variant="terra" size="md">View all {total ? `${total} products` : 'products'}</ButtonLink>
+          <div className="mt-6 flex justify-center sm:mt-8">
+            <ButtonLink to="/shop" variant="terra" size="md">View all products</ButtonLink>
           </div>
         </div>
       </Container>

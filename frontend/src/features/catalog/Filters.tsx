@@ -36,7 +36,6 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
           {categories?.map((c) => (
             <button key={c.id} className={option(params.category === c.slug)} onClick={() => params.update({ category: c.slug })}>
               <span className="flex items-center">{dot(params.category === c.slug)}{c.name}</span>
-              <span className="tabular-nums text-[11px] text-fog">{c.product_count}</span>
             </button>
           ))}
         </div>

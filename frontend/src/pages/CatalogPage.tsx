@@ -41,7 +41,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
         trail={<><Link to="/" className="link-draw hover:text-ink">Home</Link><span>/</span>
           {preset === 'category' ? <><Link to="/collections" className="link-draw hover:text-ink">Collections</Link><span>/</span><span className="text-ink">{copy.title}</span></>
             : <span className="text-ink">{copy.title}</span>}</>}
-        title={copy.title || ' '} count={data?.total} intro={copy.intro} />
+        title={copy.title || ' '} intro={copy.intro} />
       <Container>
         <ProductResults params={params} data={data} isLoading={isLoading || (preset === 'category' && catsLoading)} isFetching={isFetching}
           showCategories={preset !== 'category'}

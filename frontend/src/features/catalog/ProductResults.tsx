@@ -7,7 +7,6 @@ import { Pagination } from '@/components/ui/misc'
 import { Drawer } from '@/components/ui/Overlay'
 import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
-import { plural } from '@/lib/format'
 import { scrollToY } from '@/lib/scroll'
 import { cn } from '@/lib/cn'
 import { Filters } from './Filters'
@@ -42,7 +41,7 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
             ))}
           </div>
         ) : (
-          <p className="flex-1 tabular-nums text-[12px] text-fog" aria-live="polite">{data ? plural(data.total, 'piece') : ' '}</p>
+          <span className="flex-1" />
         )}
         <div className="flex shrink-0 items-center gap-2">
           <button onClick={() => setFiltersOpen(true)}
@@ -58,10 +57,6 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
           </select>
         </div>
       </div>
-
-      {showCategories && data && (
-        <p className="-mt-4 mb-8 tabular-nums text-[12px] text-fog" aria-live="polite">{plural(data.total, 'piece')}</p>
-      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-12 xl:grid-cols-5">
@@ -86,7 +81,7 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
       )}
 
       <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filter"
-        footer={<Button size="lg" className="w-full" onClick={() => setFiltersOpen(false)}>Show {data ? plural(data.total, 'result') : 'results'}</Button>}>
+        footer={<Button size="lg" className="w-full" onClick={() => setFiltersOpen(false)}>Show results</Button>}>
         <div className="px-6 sm:px-8">
           <div className="border-b border-rule py-6 sm:hidden">
             <p className="label mb-4 text-fog">Sort by</p>

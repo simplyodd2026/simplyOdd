@@ -150,11 +150,14 @@ export default function ProductPage() {
 
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-28">
-              <nav className="mb-8 flex flex-wrap gap-2 text-[13px] text-fog" aria-label="Breadcrumb">
-                <Link to="/shop" className="link-draw hover:text-ink">Objects</Link>
-                {category && <><span aria-hidden>/</span><Link to={`/collections/${category.slug}`} className="link-draw hover:text-ink">{category.name}</Link></>}
-                <span aria-hidden>/</span><span className="text-ink">{p.name}</span>
-              </nav>
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                <nav className="flex flex-wrap gap-2 text-[13px] text-fog" aria-label="Breadcrumb">
+                  <Link to="/shop" className="link-draw hover:text-ink">Objects</Link>
+                  {category && <><span aria-hidden>/</span><Link to={`/collections/${category.slug}`} className="link-draw hover:text-ink">{category.name}</Link></>}
+                  <span aria-hidden>/</span><span className="text-ink">{p.name}</span>
+                </nav>
+                <CustomiseThis product={p} category={category} />
+              </div>
               <SplitReveal key={p.id} as="h1" on="load" delay={0.1} className="font-display text-[clamp(3rem,5.4vw,5.75rem)] leading-[0.98] text-ink text-balance">
                 {p.name}
               </SplitReveal>
@@ -198,7 +201,6 @@ export default function ProductPage() {
                 )}
               </div>
 
-              <CustomiseThis className="mt-8" product={p} category={category} />
             </div>
           </div>
         </div>
