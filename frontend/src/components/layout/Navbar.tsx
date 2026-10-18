@@ -174,7 +174,7 @@ export function Navbar() {
           <motion.div initial={{ opacity: 0, y: -10, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.45, ease: OUT }}
             onMouseEnter={() => setHovered('objects')}
-            className="pointer-events-auto absolute inset-x-0 top-full mx-auto mt-3 hidden max-w-[1000px] origin-top lg:block">
+            className="pointer-events-auto absolute inset-x-0 top-full mx-auto hidden max-w-[1000px] origin-top pt-3 lg:block">
             <div className="grid grid-cols-12 gap-8 rounded-[2rem] bg-paper/80 p-9 shadow-[0_30px_60px_-30px_rgb(66_44_28/0.5),inset_0_1px_0_rgb(255_255_255/0.6)] ring-1 ring-ink/[0.07] backdrop-blur-2xl backdrop-saturate-150">
               <div className="col-span-5 flex flex-col gap-1">
                 <p className="mb-3 text-[13px] text-fog">Browse</p>
