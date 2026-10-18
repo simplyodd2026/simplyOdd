@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useProduct, useConfig } from '@/lib/queries'
@@ -53,6 +53,12 @@ export default function ProductPage() {
   const [shot, setShot] = useState(0)
   const [viewer, setViewer] = useState<number | null>(null)
   const [color, setColor] = useState<string | null>(null)
+  // Each photo's own width/height, learned as it loads, so the frame fits the photo instead of cropping it.
+  const [ratios, setRatios] = useState<Record<string, number>>({})
+  const measure = (e: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: w, naturalHeight: h, dataset: { url } } = e.currentTarget
+    if (url && w && h) setRatios((r) => (r[url] ? r : { ...r, [url]: w / h }))
+  }
   const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
   useEffect(() => { setQty(1); setShot(0); setColor(null) }, [slug])
@@ -94,6 +100,10 @@ export default function ProductPage() {
   const gallery = ownPhotos.length ? [...ownPhotos, ...generalPhotos] : generalPhotos.length ? generalPhotos : p.images
   const hero = gallery[shot] ?? gallery[0]
   const room = gallery.slice(1)
+  // The frame follows the photo's shape, held between 2:3 and 3:2 so extreme shots don't wreck the layout.
+  // Until the photo has loaded, the classic 4:5 stands. Width is capped so the whole frame fits on screen.
+  const ratio = Math.min(1.5, Math.max(2 / 3, (hero && ratios[hero.url]) || 0.8))
+  const frameWidth = { maxWidth: `calc((100svh - 10rem) * ${ratio})` }
   const chooseColor = (id: string) => { setColor(id); setShot(0) }
   const pictured = hero?.color ? filaments.byId.get(hero.color) : undefined
   const colorNote = chosen && hero && !ownPhotos.length
@@ -121,13 +131,14 @@ export default function ProductPage() {
           <div className="relative lg:col-span-7">
             <span aria-hidden className="pebble absolute -left-[6%] bottom-[10%] -z-10 aspect-square w-[46%] bg-clay/45 max-sm:hidden" />
             <motion.div key={p.id} initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} transition={{ duration: 1.3, ease: EASE }}
-              className="mx-auto w-full max-w-[calc((100svh-10rem)*0.8)]">
+              className="mx-auto w-full transition-[max-width] duration-700 ease-[var(--ease-out-quint)]" style={frameWidth}>
               <div ref={tilt}>
                 <button type="button" onClick={() => setViewer(shot)} aria-label={`Open image ${shot + 1} of ${gallery.length}`}
-                  className={cn('table-shadow relative block aspect-[4/5] w-full overflow-hidden bg-ash', SLAB)}>
+                  style={{ aspectRatio: ratio }}
+                  className={cn('table-shadow relative block w-full overflow-hidden bg-ash transition-[aspect-ratio] duration-700 ease-[var(--ease-out-quint)]', SLAB)}>
                   <AnimatePresence mode="popLayout" initial={false}>
                     {hero ? (
-                      <motion.img key={hero.url} src={hero.url} alt={hero.alt || p.name} draggable={false}
+                      <motion.img key={hero.url} src={hero.url} alt={hero.alt || p.name} draggable={false} data-url={hero.url} onLoad={measure}
                         initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: EASE }}
                         className="absolute inset-0 size-full object-cover" />
                     ) : null}
@@ -136,12 +147,12 @@ export default function ProductPage() {
               </div>
             </motion.div>
             {gallery.length > 1 && (
-              <div className="mx-auto mt-5 flex w-full max-w-[calc((100svh-10rem)*0.8)] flex-wrap gap-3" role="tablist" aria-label="Product images">
+              <div className="mx-auto mt-5 flex w-full flex-wrap gap-3" style={frameWidth} role="tablist" aria-label="Product images">
                 {gallery.map((img, i) => (
                   <button key={img.url} type="button" role="tab" aria-selected={i === shot} aria-label={`Show image ${i + 1}`} onClick={() => setShot(i)}
                     className={cn('plate size-16 overflow-hidden ring-1 ring-offset-2 ring-offset-paper transition-[box-shadow,opacity] duration-300',
                       i === shot ? 'ring-ink' : 'opacity-60 ring-transparent hover:opacity-100')}>
-                    <img src={img.url} alt="" className="size-full object-cover" />
+                    <img src={img.url} alt="" data-url={img.url} onLoad={measure} className="size-full object-cover" />
                   </button>
                 ))}
               </div>
