@@ -16,7 +16,6 @@ const PRIMARY = [
   ['/shop', 'All objects'],
   ['/new', 'New arrivals'],
   ['/collections', 'Collections'],
-  ['/about#process', 'Process'],
   ['/about', 'About'],
   ['/customise', 'Customise'],
 ] as const

@@ -292,7 +292,7 @@ export default function ProductPage() {
 
       <Viewer images={gallery} name={p.name} index={viewer} onChange={setViewer} />
 
-      <Container><div className="mx-auto max-w-[1440px]">
+      <Container className={cn(!related.length && 'pb-28')}><div className="mx-auto max-w-[1440px]">
         <BoughtTogether key={p.id} product={p} others={frequently_bought} />
         <Reviews product={p} />
       </div></Container>

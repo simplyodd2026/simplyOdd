@@ -16,15 +16,14 @@ const SPRING = { type: 'spring', stiffness: 380, damping: 34, mass: 0.9 } as con
 const LINKS = [
   { key: 'objects', to: '/shop', label: 'Objects' },
   { key: 'collections', to: '/collections', label: 'Collections' },
-  { key: 'process', to: '/about#process', label: 'Process' },
   { key: 'about', to: '/about', label: 'About' },
   { key: 'customise', to: '/customise', label: 'Customise' },
 ] as const
 type Key = (typeof LINKS)[number]['key']
 
 /** Which link the current page belongs to, so the highlight can rest on it. */
-function activeKey(pathname: string, hash: string): Key | null {
-  if (pathname === '/about') return hash === '#process' ? 'process' : 'about'
+function activeKey(pathname: string): Key | null {
+  if (pathname === '/about') return 'about'
   if (pathname.startsWith('/collections')) return 'collections'
   if (pathname.startsWith('/customise')) return 'customise'
   if (/^\/(shop|new|bestsellers|product|search)/.test(pathname)) return 'objects'
@@ -81,7 +80,7 @@ export function Navbar() {
   const { data: categories } = useCategories()
   const { hidden, scrolled } = useHeaderVisibility(shopOpen)
   const bag = cartCount(items)
-  const current = activeKey(pathname, hash)
+  const current = activeKey(pathname)
   const lit = hovered ?? current
 
   useEffect(() => { setShopOpen(false); setHovered(null) }, [pathname, hash])

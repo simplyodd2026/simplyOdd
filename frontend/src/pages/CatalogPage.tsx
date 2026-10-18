@@ -42,7 +42,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
           {preset === 'category' ? <><Link to="/collections" className="link-draw hover:text-ink">Collections</Link><span>/</span><span className="text-ink">{copy.title}</span></>
             : <span className="text-ink">{copy.title}</span>}</>}
         title={copy.title || ' '} intro={copy.intro} />
-      <Container>
+      <Container className="pb-28">
         <ProductResults params={params} data={data} isLoading={isLoading || (preset === 'category' && catsLoading)} isFetching={isFetching}
           showCategories={preset !== 'category'}
           empty={<EmptyState title="Nothing matches those filters." body="Widen the price range or include pieces that are currently sold out."
