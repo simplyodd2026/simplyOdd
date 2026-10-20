@@ -5,6 +5,7 @@ import { cn } from '@/lib/cn'
 import { Container } from '@/components/layout/Container'
 import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 import { Icon } from '@/components/ui/Icon'
+import { SHIPPING } from '@/lib/constants'
 
 // Terracotta, linen and olive, like three swatches laid across a strip of sand.
 const TONES = [
@@ -27,7 +28,7 @@ export function Kinds() {
       <Container>
         <div className="mx-auto mb-14 flex max-w-[1360px] flex-wrap items-end justify-between gap-6">
           <SplitReveal as="h2" className="font-display text-[clamp(2.6rem,5vw,5rem)] leading-[1] text-ink">Shop by kind</SplitReveal>
-          <p className="max-w-xs text-[15px] leading-[1.65] text-smoke">Every piece is made to order and ships free over {money(config?.free_shipping_threshold ?? 1999)}.</p>
+          <p className="max-w-xs text-[15px] leading-[1.65] text-smoke">Every piece is made to order and ships free over {money(config?.free_shipping_threshold ?? SHIPPING.freeOver)}.</p>
         </div>
       </Container>
 

@@ -1,8 +1,7 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/cn'
-import { useCategories } from '@/lib/queries'
 import { ButtonLink } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { reducedMotion } from '@/lib/motion'
@@ -17,12 +16,9 @@ const ODD = '#F2642A'
  * The print room. A full-width panel in a shell-to-clay wash, with the name set huge across it, and in the
  * middle the Simply Odd mark being built, layer by layer, from nothing (see PrintedMark), as large as the
  * screen's height allows. Once the last layer is down, "Oddly beautiful" is written over its edges by hand.
- * Along the foot: what the studio makes and the way in, the shop's categories, and a floating card for
- * commissioning a one-off piece.
+ * Along the foot: what the studio makes and the way in, and a floating card for commissioning a one-off piece.
  */
 export function Hero() {
-  // Only categories with something in them, so no link from the first screen leads to an empty page.
-  const categories = (useCategories().data ?? []).filter((c) => c.product_count > 0)
   const [layer, setLayer] = useState(0)
   const printed = layer >= LAYERS
 
@@ -64,7 +60,7 @@ export function Hero() {
           </div>
         </div>
 
-        {/* The foot of the panel, on one line: the studio and the way in, the shop's categories, a one-off piece.
+        {/* The foot of the panel, on one line: the studio and the way in, then a one-off piece.
             On wide screens it lies over the stage, the words and the card beside the narrow base of the piece. */}
         <div className="pointer-events-none relative z-30 mx-auto grid w-full max-w-[1520px] gap-8 px-5 pb-10 pt-8 sm:px-10 lg:absolute lg:inset-x-0 lg:bottom-0 lg:grid-cols-[1fr_auto_1fr] lg:items-end lg:gap-10 lg:pt-0 [&>*]:pointer-events-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: OUT, delay: 0.5 }}
@@ -80,18 +76,8 @@ export function Hero() {
             </div>
           </motion.div>
 
-          {/* Under the piece, what the shop makes: its categories, each a way in. */}
-          {categories.length > 0 ? (
-            <motion.nav aria-label="Shop by category" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: OUT, delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[clamp(0.8125rem,1vw,0.9375rem)] font-medium uppercase tracking-[0.14em] text-ink/70 max-lg:order-1 lg:pb-3">
-              {categories.map((c, i) => (
-                <Fragment key={c.id}>
-                  {i > 0 && <span aria-hidden className="text-accent">·</span>}
-                  <Link to={`/collections/${c.slug}`} className="link-draw transition-colors hover:text-ink">{c.name}</Link>
-                </Fragment>
-              ))}
-            </motion.nav>
-          ) : <span aria-hidden />}
+          {/* The middle column stays empty: the piece's base sits there. */}
+          <span aria-hidden className="max-lg:hidden" />
 
           {/* Floating: the way into a one-off piece. */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: OUT, delay: 0.7 }}

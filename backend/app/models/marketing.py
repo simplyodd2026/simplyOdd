@@ -6,10 +6,15 @@ from pydantic import EmailStr, Field
 from app.models.common import Schema
 
 
+# custom_total: the shopper enters the amount they'll pay, and that becomes the
+# order total. `value` is then the lowest amount they may enter.
+CouponKind = Literal["percent", "fixed", "free_shipping", "custom_total"]
+
+
 class CouponBase(Schema):
     code: str = Field(min_length=3, max_length=32)
     description: str = ""
-    kind: Literal["percent", "fixed", "free_shipping"] = "percent"
+    kind: CouponKind = "percent"
     value: float = Field(default=0, ge=0)
     min_subtotal: float = 0
     max_discount: float | None = None
@@ -25,7 +30,7 @@ class CouponCreate(CouponBase):
 
 class CouponUpdate(Schema):
     description: str | None = None
-    kind: Literal["percent", "fixed", "free_shipping"] | None = None
+    kind: CouponKind | None = None
     value: float | None = None
     min_subtotal: float | None = None
     max_discount: float | None = None

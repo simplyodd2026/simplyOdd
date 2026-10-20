@@ -5,6 +5,7 @@ import type {
   SortKey, StorefrontConfig, UserProfile,
 } from './types'
 import { useSession } from '@/stores/session'
+import { SHIPPING } from './constants'
 
 export interface ProductQuery {
   q?: string
@@ -50,10 +51,20 @@ export const useCategories = () =>
 export const useConfig = () =>
   useQuery({ queryKey: ['config'], queryFn: () => api<StorefrontConfig>('/config', { auth: false }), staleTime: Infinity })
 
-export const useQuote = (items: CartLine[], coupon: string | null, shipping: ShippingMethod) =>
+/** Shipping rates from /config, with the built-in values until it loads. */
+export const useShippingRates = () => {
+  const { data: config } = useConfig()
+  return {
+    freeOver: config?.free_shipping_threshold ?? SHIPPING.freeOver,
+    standardFee: config?.standard_shipping_fee ?? SHIPPING.standardFee,
+    expressFee: config?.express_shipping_fee ?? SHIPPING.expressFee,
+  }
+}
+
+export const useQuote = (items: CartLine[], coupon: string | null, shipping: ShippingMethod, couponAmount: number | null = null) =>
   useQuery({
-    queryKey: ['quote', items, coupon, shipping],
-    queryFn: () => api<Quote>('/cart/quote', { body: { items, coupon_code: coupon, shipping_method: shipping }, auth: false }),
+    queryKey: ['quote', items, coupon, couponAmount, shipping],
+    queryFn: () => api<Quote>('/cart/quote', { body: { items, coupon_code: coupon, coupon_amount: couponAmount, shipping_method: shipping }, auth: false }),
     enabled: items.length > 0,
     placeholderData: keepPreviousData,
   })

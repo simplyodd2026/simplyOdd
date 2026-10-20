@@ -4,17 +4,21 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Accordion } from '@/components/ui/Accordion'
 import { Reveal } from '@/components/motion/Reveal'
 import { useDocumentTitle } from '@/lib/hooks'
+import { money } from '@/lib/format'
+import { useShippingRates } from '@/lib/queries'
 import { cn } from '@/lib/cn'
 import NotFoundPage from './NotFoundPage'
 
-const TOPICS: Record<string, { title: string; intro: string; sections: [string, string][] }> = {
+type Rates = ReturnType<typeof useShippingRates>
+
+const topics = (rates: Rates): Record<string, { title: string; intro: string; sections: [string, string][] }> => ({
   shipping: {
     title: 'Shipping',
     intro: 'How long your piece takes to make, how it travels and what it costs.',
     sections: [
-      ['When will my order ship?', 'Most pieces are made to order and leave the studio within 2–4 business days. Large lamps can take up to 6.'],
-      ['How long does delivery take?', 'Standard delivery takes 5–8 business days after dispatch. Express takes 2–3 business days to most metro PIN codes.'],
-      ['What does shipping cost?', 'Standard shipping is ₹99, and free on orders over ₹1,999. Express shipping is ₹249.'],
+      ['When will my order ship?', 'Every piece is made to order, so how long it takes depends on the piece and what else is on the printers. Your order page shows when it goes into production and when it ships.'],
+      ['How long does delivery take?', 'It depends on where you are and the courier, so we can’t promise a date. Once your order ships, its tracking number on your order page shows where it is.'],
+      ['What does shipping cost?', `Standard shipping is ${money(rates.standardFee)}, and free on orders over ${money(rates.freeOver)}. Express shipping is ${money(rates.expressFee)}.`],
       ['How is it packed?', 'Every piece is wrapped in recycled paper pulp and boxed with enough space that nothing touches the walls. No plastic fillers.'],
       ['Can I track my order?', 'Yes. When your order ships we add a tracking number to your order page in your account.'],
     ],
@@ -40,10 +44,11 @@ const TOPICS: Record<string, { title: string; intro: string; sections: [string, 
       ['Can you make something custom?', 'Yes. Use the Customise page to send us a brief, or email hello@simplyodd.in.'],
     ],
   },
-}
+})
 
 export default function HelpPage() {
   const { topic = '' } = useParams()
+  const TOPICS = topics(useShippingRates())
   const page = TOPICS[topic]
   useDocumentTitle(page?.title)
   if (!page) return <NotFoundPage />

@@ -27,6 +27,7 @@ import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { filamentLabel, productFilaments, useFilaments } from '@/lib/filaments'
 import NotFoundPage from './NotFoundPage'
+import { SHIPPING } from '@/lib/constants'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 // The gallery frame: a cut slab with three soft corners, the crisp one top right.
@@ -88,7 +89,7 @@ export default function ProductPage() {
   const dims = [p.dimensions.width_cm, p.dimensions.height_cm, p.dimensions.depth_cm]
   const paragraphs = (p.description || '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean)
   const [lede, ...story] = paragraphs
-  const freeOver = money(config?.free_shipping_threshold ?? 1999)
+  const freeOver = money(config?.free_shipping_threshold ?? SHIPPING.freeOver)
   // Colour: only what this piece is offered in. Until the shopper picks, the product's default stands.
   const options = productFilaments(p, filaments.byId)
   const chosen = options.find((f) => f.id === color) ?? options.find((f) => f.id === p.default_color) ?? options[0] ?? null
@@ -99,7 +100,6 @@ export default function ProductPage() {
   const generalPhotos = p.images.filter((img) => !img.color)
   const gallery = ownPhotos.length ? [...ownPhotos, ...generalPhotos] : generalPhotos.length ? generalPhotos : p.images
   const hero = gallery[shot] ?? gallery[0]
-  const room = gallery.slice(1)
   // The frame follows the photo's shape, held between 2:3 and 3:2 so extreme shots don't wreck the layout.
   // Until the photo has loaded, the classic 4:5 stands. Width is capped so the whole frame fits on screen.
   const ratio = Math.min(1.5, Math.max(2 / 3, (hero && ratios[hero.url]) || 0.8))
@@ -111,7 +111,7 @@ export default function ProductPage() {
     : null
   const addToBag = () => { add(p.id, qty, chosen?.id ?? null); setCart(true) }
   const buyNow = () => { add(p.id, qty, chosen?.id ?? null); navigate('/checkout') }
-  const availability = soldOut ? 'Sold out' : p.availability === 'low_stock' ? `Only ${p.stock} left` : 'In stock, ships in 2–4 days'
+  const availability = soldOut ? 'Sold out' : p.availability === 'low_stock' ? `Only ${p.stock} left` : 'In stock, made to order'
 
   const details: [string, string][] = [
     ['Material', p.materials.join(', ') || 'Plant-based PLA'],
@@ -261,7 +261,7 @@ export default function ProductPage() {
               ))}
               <div className="border-t border-ink/15">
                 <Accordion title="Shipping and returns">
-                  <p>Standard delivery takes 5–8 business days and is complimentary over {freeOver}. Express takes 2–3 business days.
+                  <p>Every piece is made to order, so timing varies; you can follow your order from your account. Standard shipping is complimentary over {freeOver}.
                     Unused pieces can be returned within 14 days; anything damaged in transit is remade at no cost.{' '}
                     <Link to="/help/shipping" className="link-draw text-ink">Details</Link></p>
                 </Accordion>
@@ -281,25 +281,6 @@ export default function ProductPage() {
           <ProcessStrip />
         </div>
       </Container>
-
-      {/* The piece at home: the remaining photographs, at different scales. */}
-      {room.length > 0 && (
-        <Container className="pb-28 sm:pb-36">
-          <div className="mx-auto max-w-[1300px]">
-            <h2 className="mb-12 font-display text-[clamp(2.4rem,4vw,4rem)] leading-[1] text-ink">In your space</h2>
-            <div className="grid gap-5 sm:grid-cols-12 sm:gap-6">
-              {room.slice(0, 3).map((img, i) => (
-                <button key={img.url} type="button" onClick={() => setViewer(i + 1)} aria-label={`Open image ${i + 2} of ${gallery.length}`}
-                  className={cn('block overflow-hidden bg-ash',
-                    i === 0 ? 'pebble-2 aspect-[4/3] sm:col-span-7' : i === 1 ? 'arch aspect-[3/4] sm:col-span-4 sm:col-start-9 sm:mt-24' : 'slab aspect-[16/9] sm:col-span-6 sm:col-start-3')}>
-                  <img src={img.url} alt={img.alt || `${p.name} at home`} loading="lazy" decoding="async"
-                    className="size-full object-cover transition-transform duration-[1.4s] ease-[var(--ease-out-quint)] hover:scale-[1.03]" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </Container>
-      )}
 
       <Viewer images={gallery} name={p.name} index={viewer} onChange={setViewer} />
 

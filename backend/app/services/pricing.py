@@ -2,7 +2,8 @@
 it renders the quote returned from here, and checkout recomputes it."""
 from __future__ import annotations
 
-from app.core.config import Settings
+from app.core.constants import (CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, PARTIAL_SHARE,
+                                STANDARD_SHIPPING_FEE)
 from app.core.utils import money
 from app.models.cart import CartLine, Quote, QuoteLine, QuoteRequest, ShippingOption
 from app.models.filament import FILAMENTS_BY_ID, FilamentChoice
@@ -10,22 +11,19 @@ from app.models.marketing import Coupon
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
 
-PARTIAL_SHARE = 0.5  # share of the total paid online on the partial plan
-
 
 class PricingService:
-    def __init__(self, settings: Settings, catalog: CatalogService, coupons: CouponService):
-        self.s = settings
+    def __init__(self, catalog: CatalogService, coupons: CouponService):
         self.catalog = catalog
         self.coupons = coupons
 
     def shipping_options(self, subtotal: float) -> list[ShippingOption]:
-        free = subtotal >= self.s.free_shipping_threshold
+        free = subtotal >= FREE_SHIPPING_THRESHOLD
         return [
-            ShippingOption(method="standard", label="Standard", eta="5–8 business days",
-                           fee=0 if free or subtotal == 0 else self.s.standard_shipping_fee),
-            ShippingOption(method="express", label="Express", eta="2–3 business days",
-                           fee=self.s.express_shipping_fee if subtotal else 0),
+            ShippingOption(method="standard", label="Standard", eta="Regular courier",
+                           fee=0 if free or subtotal == 0 else STANDARD_SHIPPING_FEE),
+            ShippingOption(method="express", label="Express", eta="Priority courier",
+                           fee=EXPRESS_SHIPPING_FEE if subtotal else 0),
         ]
 
     async def quote(self, req: QuoteRequest) -> tuple[Quote, Coupon | None]:
@@ -74,18 +72,22 @@ class PricingService:
         options = self.shipping_options(subtotal)
         shipping = next(o.fee for o in options if o.method == req.shipping_method)
 
-        discount, coupon, message = 0.0, None, None
+        discount, coupon, message, needs_amount = 0.0, None, None, False
         if req.coupon_code and req.coupon_code.strip():
             found = await self.coupons.find(req.coupon_code)
-            applied, discount, shipping, message = self.coupons.evaluate(found, req.coupon_code, subtotal, shipping)
+            applied, discount, shipping, message = self.coupons.evaluate(
+                found, req.coupon_code, subtotal, shipping, req.coupon_amount)
             coupon = found if applied else None
+            needs_amount = found is not None and found.kind == "custom_total" \
+                and self.coupons.problem(found, req.coupon_code, subtotal) is None
 
         total = money(subtotal - discount + shipping)
         quote = Quote(
             lines=lines, subtotal=subtotal, discount=discount,
-            coupon_code=coupon.code if coupon else None, coupon_message=message,
+            coupon_code=coupon.code if coupon else None, coupon_message=message, coupon_needs_amount=needs_amount,
+            coupon_amount=total if coupon and coupon.kind == "custom_total" else None,
             shipping_method=req.shipping_method, shipping=shipping, shipping_options=options,
-            total=total, deposit=money(total * PARTIAL_SHARE), currency=self.s.currency,
+            total=total, deposit=money(total * PARTIAL_SHARE), currency=CURRENCY,
             item_count=sum(line.quantity for line in lines if line.available),
             has_issues=any(not line.available for line in lines),
         )

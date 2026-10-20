@@ -42,19 +42,37 @@ class CouponService:
     async def mark_used(self, coupon: Coupon) -> None:
         await self.store.increment(COUPONS, coupon.id, "used_count", 1)
 
-    def evaluate(self, coupon: Coupon | None, code: str, subtotal: float, shipping: float) -> tuple[bool, float, float, str]:
-        """Returns (applied, discount, shipping_after, message)."""
+    def problem(self, coupon: Coupon | None, code: str, subtotal: float) -> str | None:
+        """Why the coupon can't be used on this order, or None when it can."""
         if coupon is None or not coupon.active:
-            return False, 0, shipping, f"{code.upper()} isn't a valid code"
+            return f"{code.upper()} isn't a valid code"
         ts = now()
         if coupon.starts_at and ts < coupon.starts_at:
-            return False, 0, shipping, f"{coupon.code} isn't active yet"
+            return f"{coupon.code} isn't active yet"
         if coupon.expires_at and ts > coupon.expires_at:
-            return False, 0, shipping, f"{coupon.code} has expired"
+            return f"{coupon.code} has expired"
         if coupon.usage_limit is not None and coupon.used_count >= coupon.usage_limit:
-            return False, 0, shipping, f"{coupon.code} has been fully redeemed"
+            return f"{coupon.code} has been fully redeemed"
         if subtotal < coupon.min_subtotal:
-            return False, 0, shipping, f"Add items worth {coupon.min_subtotal - subtotal:.0f} more to use {coupon.code}"
+            return f"Add items worth {coupon.min_subtotal - subtotal:.0f} more to use {coupon.code}"
+        return None
+
+    def evaluate(self, coupon: Coupon | None, code: str, subtotal: float, shipping: float,
+                 amount: float | None = None) -> tuple[bool, float, float, str]:
+        """Returns (applied, discount, shipping_after, message). `amount` is what the
+        shopper chose to pay, used only by custom_total coupons."""
+        if problem := self.problem(coupon, code, subtotal):
+            return False, 0, shipping, problem
+        assert coupon is not None
+        if coupon.kind == "custom_total":
+            minimum = max(coupon.value, 1)
+            if amount is None:
+                return False, 0, shipping, f"Enter the amount you'll pay with {coupon.code}"
+            if amount < minimum:
+                return False, 0, shipping, f"{coupon.code} needs an amount of at least {minimum:.0f}"
+            # Never charge more than the order would have cost without the code.
+            discount = money(max(subtotal + shipping - amount, 0))
+            return True, discount, shipping, f"{coupon.code} applied"
         if coupon.kind == "free_shipping":
             return True, 0, 0, f"{coupon.code} applied: free shipping"
         discount = subtotal * coupon.value / 100 if coupon.kind == "percent" else coupon.value

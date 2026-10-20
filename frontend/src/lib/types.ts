@@ -100,6 +100,9 @@ export interface Quote {
   discount: number
   coupon_code: string | null
   coupon_message: string | null
+  /** The code lets the shopper choose what they pay: ask for an amount. */
+  coupon_needs_amount: boolean
+  coupon_amount: number | null
   shipping_method: ShippingMethod
   shipping: number
   shipping_options: ShippingOption[]
@@ -225,6 +228,8 @@ export interface PaymentProviderInfo { id: string; label: string; description: s
 export interface StorefrontConfig {
   currency: string
   free_shipping_threshold: number
+  standard_shipping_fee: number
+  express_shipping_fee: number
   payment_providers: PaymentProviderInfo[]
   filaments: Filament[]
 }
@@ -233,7 +238,8 @@ export interface Coupon {
   id: string
   code: string
   description: string
-  kind: 'percent' | 'fixed' | 'free_shipping'
+  /** custom_total: the shopper enters the order total; `value` is the lowest they may enter. */
+  kind: 'percent' | 'fixed' | 'free_shipping' | 'custom_total'
   value: number
   min_subtotal: number
   max_discount: number | null

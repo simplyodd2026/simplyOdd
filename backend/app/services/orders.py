@@ -80,7 +80,8 @@ class OrderService:
             raise BadRequest("Choose a payment method")
 
         quote, coupon = await self.pricing.quote_lines(
-            req.items, coupon_code=req.coupon_code, shipping_method=req.shipping_method, country=req.address.country)
+            req.items, coupon_code=req.coupon_code, coupon_amount=req.coupon_amount,
+            shipping_method=req.shipping_method, country=req.address.country)
         if quote.has_issues:
             problems = "; ".join(f"{line.name}: {line.issue}" for line in quote.lines if line.issue)
             raise Conflict(f"Update your bag before checking out. {problems}")

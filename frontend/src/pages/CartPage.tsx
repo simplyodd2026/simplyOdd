@@ -15,8 +15,8 @@ import { ProductRail } from '@/features/home/ProductRail'
 import { LineColor } from '@/features/checkout/LineColor'
 
 export default function CartPage() {
-  const { items, couponCode, shippingMethod, setQuantity, remove } = useCart()
-  const { data: quote, isLoading } = useQuote(items, couponCode, shippingMethod)
+  const { items, couponCode, couponAmount, shippingMethod, setQuantity, remove } = useCart()
+  const { data: quote, isLoading } = useQuote(items, couponCode, shippingMethod, couponAmount)
   const toggleWish = useWishlist((s) => s.toggle)
   const navigate = useNavigate()
   useDocumentTitle('Your bag')

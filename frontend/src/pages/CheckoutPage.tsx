@@ -35,7 +35,7 @@ export default function CheckoutPage() {
   const qc = useQueryClient()
   const { user, profile } = useSession()
   const cart = useCart()
-  const { data: quote, isLoading } = useQuote(cart.items, cart.couponCode, cart.shippingMethod)
+  const { data: quote, isLoading } = useQuote(cart.items, cart.couponCode, cart.shippingMethod, cart.couponAmount)
   const { data: config } = useConfig()
 
   const [step, setStep] = useState<Step>('address')
@@ -125,7 +125,7 @@ export default function CheckoutPage() {
       } else {
         const res = await api<CheckoutResponse>('/checkout', {
           body: {
-            items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode,
+            items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode, coupon_amount: cart.couponAmount,
             payment_provider: provider, payment_plan: plan, notes: null,
           },
         })
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                     <dd className="leading-relaxed text-graphite"><span className="text-ink">{address.full_name}</span>, {address.line1}, {address.city}, {address.state} {address.postal_code}<br />{address.email}</dd>
                   </dl>
                 )}
-                <h2 className="font-display text-[1.6rem] text-ink">Delivery speed</h2>
+                <h2 className="font-display text-[1.6rem] text-ink">Shipping</h2>
                 <div className="flex flex-col gap-3" role="radiogroup" aria-label="Shipping method">
                   {shippingOptions.map((o) => (
                     <button key={o.method} role="radio" aria-checked={cart.shippingMethod === o.method} onClick={() => cart.setShipping(o.method)}

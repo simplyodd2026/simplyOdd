@@ -25,6 +25,7 @@ class Cart(Schema):
 class QuoteRequest(Schema):
     items: list[CartLine]
     coupon_code: str | None = None
+    coupon_amount: float | None = Field(default=None, gt=0)  # what the shopper pays with a custom_total coupon
     shipping_method: ShippingMethod = "standard"
     country: str | None = None
 
@@ -59,6 +60,8 @@ class Quote(Schema):
     discount: float
     coupon_code: str | None
     coupon_message: str | None = None
+    coupon_needs_amount: bool = False  # the code is a custom_total one: ask the shopper for an amount
+    coupon_amount: float | None = None  # the amount applied, when it was
     shipping_method: ShippingMethod
     shipping: float
     shipping_options: list[ShippingOption]

@@ -12,8 +12,8 @@ import { LineColor } from '@/features/checkout/LineColor'
 
 export function CartDrawer() {
   const { cartOpen, setCart } = useUi()
-  const { items, couponCode, shippingMethod, setQuantity, remove } = useCart()
-  const { data: quote, isLoading } = useQuote(items, couponCode, shippingMethod)
+  const { items, couponCode, couponAmount, shippingMethod, setQuantity, remove } = useCart()
+  const { data: quote, isLoading } = useQuote(items, couponCode, shippingMethod, couponAmount)
   const { data: config } = useConfig()
   const navigate = useNavigate()
   const close = () => setCart(false)

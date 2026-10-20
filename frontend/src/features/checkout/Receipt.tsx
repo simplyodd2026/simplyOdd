@@ -83,8 +83,37 @@ export function ReceiptLines({ quote }: { quote: Quote }) {
 
 /** The discount code, written on the slip: a single underlined line with Apply beside it. */
 export function ReceiptCoupon({ quote }: { quote: Quote }) {
-  const { couponCode, setCoupon } = useCart()
+  const { couponCode, couponAmount, setCoupon, setCouponAmount } = useCart()
   const [draft, setDraft] = useState('')
+  const [amount, setAmount] = useState('')
+  if (couponCode && quote.coupon_code && quote.coupon_amount != null) {
+    return (
+      <p className="flex items-baseline justify-between gap-4 text-[14px]">
+        <span><span className="font-medium text-ink">{quote.coupon_code}</span> <span className="text-smoke">paying {money(quote.coupon_amount)}</span></span>
+        <span className="flex gap-4">
+          <button onClick={() => { setAmount(String(couponAmount ?? '')); setCouponAmount(null) }} className="link-draw text-smoke hover:text-ink">Change</button>
+          <button onClick={() => setCoupon(null)} className="link-draw text-smoke hover:text-ink">Remove</button>
+        </span>
+      </p>
+    )
+  }
+  if (couponCode && quote.coupon_needs_amount) {
+    return (
+      <div>
+        <form className="flex items-end gap-3" onSubmit={(e) => { e.preventDefault(); const v = Number(amount); if (v > 0) setCouponAmount(v) }}>
+          <label htmlFor="receipt-coupon-amount" className="sr-only">Amount to pay with {couponCode}</label>
+          <input id="receipt-coupon-amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" autoFocus
+            placeholder={`Amount to pay with ${couponCode}`}
+            className="h-10 min-w-0 flex-1 border-b border-dashed border-ink/30 bg-transparent text-[15px] tabular-nums outline-none placeholder:text-fog focus:border-ink" />
+          <button type="submit" className="link-draw pb-2 text-[14px] font-medium text-ink">Apply</button>
+        </form>
+        <p className="mt-2 flex justify-between gap-4 text-[13px]">
+          <span className={couponAmount ? 'text-accent' : 'text-smoke'}>{quote.coupon_message}</span>
+          <button onClick={() => setCoupon(null)} className="link-draw text-smoke hover:text-ink">Remove</button>
+        </p>
+      </div>
+    )
+  }
   if (couponCode && quote.coupon_code) {
     return (
       <p className="flex items-baseline justify-between gap-4 text-[14px]">

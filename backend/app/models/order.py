@@ -79,6 +79,7 @@ class CheckoutRequest(Schema):
     address: ShippingAddress
     shipping_method: ShippingMethod = "standard"
     coupon_code: str | None = None
+    coupon_amount: float | None = Field(default=None, gt=0)
     payment_provider: str
     payment_plan: PaymentPlan = "full"
     notes: str | None = Field(default=None, max_length=500)

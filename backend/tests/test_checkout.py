@@ -5,7 +5,7 @@ from tests.conftest import ADMIN, CUSTOMER, OTHER, address
 def test_quote_applies_shipping_and_coupon(client, products):
     pid = products["vortex-pen-cup"]["id"]  # 1290
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 1}]}).json()
-    assert q["subtotal"] == 1290 and q["shipping"] == 99 and q["total"] == 1389 and q["deposit"] == 694.5
+    assert q["subtotal"] == 1290 and q["shipping"] == 199 and q["total"] == 1489 and q["deposit"] == 744.5
     assert "tax" not in q
 
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 2}], "coupon_code": "oddone"}).json()
@@ -13,6 +13,31 @@ def test_quote_applies_shipping_and_coupon(client, products):
 
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 1}], "coupon_code": "BOGUS"}).json()
     assert q["discount"] == 0 and q["coupon_code"] is None and "isn't a valid code" in q["coupon_message"]
+
+
+def test_custom_total_coupon_sets_what_the_shopper_pays(client, products):
+    r = client.post("/api/admin/coupons", json={"code": "payyourway", "kind": "custom_total", "value": 200}, headers=ADMIN)
+    assert r.status_code == 201, r.text
+    pid = products["vortex-pen-cup"]["id"]  # 1290 + 199 shipping
+    quote = lambda **kw: client.post("/api/cart/quote", json={  # noqa: E731
+        "items": [{"product_id": pid, "quantity": 1}], "coupon_code": "PAYYOURWAY", **kw}).json()
+
+    q = quote()
+    assert q["coupon_needs_amount"] and q["coupon_code"] is None and q["total"] == 1489
+    q = quote(coupon_amount=150)
+    assert q["coupon_code"] is None and "at least 200" in q["coupon_message"]
+    q = quote(coupon_amount=500)
+    assert q["coupon_code"] == "PAYYOURWAY" and q["total"] == 500 and q["discount"] == 989 and q["coupon_amount"] == 500
+    q = quote(coupon_amount=5000)  # never more than the bag costs
+    assert q["total"] == 1489 and q["discount"] == 0
+    assert not client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 1}],
+                                                    "coupon_code": "ODDONE"}).json()["coupon_needs_amount"]
+
+    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
+            "coupon_code": "PAYYOURWAY"}
+    assert client.post("/api/checkout", json=body, headers=CUSTOMER).status_code == 400
+    order = client.post("/api/checkout", json={**body, "coupon_amount": 750}, headers=CUSTOMER).json()["order"]
+    assert order["total"] == 750 and order["payment"]["amount"] == 750 and order["coupon_code"] == "PAYYOURWAY"
 
 
 def test_quote_flags_stock_problems(client, products):

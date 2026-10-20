@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { selectChevron } from '@/components/ui/Field'
 
 export function AdminHeader({ title, actions, sub }: { title: string; actions?: ReactNode; sub?: ReactNode }) {
   return (
@@ -50,7 +51,7 @@ export function FilterSelect({ value, onChange, options, label }: {
 }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}
-      className="h-10 rounded-xl border border-rule bg-transparent px-3 text-sm outline-none focus:border-accent ">
+      className="h-10 appearance-none rounded-xl border border-rule bg-transparent pl-3 pr-9 text-sm outline-none focus:border-accent" style={selectChevron}>
       {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   )

@@ -12,6 +12,8 @@ import { isSignedIn } from './session'
 interface CartState {
   items: CartLine[]
   couponCode: string | null
+  /** What the shopper chose to pay, for a code that lets them set the total. */
+  couponAmount: number | null
   shippingMethod: ShippingMethod
   /** `color` is a filament id; the same product in two colours is two lines. */
   add: (productId: string, quantity?: number, color?: string | null) => void
@@ -22,6 +24,7 @@ interface CartState {
   clear: () => void
   replace: (items: CartLine[]) => void
   setCoupon: (code: string | null) => void
+  setCouponAmount: (amount: number | null) => void
   setShipping: (m: ShippingMethod) => void
 }
 
@@ -47,6 +50,7 @@ export const useCart = create<CartState>()(
       return {
         items: [],
         couponCode: null,
+        couponAmount: null,
         shippingMethod: 'standard',
         add: (productId, quantity = 1, color = null) => {
           const items = get().items
@@ -69,9 +73,10 @@ export const useCart = create<CartState>()(
             ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(99, i.quantity + moving.quantity) } : i))
             : items.map((i) => (i === moving ? { ...i, color: to } : i)))
         },
-        clear: () => set({ items: [], couponCode: null, shippingMethod: 'standard' }),
+        clear: () => set({ items: [], couponCode: null, couponAmount: null, shippingMethod: 'standard' }),
         replace: (items) => set({ items }),
-        setCoupon: (couponCode) => set({ couponCode }),
+        setCoupon: (couponCode) => set({ couponCode, couponAmount: null }),
+        setCouponAmount: (couponAmount) => set({ couponAmount }),
         setShipping: (shippingMethod) => set({ shippingMethod }),
       }
     },

@@ -15,6 +15,7 @@ type Draft = Omit<Coupon, 'id' | 'used_count' | 'created_at'> & { id?: string }
 const blank: Draft = { code: '', description: '', kind: 'percent', value: 10, min_subtotal: 0, max_discount: null, usage_limit: null, starts_at: null, expires_at: null, active: true }
 
 const describe = (c: Coupon) =>
+  c.kind === 'custom_total' ? `Shopper sets total${c.value ? ` (at least ${money(c.value)})` : ''}` :
   c.kind === 'free_shipping' ? 'Free shipping' : c.kind === 'percent' ? `${c.value}% off${c.max_discount ? ` (up to ${money(c.max_discount)})` : ''}` : `${money(c.value)} off`
 
 export default function CouponsPage() {
@@ -66,10 +67,11 @@ export default function CouponsPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Code" value={draft.code} disabled={!!draft.id} onChange={(e) => setDraft({ ...draft, code: e.target.value.toUpperCase() })} />
             <Select label="Type" value={draft.kind} onChange={(e) => setDraft({ ...draft, kind: e.target.value as Draft['kind'] })}>
-              <option value="percent">Percentage off</option><option value="fixed">Fixed amount off</option><option value="free_shipping">Free shipping</option>
+              <option value="percent">Percentage off</option><option value="fixed">Fixed amount off</option><option value="free_shipping">Free shipping</option><option value="custom_total">Shopper sets total</option>
             </Select>
             <Input className="sm:col-span-2" label="Description" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
-            {draft.kind !== 'free_shipping' && <Input label={draft.kind === 'percent' ? 'Percent off' : 'Amount off (₹)'} inputMode="decimal" value={draft.value} onChange={(e) => setDraft({ ...draft, value: Number(e.target.value) || 0 })} />}
+            {draft.kind === 'custom_total' && <p className="text-sm text-smoke sm:col-span-2">At checkout the shopper enters this code and an amount; that amount becomes what they pay for the whole order.</p>}
+            {draft.kind !== 'free_shipping' && <Input label={draft.kind === 'percent' ? 'Percent off' : draft.kind === 'custom_total' ? 'Lowest amount allowed (₹)' : 'Amount off (₹)'} inputMode="decimal" value={draft.value} onChange={(e) => setDraft({ ...draft, value: Number(e.target.value) || 0 })} />}
             {draft.kind === 'percent' && <Input label="Maximum discount (₹)" inputMode="decimal" value={draft.max_discount ?? ''} onChange={(e) => setDraft({ ...draft, max_discount: n(e.target.value) })} />}
             <Input label="Minimum order (₹)" inputMode="decimal" value={draft.min_subtotal || ''} onChange={(e) => setDraft({ ...draft, min_subtotal: Number(e.target.value) || 0 })} />
             <Input label="Total uses allowed" inputMode="numeric" value={draft.usage_limit ?? ''} onChange={(e) => setDraft({ ...draft, usage_limit: n(e.target.value) })} hint="Empty for unlimited" />

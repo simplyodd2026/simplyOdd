@@ -49,6 +49,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
   )
 })
 
+/** A select's own chevron, inset from the edge (pair with appearance-none and right padding). */
+export const selectChevron = {
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+}
+
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement> & Wrap>(function Select(
   { label, hint, error, tone = 'dark', className, id, children, ...rest }, ref,
 ) {
@@ -58,7 +64,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
     <FieldWrap id={fid} label={label} hint={hint} error={error} className={className}>
       <select ref={ref} id={fid} className={cn(control(tone, !!error), 'h-12 appearance-none pr-9',
         tone === 'dark' ? '' : '')} {...rest}
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+        style={selectChevron}>
         {children}
       </select>
     </FieldWrap>

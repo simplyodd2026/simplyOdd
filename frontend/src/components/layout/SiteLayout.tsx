@@ -11,6 +11,7 @@ import { useConfig } from '@/lib/queries'
 import { money } from '@/lib/format'
 import { refreshScroll } from '@/lib/motion'
 import { scrollToTop, scrollToY, startSmoothScroll } from '@/lib/scroll'
+import { SHIPPING } from '@/lib/constants'
 
 /** A quiet service line above the header; the messages cross-fade rather than scroll. */
 function AnnouncementBar({ threshold }: { threshold: number }) {
@@ -89,7 +90,7 @@ export function SiteLayout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-ink focus:px-5 focus:py-2.5 focus:text-paper">
         Skip to content
       </a>
-      <AnnouncementBar threshold={config?.free_shipping_threshold ?? 1999} />
+      <AnnouncementBar threshold={config?.free_shipping_threshold ?? SHIPPING.freeOver} />
       <Navbar />
       <main id="main" ref={main} className="flex-1">
         <PageTransition />
