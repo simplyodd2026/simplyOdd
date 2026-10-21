@@ -23,7 +23,7 @@ async def _drop_replaced_image(svc: Services, before: Category, after: Category)
 @router.get("/products", response_model=Page[Product])
 async def list_products(
     q: str | None = None, category: str | None = None,
-    status: Literal["published", "draft", "out_of_stock", "low_stock"] | None = None,
+    status: Literal["published", "draft"] | None = None,
     sort: SortKey = "newest", page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=100),
     svc: Services = Depends(services),
 ):
@@ -34,10 +34,6 @@ async def list_products(
         items = [p for p in items if p.is_published]
     elif status == "draft":
         items = [p for p in items if not p.is_published]
-    elif status == "out_of_stock":
-        items = [p for p in items if p.stock <= 0]
-    elif status == "low_stock":
-        items = [p for p in items if 0 < p.stock <= 5]
     start = (page - 1) * page_size
     return Page[Product](items=items[start:start + page_size], total=len(items), page=page,
                          page_size=page_size, pages=max(1, -(-len(items) // page_size)))

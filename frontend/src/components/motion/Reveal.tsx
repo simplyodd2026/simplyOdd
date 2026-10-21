@@ -1,6 +1,7 @@
 import { useRef, type ElementType, type ReactNode, type CSSProperties } from 'react'
 import { gsap, SplitText, useGSAP, EASE, reducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/cn'
+import { responsive } from '@/lib/image'
 
 type SplitBy = 'lines' | 'words' | 'chars'
 
@@ -72,9 +73,9 @@ export function Reveal({
  * while the photo settles from a slight zoom. With `parallax`, the image then drifts inside its frame.
  */
 export function PrintImage({
-  src, alt, className, imgClassName, parallax = false, priority = false, delay = 0, onScreen = true, children,
+  src, sizes = '100vw', alt, className, imgClassName, parallax = false, priority = false, delay = 0, onScreen = true, children,
 }: {
-  src?: string; alt: string; className?: string; imgClassName?: string; parallax?: boolean; priority?: boolean
+  src?: string; sizes?: string; alt: string; className?: string; imgClassName?: string; parallax?: boolean; priority?: boolean
   delay?: number; onScreen?: boolean; children?: ReactNode
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -100,7 +101,7 @@ export function PrintImage({
   return (
     <div ref={ref} className={cn('relative overflow-hidden bg-ash', className)}>
       {src && (
-        <img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} decoding="async" draggable={false}
+        <img {...responsive(src, sizes)} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" draggable={false}
           className={cn('absolute left-0 w-full object-cover', parallax ? '-top-[8%] h-[116%]' : 'inset-0 h-full', imgClassName)} />
       )}
       {children}

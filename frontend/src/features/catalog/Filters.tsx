@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useCategories } from '@/lib/queries'
 import { cn } from '@/lib/cn'
-import { Checkbox } from '@/components/ui/Field'
 import type { useCatalogParams } from './useCatalogParams'
 
 type Params = ReturnType<typeof useCatalogParams>
@@ -59,11 +58,6 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
             className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-ink" />
           <button type="submit" className="h-10 shrink-0 rounded-full bg-ink px-4 text-sm text-paper transition-colors hover:bg-hot">Apply</button>
         </form>
-      </div>
-
-      <div className={group}>
-        <p className={heading}>Availability</p>
-        <Checkbox label="In stock only" checked={params.in_stock} onChange={(e) => params.update({ in_stock: e.target.checked })} />
       </div>
 
       {params.activeCount > 0 && (

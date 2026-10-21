@@ -42,7 +42,6 @@ class QuoteLine(Schema):
     compare_at_price: float | None
     quantity: int
     line_total: float
-    stock: int
     available: bool
     issue: str | None = None
 

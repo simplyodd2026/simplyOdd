@@ -35,20 +35,19 @@ export default function WishlistPage() {
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-12 xl:grid-cols-5">
           {list.map((p) => {
-            const soldOut = p.availability === 'out_of_stock'
             return (
               <li key={p.id} className="flex flex-col">
                 <Link to={`/product/${p.slug}`} className="block overflow-hidden bg-ash">
-                  <img src={p.images[0]?.url} alt={p.name} className={`aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105 ${soldOut ? 'opacity-50 grayscale' : ''}`} />
+                  <img src={p.images[0]?.url} alt={p.name} className={`aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105`} />
                 </Link>
                 <Link to={`/product/${p.slug}`} className="mt-4 text-[15px] font-medium text-ink"><span className="link-draw">{p.name}</span></Link>
                 <Price price={p.price} compareAt={p.compare_at_price} className="mt-1 tabular-nums text-[13px] text-fog" />
                 <div className="mt-4 flex flex-col gap-2">
-                  <Button size="sm" disabled={soldOut} onClick={() => {
+                  <Button size="sm" onClick={() => {
                     add(p.id, 1, defaultColor(p))
                     void remove(p.id)
                     toast(`Moved ${p.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
-                  }}>{soldOut ? 'Sold out' : 'Move to bag'}</Button>
+                  }}>Move to bag</Button>
                   <button onClick={() => void remove(p.id)} className="link-draw self-center text-sm text-smoke hover:text-ink">Remove</button>
                 </div>
               </li>

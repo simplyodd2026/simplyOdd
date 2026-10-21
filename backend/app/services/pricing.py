@@ -2,8 +2,8 @@
 it renders the quote returned from here, and checkout recomputes it."""
 from __future__ import annotations
 
-from app.core.constants import (CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, PARTIAL_SHARE,
-                                STANDARD_SHIPPING_FEE)
+from app.core.constants import (CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
+                                PARTIAL_SHARE, STANDARD_SHIPPING_FEE)
 from app.core.utils import money
 from app.models.cart import CartLine, Quote, QuoteLine, QuoteRequest, ShippingOption
 from app.models.filament import FILAMENTS_BY_ID, FilamentChoice
@@ -35,7 +35,7 @@ class PricingService:
             p = products.get(line.product_id)
             key = (line.product_id, line.color if p is None or p.colors else None)
             merged[key] = merged.get(key, 0) + line.quantity
-        # Stock is shared by every colour of a product.
+        # The order limit covers every colour of a product together.
         per_product: dict[str, int] = {}
         for (pid, _), qty in merged.items():
             per_product[pid] = per_product.get(pid, 0) + qty
@@ -45,7 +45,7 @@ class PricingService:
             p = products.get(pid)
             if p is None or not p.is_published:
                 lines.append(QuoteLine(product_id=pid, color=color, name="Unavailable item", slug="", image=None,
-                                       unit_price=0, compare_at_price=None, quantity=qty, line_total=0, stock=0,
+                                       unit_price=0, compare_at_price=None, quantity=qty, line_total=0,
                                        available=False, issue="This item is no longer available"))
                 continue
             offered = [c for c in p.colors if c in FILAMENTS_BY_ID]
@@ -55,17 +55,15 @@ class PricingService:
                 issue = "Choose a colour"
             elif color is not None and filament is None:
                 issue = "This colour isn't available for this piece. Choose another"
-            elif p.stock <= 0:
-                issue = "Out of stock"
-            elif per_product[pid] > p.stock:
-                issue = f"Only {p.stock} left"
+            elif per_product[pid] > MAX_PER_PRODUCT:
+                issue = f"You can order up to {MAX_PER_PRODUCT} of this piece"
             image = next((i.url for i in p.images if color and i.color == color), None) \
                 or (p.images[0].url if p.images else None)
             lines.append(QuoteLine(
                 product_id=pid, color=color, filament=FilamentChoice.of(filament) if filament else None,
                 colors=offered, name=p.name, slug=p.slug, image=image,
                 unit_price=p.price, compare_at_price=p.compare_at_price, quantity=qty,
-                line_total=money(p.price * qty), stock=p.stock, available=issue is None, issue=issue,
+                line_total=money(p.price * qty), available=issue is None, issue=issue,
             ))
 
         subtotal = money(sum(line.line_total for line in lines if line.available))

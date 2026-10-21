@@ -8,4 +8,6 @@ FREE_SHIPPING_THRESHOLD = 1499
 STANDARD_SHIPPING_FEE = 199
 EXPRESS_SHIPPING_FEE = 249
 
+MAX_PER_PRODUCT = 10  # most of one piece a single order can hold, across all its colours
+
 PARTIAL_SHARE = 0.5  # share of the total paid online on the partial plan

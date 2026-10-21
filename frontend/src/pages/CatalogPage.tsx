@@ -26,7 +26,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
   const flag = preset === 'new' ? 'new' : preset === 'bestseller' ? 'bestseller' : undefined
   const { data, isLoading, isFetching } = useProducts({
     category: preset === 'category' ? slug : params.category,
-    flag, min_price: params.min_price, max_price: params.max_price, in_stock: params.in_stock,
+    flag, min_price: params.min_price, max_price: params.max_price,
     sort: params.sort, page: params.page, page_size: 20,
   }, preset !== 'category' || !!category)
 
@@ -45,7 +45,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
       <Container className="pb-28">
         <ProductResults params={params} data={data} isLoading={isLoading || (preset === 'category' && catsLoading)} isFetching={isFetching}
           showCategories={preset !== 'category'}
-          empty={<EmptyState title="Nothing matches those filters." body="Widen the price range or include pieces that are currently sold out."
+          empty={<EmptyState title="Nothing matches those filters." body="Try widening the price range."
             action={params.activeCount ? <button onClick={params.clear} className="link-draw text-ink">Clear filters</button>
               : <ButtonLink to="/shop">Browse everything</ButtonLink>} />} />
       </Container>

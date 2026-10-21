@@ -9,9 +9,6 @@ def test_list_filters_and_sorts(client):
     lighting = client.get("/api/products", params={"category": "lighting"}).json()
     assert lighting["total"] == 3
 
-    in_stock = client.get("/api/products", params={"in_stock": True, "page_size": 100}).json()
-    assert all(p["stock"] > 0 for p in in_stock["items"]) and in_stock["total"] == 20
-
 
 def test_search_matches_names_tags_and_categories(client):
     names = [p["name"] for p in client.get("/api/products", params={"q": "lamp", "sort": "relevance"}).json()["items"]]

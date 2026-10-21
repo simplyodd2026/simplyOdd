@@ -16,7 +16,6 @@ export function useCatalogParams(defaultSort: SortKey = 'newest') {
     category: sp.get('category') ?? undefined,
     min_price: num('min'),
     max_price: num('max'),
-    in_stock: sp.get('in_stock') === '1',
     sort: sortParam && SORTS.includes(sortParam) ? sortParam : defaultSort,
     page: num('page') ?? 1,
   }
@@ -29,8 +28,8 @@ export function useCatalogParams(defaultSort: SortKey = 'newest') {
     if (resetPage && !('page' in patch)) next.delete('page')
     setSp(next, { replace: false })
   }
-  const activeCount = [state.category, state.min_price, state.max_price, state.in_stock || undefined].filter((x) => x !== undefined).length
-  return { ...state, update, activeCount, clear: () => update({ category: null, min: null, max: null, in_stock: null }) }
+  const activeCount = [state.category, state.min_price, state.max_price].filter((x) => x !== undefined).length
+  return { ...state, update, activeCount, clear: () => update({ category: null, min: null, max: null }) }
 }
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [

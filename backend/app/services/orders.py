@@ -9,7 +9,7 @@ from app.models.order import (
     STATUS_FLOW, CheckoutRequest, Order, OrderItem, PaymentInfo, StatusEvent,
 )
 from app.models.user import AuthUser
-from app.repositories.store import DocumentStore, InsufficientStock
+from app.repositories.store import DocumentStore
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
 from app.services.payments.base import PaymentRegistry
@@ -23,7 +23,7 @@ CANCELLABLE_BY_CUSTOMER = {"pending", "confirmed"}
 
 
 def _per_product(deltas: Iterable[tuple[str, int]]) -> dict[str, int]:
-    """Sum stock changes per product: one product can appear on several lines, one per colour."""
+    """Sum sales changes per product: one product can appear on several lines, one per colour."""
     out: dict[str, int] = {}
     for pid, delta in deltas:
         out[pid] = out.get(pid, 0) + delta
@@ -61,10 +61,10 @@ class OrderService:
         order.status = status  # type: ignore[assignment]
         order.history.append(StatusEvent(status=status, at=now(), note=note, by=by))  # type: ignore[arg-type]
 
-    async def _release_stock(self, order: Order) -> None:
-        if order.stock_reserved:
-            await self.store.adjust_stock(_per_product((i.product_id, i.quantity) for i in order.items))
-            order.stock_reserved = False
+    async def _undo_sales(self, order: Order) -> None:
+        if order.sales_counted:
+            await self.store.record_sales(_per_product((i.product_id, -i.quantity) for i in order.items))
+            order.sales_counted = False
             self.catalog.invalidate()
 
     async def _on_confirmed(self, order: Order) -> None:
@@ -88,10 +88,7 @@ class OrderService:
         if req.coupon_code and not coupon:
             raise BadRequest(quote.coupon_message or "That coupon can't be applied")
 
-        try:
-            await self.store.adjust_stock(_per_product((line.product_id, -line.quantity) for line in quote.lines))
-        except InsufficientStock as e:
-            raise Conflict(f"Only {e.available} left of one of your items. Update your bag and try again.") from e
+        await self.store.record_sales(_per_product((line.product_id, line.quantity) for line in quote.lines))
         self.catalog.invalidate()
 
         due_now = quote.deposit if req.payment_plan == "partial" else quote.total
@@ -116,7 +113,7 @@ class OrderService:
             started = await provider.start(order)
         except Exception as exc:
             log.exception("Payment start failed for %s", order.number)
-            await self._release_stock(order)
+            await self._undo_sales(order)
             self._event(order, "cancelled", "Payment could not be started")
             order.payment.status = "failed"
             await self._save(order)
@@ -221,7 +218,7 @@ class OrderService:
     async def _cancel(self, order: Order, note: str, by: str) -> Order:
         if "cancelled" not in STATUS_FLOW[order.status]:
             raise Conflict("Shipped orders can't be cancelled; process a refund once returned")
-        await self._release_stock(order)
+        await self._undo_sales(order)
         self._event(order, "cancelled", note, by=by)
         if order.payment.status in ("paid", "partially_paid"):
             order.payment.status = "refund_pending"

@@ -3,6 +3,7 @@ import { ButtonLink } from '@/components/ui/Button'
 import { Reveal, SplitReveal } from '@/components/motion/Reveal'
 import { useHomePieces } from './pieces'
 import { useImageAspect } from '@/lib/hooks'
+import { responsive } from '@/lib/image'
 
 /**
  * The studio. A photograph in a pebble-shaped frame, a sage pebble behind it, and a few plain sentences
@@ -18,7 +19,7 @@ export function Brand() {
         <Reveal y={50} className="relative mx-auto w-full max-w-[30rem] lg:col-span-5">
           <span aria-hidden className="pebble absolute -right-[4%] -top-[8%] -z-10 aspect-square w-[70%] bg-sage/60 sm:-right-[10%]" />
           <div className="pebble-3 aspect-[1/1.05] overflow-hidden bg-ash" style={fit.style}>
-            {studio && <img {...fit.img} src={studio} alt="A piece from the studio" loading="lazy" decoding="async" className="size-full object-cover" />}
+            {studio && <img {...fit.img} {...responsive(studio, '(min-width: 480px) 480px, 100vw')} alt="A piece from the studio" loading="lazy" decoding="async" className="size-full object-cover" />}
           </div>
         </Reveal>
         <div className="lg:col-span-6 lg:col-start-7">

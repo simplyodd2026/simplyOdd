@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, model_validator
 
 from app.models.cart import CartLine, ShippingMethod
 from app.models.common import Schema
@@ -104,9 +104,18 @@ class Order(Schema):
     payment: PaymentInfo
     tracking_number: str | None = None
     notes: str | None = None
-    stock_reserved: bool = True
+    sales_counted: bool = True  # whether this order's units are in each product's sales_count
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_stock_flag(cls, data):
+        # Orders saved while stock was tracked carry `stock_reserved` instead.
+        if isinstance(data, dict) and "stock_reserved" in data:
+            data = {**data}
+            data.setdefault("sales_counted", data.pop("stock_reserved"))
+        return data
 
 
 class CheckoutResponse(Schema):

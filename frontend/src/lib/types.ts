@@ -1,5 +1,3 @@
-export type Availability = 'in_stock' | 'low_stock' | 'out_of_stock'
-
 /** `color` tags a photo as showing a particular filament, so choosing that colour can show it. */
 export interface ProductImage { url: string; path?: string | null; alt: string; color?: string | null }
 
@@ -20,7 +18,6 @@ export interface Product {
   description: string
   price: number
   compare_at_price: number | null
-  stock: number
   /** Every category the piece appears in; the first is its home (breadcrumbs, "more like this"). */
   category_ids: string[]
   tags: string[]
@@ -40,12 +37,11 @@ export interface Product {
   rating: RatingSummary
   sales_count: number
   discount_percent: number
-  availability: Availability
   created_at: string
   updated_at: string
 }
 
-export type ProductInput = Omit<Product, 'id' | 'rating' | 'sales_count' | 'discount_percent' | 'availability' | 'created_at' | 'updated_at' | 'slug'> & { slug?: string | null }
+export type ProductInput = Omit<Product, 'id' | 'rating' | 'sales_count' | 'discount_percent' | 'created_at' | 'updated_at' | 'slug'> & { slug?: string | null }
 
 export interface Category {
   id: string
@@ -87,7 +83,6 @@ export interface QuoteLine {
   compare_at_price: number | null
   quantity: number
   line_total: number
-  stock: number
   available: boolean
   issue: string | null
 }
@@ -273,7 +268,6 @@ export interface Dashboard {
   status_counts: Record<string, number>
   revenue_series: { date: string; revenue: number }[]
   top_products: { product_id: string; name: string; units: number; revenue: number }[]
-  low_stock: { id: string; name: string; stock: number }[]
   recent_orders: Pick<Order, 'id' | 'number' | 'email' | 'total' | 'status' | 'created_at'>[]
 }
 

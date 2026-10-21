@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn'
 import { Icon } from '@/components/ui/Icon'
 import { PrintImage } from '@/components/motion/Reveal'
 import { useOverlay } from '@/components/ui/Overlay'
+import { responsive } from '@/lib/image'
 
 /**
  * Desktop: an editorial stack, the hero shot full width and the rest in pairs, each printed in as it arrives.
@@ -24,7 +25,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
         {images.map((img, i) => (
           <button key={img.url} type="button" onClick={() => setViewer(i)} aria-label={`Open image ${i + 1} of ${count}`}
             className={cn('block cursor-zoom-in text-left', i === 0 || (count === 2 && i === 1) ? 'col-span-2' : '')}>
-            <PrintImage src={img.url} alt={img.alt || name} priority={i === 0} delay={i === 0 ? 0.2 : 0}
+            <PrintImage src={img.url} sizes={i === 0 || (count === 2 && i === 1) ? '58vw' : '29vw'} alt={img.alt || name} priority={i === 0} delay={i === 0 ? 0.2 : 0}
               className={i === 0 ? 'aspect-[4/5] xl:aspect-[5/6]' : 'aspect-[4/5]'} />
           </button>
         ))}
@@ -35,7 +36,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
           onScroll={(e) => setActive(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
           {images.map((img, i) => (
             <button key={img.url} type="button" onClick={() => setViewer(i)} className="w-full shrink-0 snap-center" aria-label={`Open image ${i + 1} of ${count}`}>
-              <img src={img.url} alt={img.alt || name} loading={i === 0 ? 'eager' : 'lazy'} className="aspect-[4/5] w-full bg-ash object-cover" />
+              <img {...responsive(img.url, '100vw')} alt={img.alt || name} loading={i === 0 ? 'eager' : 'lazy'} className="aspect-[4/5] w-full bg-ash object-cover" />
             </button>
           ))}
         </div>

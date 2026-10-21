@@ -9,6 +9,7 @@ import { Container } from '@/components/layout/Container'
 import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion/Reveal'
 import { useHomePieces } from './pieces'
+import { responsive } from '@/lib/image'
 
 /**
  * The object. One piece, very large, in a pebble-shaped frame on a linen band, with its own name set huge
@@ -24,7 +25,6 @@ export function Spotlight() {
   if (!p) return null
 
   const main = spotlight?.image ?? p.images[0]
-  const soldOut = p.availability === 'out_of_stock'
   const addToBag = () => {
     const color = defaultColor(p)
     add(p.id, 1, color)
@@ -42,12 +42,12 @@ export function Spotlight() {
           <Reveal y={60} className="relative mx-auto w-full lg:col-span-7" style={{ maxWidth: `calc((100svh - 20rem) * ${shape.ratio ?? 1.25})` }}>
             <div ref={tilt}>
               <Link to={`/product/${p.slug}`} aria-label={p.name} className="table-shadow pebble-2 block aspect-[5/4] overflow-hidden bg-ash" style={shape.style}>
-                {main && <img {...shape.img} src={main.url} alt={main.alt || p.name} loading="lazy" decoding="async" className="size-full object-cover" />}
+                {main && <img {...shape.img} {...responsive(main.url, '(min-width: 1024px) 55vw, 100vw')} alt={main.alt || p.name} loading="lazy" decoding="async" className="size-full object-cover" />}
               </Link>
             </div>
             {spotlightInset && (
               <div className="plate absolute -bottom-10 right-[4%] w-[30%] overflow-hidden border-[6px] border-stone bg-ash sm:-bottom-14">
-                <img src={spotlightInset} alt="" loading="lazy" className="aspect-square size-full object-cover" />
+                <img {...responsive(spotlightInset, '(min-width: 1024px) 17vw, 30vw')} alt="" loading="lazy" className="aspect-square size-full object-cover" />
               </div>
             )}
           </Reveal>
@@ -61,10 +61,9 @@ export function Spotlight() {
             <p className="mt-8 flex items-baseline gap-4">
               <span className="font-display text-[2.1rem] leading-none tabular-nums text-ink">{money(p.price)}</span>
               {p.compare_at_price && p.compare_at_price > p.price && <s className="text-[14px] text-fog">{money(p.compare_at_price)}</s>}
-              <span className="text-[14px] text-smoke">{soldOut ? 'Sold out' : p.availability === 'low_stock' ? `Only ${p.stock} left` : 'In stock'}</span>
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Button onClick={addToBag} disabled={soldOut} size="lg">{soldOut ? 'Sold out' : 'Add to bag'}</Button>
+              <Button onClick={addToBag} size="lg">Add to bag</Button>
               <Link to={`/product/${p.slug}`} className="link-draw text-[15px] font-medium text-ink">Explore object</Link>
             </div>
           </div>

@@ -1,5 +1,6 @@
 from app.core.container import LOCAL_MEDIA_ROOT
 from tests.conftest import ADMIN, CUSTOMER, OTHER, address
+from tests.test_media import photo
 
 
 def test_quote_applies_shipping_and_coupon(client, products):
@@ -40,10 +41,10 @@ def test_custom_total_coupon_sets_what_the_shopper_pays(client, products):
     assert order["total"] == 750 and order["payment"]["amount"] == 750 and order["coupon_code"] == "PAYYOURWAY"
 
 
-def test_quote_flags_stock_problems(client, products):
-    ghost = products["ghost-lamp"]["id"]
-    q = client.post("/api/cart/quote", json={"items": [{"product_id": ghost, "quantity": 1}]}).json()
-    assert q["has_issues"] and q["lines"][0]["issue"] == "Out of stock" and q["subtotal"] == 0
+def test_quote_has_no_stock_limit(client, products):
+    ghost = products["ghost-lamp"]
+    q = client.post("/api/cart/quote", json={"items": [{"product_id": ghost["id"], "quantity": 10, "color": ghost["default_color"]}]}).json()
+    assert not q["has_issues"] and "stock" not in q["lines"][0] and "stock" not in ghost and "availability" not in ghost
 
 
 def test_checkout_requires_auth(client, products):
@@ -51,19 +52,16 @@ def test_checkout_requires_auth(client, products):
     assert r.status_code == 401
 
 
-def test_mock_payment_flow_reserves_and_releases_stock(client, products):
-    p = products["facet-planter"]  # stock 3
-    body = {"items": [{"product_id": p["id"], "quantity": 2}], "address": address(), "payment_provider": "mock"}
+def test_mock_payment_flow_counts_and_uncounts_sales(client, products):
+    p = products["facet-planter"]
+    sold = p["sales_count"]
+    body = {"items": [{"product_id": p["id"], "quantity": 2, "color": p["default_color"]}], "address": address(), "payment_provider": "mock"}
     r = client.post("/api/checkout", json=body, headers=CUSTOMER)
     assert r.status_code == 201, r.text
     order = r.json()["order"]
     assert order["status"] == "pending" and order["number"].startswith("OM-")
     assert order["payment"]["plan"] == "full" and order["payment"]["amount"] == order["total"]
-    assert client.get("/api/products/facet-planter").json()["product"]["stock"] == 1
-
-    # Can't oversell the remaining 1
-    r2 = client.post("/api/checkout", json=body, headers=CUSTOMER)
-    assert r2.status_code == 409
+    assert client.get("/api/products/facet-planter").json()["product"]["sales_count"] == sold + 2
 
     # Declined, then paid
     bad = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "failure"}}, headers=CUSTOMER)
@@ -72,10 +70,10 @@ def test_mock_payment_flow_reserves_and_releases_stock(client, products):
     ok = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "success"}}, headers=CUSTOMER).json()
     assert ok["status"] == "confirmed" and ok["payment"]["status"] == "paid"
 
-    # Customer cancels → stock returns, payment awaits refund
+    # Customer cancels → the sale is uncounted, payment awaits refund
     c = client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER).json()
     assert c["status"] == "cancelled" and c["payment"]["status"] == "refund_pending"
-    assert client.get("/api/products/facet-planter").json()["product"]["stock"] == 3
+    assert client.get("/api/products/facet-planter").json()["product"]["sales_count"] == sold
 
     # Admin refunds
     rf = client.post(f"/api/admin/orders/{order['id']}/refund", json={"status": "refunded"}, headers=ADMIN).json()
@@ -139,14 +137,14 @@ def test_cart_wishlist_and_addresses(client, products):
 
 def test_admin_product_crud(client):
     assert client.post("/api/admin/products", json={"name": "X", "price": 1}, headers=CUSTOMER).status_code == 403
-    p = client.post("/api/admin/products", json={"name": "Odd Thing", "price": 999, "stock": 2, "is_published": False},
+    p = client.post("/api/admin/products", json={"name": "Odd Thing", "price": 999, "is_published": False},
                     headers=ADMIN).json()
     assert p["slug"] == "odd-thing"
     assert client.get("/api/products/odd-thing").status_code == 404  # draft hidden
     client.patch(f"/api/admin/products/{p['id']}", json={"is_published": True}, headers=ADMIN)
     assert client.get("/api/products/odd-thing").status_code == 200
     img = client.post(f"/api/admin/products/{p['id']}/images", headers=ADMIN,
-                      files=[("files", ("a.png", b"\x89PNG....", "image/png"))]).json()
+                      files=[("files", ("a.png", photo(), "image/png"))]).json()
     assert len(img["images"]) == 1
     assert img["images"][0]["path"].startswith("products/odd-thing/")
     stored = LOCAL_MEDIA_ROOT / img["images"][0]["path"]

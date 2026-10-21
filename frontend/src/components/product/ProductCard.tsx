@@ -8,17 +8,17 @@ import { Price } from './Price'
 import { WishlistButton } from './WishlistButton'
 import { Icon } from '@/components/ui/Icon'
 import { useTilt } from '@/lib/useTilt'
+import { responsive } from '@/lib/image'
 
-export function ProductCard({ product, className, priority, aspect = 'aspect-[4/5]', showTagline = true }: {
+export function ProductCard({ product, className, priority, aspect = 'aspect-[4/5]', showTagline = true, sizes = '(min-width: 1024px) 25vw, (min-width: 640px) 42vw, 70vw' }: {
   product: Product; className?: string; priority?: boolean; index?: number; aspect?: string; showTagline?: boolean
-  size?: 'md' | 'lg'
+  size?: 'md' | 'lg'; sizes?: string
 }) {
   const add = useCart((s) => s.add)
   const filaments = useFilaments()
   const tilt = useTilt<HTMLDivElement>(3)
-  const soldOut = product.availability === 'out_of_stock'
   const [primary, secondary] = product.images
-  const badge = soldOut ? 'Sold out' : product.discount_percent > 0 ? `−${product.discount_percent}%` : product.is_new_arrival ? 'New' : null
+  const badge = product.discount_percent > 0 ? `−${product.discount_percent}%` : product.is_new_arrival ? 'New' : null
 
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -40,26 +40,23 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
         {/* A cut slab: three soft corners and one crisp one, where the save button sits. */}
         <div className={cn('relative overflow-hidden rounded-[1.75rem_0.375rem_1.75rem_1.75rem] bg-ash', aspect)}>
           {primary && (
-            <img src={primary.url} alt={primary.alt || product.name} loading={priority ? 'eager' : 'lazy'} decoding="async"
+            <img {...responsive(primary.url, sizes)} alt={primary.alt || product.name} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async"
               className={cn('absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.03]',
-                secondary && 'group-hover:opacity-0', soldOut && 'opacity-50 grayscale')} />
+                secondary && 'group-hover:opacity-0')} />
           )}
           {secondary && (
-            <img src={secondary.url} alt="" aria-hidden="true" loading="lazy" decoding="async"
+            <img {...responsive(secondary.url, sizes)} alt="" aria-hidden="true" loading="lazy" decoding="async"
               className="absolute inset-0 h-full w-full scale-[1.06] object-cover opacity-0 transition-[opacity,transform] duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-100 group-hover:opacity-100" />
           )}
           {badge && (
-            <span className={cn('absolute left-5 top-5 rounded-full px-2.5 py-1 text-[12px] font-medium',
-              soldOut ? 'bg-ink text-paper' : product.discount_percent > 0 ? 'bg-accent text-paper' : 'bg-paper text-ink')}>{badge}</span>
+            <span className={cn('absolute left-5 top-5 rounded-full px-2.5 py-1 text-[12px] font-medium', product.discount_percent > 0 ? 'bg-accent text-paper' : 'bg-paper text-ink')}>{badge}</span>
           )}
-          {!soldOut && (
-            <button onClick={quickAdd}
-              className="absolute bottom-4 right-4 hidden h-10 translate-y-3 items-center gap-2 rounded-full bg-ink pl-4 pr-3 text-[13px] font-medium text-paper opacity-0
-                transition-[transform,opacity,background-color] duration-500 ease-[var(--ease-out-quint)] hover:bg-accent focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
-              aria-label={`Add ${product.name} to bag`}>
-              Add to bag <Icon name="plus" size={15} />
-            </button>
-          )}
+          <button onClick={quickAdd}
+            className="absolute bottom-4 right-4 hidden h-10 translate-y-3 items-center gap-2 rounded-full bg-ink pl-4 pr-3 text-[13px] font-medium text-paper opacity-0
+              transition-[transform,opacity,background-color] duration-500 ease-[var(--ease-out-quint)] hover:bg-accent focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
+            aria-label={`Add ${product.name} to bag`}>
+            Add to bag <Icon name="plus" size={15} />
+          </button>
         </div>
       </Link>
       </div>
@@ -72,16 +69,13 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
             <span className="link-draw">{product.name}</span>
           </Link>
           {caption && <p className="mt-1 line-clamp-1 font-odd text-[1rem] text-smoke">{caption}</p>}
-          {product.availability === 'low_stock' && <p className="mt-1 text-[13px] text-accent">Only {product.stock} left</p>}
         </div>
         <Price price={product.price} compareAt={product.compare_at_price} className="shrink-0 flex-col items-end gap-0 pt-1 text-right font-display text-[1.2rem] leading-[1.05] text-ink [&_s]:text-[12px] [&_s]:font-sans [&_s]:normal-case" />
       </div>
-      {!soldOut && (
-        <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink/20 text-[13px] text-ink active:bg-ink active:text-paper sm:hidden"
-          aria-label={`Add ${product.name} to bag`}>
-          <Icon name="plus" size={15} /> Add to bag
-        </button>
-      )}
+      <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink/20 text-[13px] text-ink active:bg-ink active:text-paper sm:hidden"
+        aria-label={`Add ${product.name} to bag`}>
+        <Icon name="plus" size={15} /> Add to bag
+      </button>
     </article>
   )
 }

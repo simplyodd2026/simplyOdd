@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuote } from '@/lib/queries'
-import { useCart } from '@/stores/cart'
+import { lineMax, useCart } from '@/stores/cart'
 import { useWishlist } from '@/stores/wishlist'
 import { useDocumentTitle } from '@/lib/hooks'
 import { money } from '@/lib/format'
@@ -13,6 +13,7 @@ import { Totals } from '@/features/checkout/OrderSummary'
 import { CouponField } from '@/features/checkout/CouponField'
 import { ProductRail } from '@/features/home/ProductRail'
 import { LineColor } from '@/features/checkout/LineColor'
+import { responsive } from '@/lib/image'
 
 export default function CartPage() {
   const { items, couponCode, couponAmount, shippingMethod, setQuantity, remove } = useCart()
@@ -46,17 +47,17 @@ export default function CartPage() {
             <ul className="divide-y divide-rule border-y border-rule">
               {quote.lines.map((l) => (
                 <li key={`${l.product_id}:${l.color ?? ''}`} className="grid grid-cols-[6rem_1fr] gap-5 py-8 sm:grid-cols-[9rem_1fr_auto] sm:gap-8">
-                  <Link to={`/product/${l.slug}`} className="overflow-hidden bg-ash">{l.image && <img src={l.image} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}</Link>
+                  <Link to={`/product/${l.slug}`} className="overflow-hidden bg-ash">{l.image && <img {...responsive(l.image, '160px')} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}</Link>
                   <div className="flex flex-col">
                     <Link to={`/product/${l.slug}`} className="font-display text-3xl leading-tight text-ink hover:text-accent">{l.name}</Link>
                     <span className="mt-2 tabular-nums text-[12px] text-fog">
                       {money(l.unit_price)}{l.compare_at_price && l.compare_at_price > l.unit_price && <s className="ml-2 text-fog">{money(l.compare_at_price)}</s>}
                     </span>
                     <LineColor line={l} />
-                    {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}{l.stock > 0 && l.issue.startsWith('Only') && '. Reduce the quantity to continue.'}</p>}
+                    {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}</p>}
                     <div className="mt-auto flex flex-wrap items-center gap-4 pt-4">
-                      {l.available || l.stock > 0 ? (
-                        <QuantityStepper size="sm" value={l.quantity} max={Math.max(1, l.stock)} onChange={(n) => setQuantity(l.product_id, l.color, n)} />
+                      {l.slug ? (
+                        <QuantityStepper size="sm" value={l.quantity} max={lineMax(items, l.product_id, l.color)} onChange={(n) => setQuantity(l.product_id, l.color, n)} />
                       ) : null}
                       <button onClick={() => remove(l.product_id, l.color)} className="link-draw text-sm text-smoke hover:text-ink">Remove</button>
                       {l.slug && (

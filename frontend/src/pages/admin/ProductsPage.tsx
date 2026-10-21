@@ -43,12 +43,12 @@ export default function ProductsPage() {
       <div className="mb-5 flex flex-wrap gap-2">
         <SearchInput value={q} onChange={(v) => { setQ(v); setPage(1) }} placeholder="Search products" />
         <FilterSelect label="Status" value={status} onChange={(v) => { setStatus(v); setPage(1) }}
-          options={[['', 'All statuses'], ['published', 'Published'], ['draft', 'Drafts'], ['low_stock', 'Low stock'], ['out_of_stock', 'Sold out']]} />
+          options={[['', 'All statuses'], ['published', 'Published'], ['draft', 'Drafts']]} />
         <FilterSelect label="Category" value={category} onChange={(v) => { setCategory(v); setPage(1) }}
           options={[['', 'All categories'], ...(categories ?? []).map((c) => [c.slug, c.name] as [string, string])]} />
       </div>
       {isLoading ? <Skeleton className="h-96" /> : (
-        <Table head={['', 'Product', 'Category', 'Price', 'Stock', 'Labels', 'Visible']}>
+        <Table head={['', 'Product', 'Category', 'Price', 'Sold', 'Labels', 'Visible']}>
           {data?.items.map((p) => (
             <tr key={p.id} className="hover:bg-black/[0.02]">
               <td className={`${td} w-14`}><img src={p.images[0]?.url} alt="" className="aspect-[4/5] w-10 bg-ash object-cover" /></td>
@@ -58,7 +58,7 @@ export default function ProductsPage() {
               </td>
               <td className={`${td} text-smoke`}>{p.category_ids.map(catName).join(', ') || catName(null)}</td>
               <td className={`${td} tabular-nums`}>{money(p.price)}{p.discount_percent > 0 && <span className="ml-2 text-xs text-accent">−{p.discount_percent}%</span>}</td>
-              <td className={cn(td, 'tabular-nums', p.stock === 0 ? 'text-accent' : p.stock <= 5 ? 'text-graphite' : 'text-smoke')}>{p.stock}</td>
+              <td className={`${td} tabular-nums`}>{p.sales_count}</td>
               <td className={`${td} text-xs text-smoke`}>{[p.is_featured && 'Featured', p.is_bestseller && 'Best seller', p.is_new_arrival && 'New'].filter(Boolean).join(', ') || '—'}</td>
               <td className={td}>
                 <button onClick={() => togglePublish(p)} role="switch" aria-checked={p.is_published} aria-label={`${p.name} visible in store`}

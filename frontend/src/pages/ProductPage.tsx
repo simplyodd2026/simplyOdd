@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useProduct, useConfig } from '@/lib/queries'
 import { useCart } from '@/stores/cart'
 import { useUi } from '@/stores/ui'
-import { useWishlist } from '@/stores/wishlist'
 import { useDocumentTitle } from '@/lib/hooks'
 import { money } from '@/lib/format'
 import { useTilt } from '@/lib/useTilt'
@@ -16,7 +15,6 @@ import { WishlistButton } from '@/components/product/WishlistButton'
 import { Button } from '@/components/ui/Button'
 import { Accordion } from '@/components/ui/Accordion'
 import { Stars, Skeleton } from '@/components/ui/misc'
-import { Icon } from '@/components/ui/Icon'
 import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 import { Reviews } from '@/features/product/Reviews'
 import { BoughtTogether } from '@/features/product/BoughtTogether'
@@ -27,7 +25,8 @@ import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { filamentLabel, productFilaments, useFilaments } from '@/lib/filaments'
 import NotFoundPage from './NotFoundPage'
-import { SHIPPING } from '@/lib/constants'
+import { MAX_PER_PRODUCT, SHIPPING } from '@/lib/constants'
+import { responsive } from '@/lib/image'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 // The gallery frame: a cut slab with three soft corners, the crisp one top right.
@@ -44,10 +43,9 @@ export default function ProductPage() {
   const { data: config } = useConfig()
   const [qty, setQty] = useState(1)
   const add = useCart((s) => s.add)
+  const bag = useCart((s) => s.items)
   const setCart = useUi((s) => s.setCart)
   const navigate = useNavigate()
-  const toggleWish = useWishlist((s) => s.toggle)
-  const saved = useWishlist((s) => !!data && s.ids.includes(data.product.id))
   const buyBox = useRef<HTMLDivElement>(null)
   const tilt = useTilt<HTMLDivElement>(2.5)
   const [dock, setDock] = useState(false)
@@ -84,7 +82,6 @@ export default function ProductPage() {
   }
 
   const { product: p, category, related, frequently_bought } = data
-  const soldOut = p.availability === 'out_of_stock'
   const discounted = !!p.compare_at_price && p.compare_at_price > p.price
   const dims = [p.dimensions.width_cm, p.dimensions.height_cm, p.dimensions.depth_cm]
   const paragraphs = (p.description || '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean)
@@ -109,9 +106,11 @@ export default function ProductPage() {
   const colorNote = chosen && hero && !ownPhotos.length
     ? `${pictured ? `Pictured in ${pictured.name}` : 'Pictured in our studio sample'}. Yours is printed in ${filamentLabel(chosen)}.`
     : null
-  const addToBag = () => { add(p.id, qty, chosen?.id ?? null); setCart(true) }
-  const buyNow = () => { add(p.id, qty, chosen?.id ?? null); navigate('/checkout') }
-  const availability = soldOut ? 'Sold out' : p.availability === 'low_stock' ? `Only ${p.stock} left` : 'In stock, made to order'
+  // The order limit covers every colour of the piece, so count what's already in the bag.
+  const room = MAX_PER_PRODUCT - bag.reduce((n, i) => (i.product_id === p.id ? n + i.quantity : n), 0)
+  const count = Math.max(1, Math.min(qty, room))
+  const addToBag = () => { add(p.id, count, chosen?.id ?? null); setCart(true) }
+  const buyNow = () => { add(p.id, count, chosen?.id ?? null); navigate('/checkout') }
 
   const details: [string, string][] = [
     ['Material', p.materials.join(', ') || 'Plant-based PLA'],
@@ -120,7 +119,6 @@ export default function ProductPage() {
     ['Finish', 'Supports removed and edges refined by hand'],
     ['Making time', p.manufacturing || 'Made to order in our studio, layer by layer'],
     ['Care', 'Dust with a soft, dry cloth. Keep away from direct heat and strong afternoon sun.'],
-    ['Availability', availability],
   ]
 
   return (
@@ -138,7 +136,7 @@ export default function ProductPage() {
                   className={cn('table-shadow relative block w-full overflow-hidden bg-ash transition-[aspect-ratio] duration-700 ease-[var(--ease-out-quint)]', SLAB)}>
                   <AnimatePresence mode="popLayout" initial={false}>
                     {hero ? (
-                      <motion.img key={hero.url} src={hero.url} alt={hero.alt || p.name} draggable={false} data-url={hero.url} onLoad={measure}
+                      <motion.img key={hero.url} {...responsive(hero.url, '(min-width: 1024px) 58vw, 100vw')} fetchPriority="high" alt={hero.alt || p.name} draggable={false} data-url={hero.url} onLoad={measure}
                         initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8, ease: EASE }}
                         className="absolute inset-0 size-full object-cover" />
                     ) : null}
@@ -152,7 +150,7 @@ export default function ProductPage() {
                   <button key={img.url} type="button" role="tab" aria-selected={i === shot} aria-label={`Show image ${i + 1}`} onClick={() => setShot(i)}
                     className={cn('plate size-16 overflow-hidden ring-1 ring-offset-2 ring-offset-paper transition-[box-shadow,opacity] duration-300',
                       i === shot ? 'ring-ink' : 'opacity-60 ring-transparent hover:opacity-100')}>
-                    <img src={img.url} alt="" data-url={img.url} onLoad={measure} className="size-full object-cover" />
+                    <img {...responsive(img.url, '64px')} alt="" data-url={img.url} onLoad={measure} loading="lazy" decoding="async" className="size-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -185,30 +183,23 @@ export default function ProductPage() {
                 {discounted && <s className="text-[15px] text-fog" aria-label={`was ${money(p.compare_at_price!)}`}>{money(p.compare_at_price!)}</s>}
                 {p.discount_percent > 0 && <span className="rounded-full bg-hot px-2.5 py-1 text-[12px] font-medium text-paper">−{p.discount_percent}%</span>}
               </div>
-              <p className={cn('mt-3 flex items-center gap-2.5 text-[14px]', soldOut ? 'text-fog' : p.availability === 'low_stock' ? 'text-accent' : 'text-graphite')}>
-                <span className={cn('size-1.5 rounded-full', soldOut ? 'bg-fog' : p.availability === 'low_stock' ? 'bg-hot' : 'bg-olive')} />
-                {availability}
-              </p>
 
-              {options.length > 0 && !soldOut && (
+              {options.length > 0 && (
                 <ColorSwatches className="mt-7" options={options} value={chosen?.id ?? null} onChange={chooseColor} note={colorNote} />
               )}
 
               <div ref={buyBox} className="mt-7">
-                {!soldOut ? (
-                  <>
-                    <div className="flex items-center gap-3">
-                      <QuantityStepper value={qty} onChange={setQty} max={p.stock} />
-                      <Button size="lg" className="h-14 flex-1" onClick={addToBag}>Add to bag</Button>
-                      <WishlistButton productId={p.id} name={p.name} size={18}
-                        className="grid size-14 shrink-0 place-items-center rounded-full border border-ink/15 text-ink hover:border-ink" />
-                    </div>
-                    <Button size="lg" variant="outline" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(p.price * qty)}</Button>
-                  </>
-                ) : (
-                  <Button size="lg" className="h-14 w-full" onClick={() => void toggleWish(p.id, p.name)}>
-                    <Icon name="heart" size={18} filled={saved} /> {saved ? 'Saved' : 'Save for when it’s back'}
-                  </Button>
+                <div className="flex items-center gap-3">
+                  <QuantityStepper value={count} onChange={setQty} max={Math.max(1, room)} />
+                  <Button size="lg" className="h-14 flex-1" onClick={addToBag} disabled={room <= 0}>Add to bag</Button>
+                  <WishlistButton productId={p.id} name={p.name} size={18}
+                    className="grid size-14 shrink-0 place-items-center rounded-full border border-ink/15 text-ink hover:border-ink" />
+                </div>
+                <Button size="lg" variant="outline" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(p.price * count)}</Button>
+                {room < MAX_PER_PRODUCT && (
+                  <p className="mt-3 text-[13px] text-smoke">
+                    {room > 0 ? `You can add ${room} more. Orders are limited to ${MAX_PER_PRODUCT} of each piece.` : `Your bag already has the most you can order: ${MAX_PER_PRODUCT} of this piece.`}
+                  </p>
                 )}
               </div>
 
@@ -246,7 +237,7 @@ export default function ProductPage() {
                 <figure className="mt-10 max-w-[22rem]">
                   {/* A close crop of the main photograph: the layer lines and the hand finish. */}
                   <div className="plate aspect-square overflow-hidden bg-ash">
-                    <img src={gallery[0].url} alt={`${p.name}, close up`} loading="lazy" className="size-full scale-[1.5] object-cover" />
+                    <img {...responsive(gallery[0].url, '(min-width: 400px) 528px, 100vw')} alt={`${p.name}, close up`} loading="lazy" className="size-full scale-[1.5] object-cover" />
                   </div>
                   <figcaption className="mt-4 font-odd text-[1.05rem] text-smoke">Up close: the surface, layer by layer.</figcaption>
                 </figure>
@@ -295,7 +286,7 @@ export default function ProductPage() {
       )}
 
       <AnimatePresence>
-        {dock && !soldOut && (
+        {dock && (
           <motion.div initial={{ y: '110%' }} animate={{ y: 0 }} exit={{ y: '110%' }} transition={{ duration: 0.6, ease: EASE }}
             className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-rule bg-paper px-5 py-3 lg:hidden">
             <img src={gallery[0]?.url} alt="" className="plate size-12 bg-ash object-cover" />
@@ -306,7 +297,7 @@ export default function ProductPage() {
                 {chosen && <><Swatch filament={chosen} className="size-2.5" /><span className="truncate">{chosen.name}</span></>}
               </p>
             </div>
-            <Button onClick={addToBag}>Add to bag</Button>
+            <Button onClick={addToBag} disabled={room <= 0}>Add to bag</Button>
           </motion.div>
         )}
       </AnimatePresence>

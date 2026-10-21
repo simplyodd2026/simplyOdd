@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { api } from '@/lib/api'
 import type { Cart, CartLine, ShippingMethod } from '@/lib/types'
 import { isSignedIn } from './session'
+import { MAX_PER_PRODUCT } from '@/lib/constants'
 
 /**
  * Bag contents. Guests persist to localStorage; signed-in shoppers also sync
@@ -31,6 +32,10 @@ interface CartState {
 /** A line is a product in a colour; a line without a colour is stored as null. */
 const same = (l: CartLine, productId: string, color: string | null) => l.product_id === productId && (l.color ?? null) === color
 
+/** How many of a product one line may hold: the limit is shared by every colour of the piece. */
+export const lineMax = (items: CartLine[], productId: string, color: string | null) =>
+  MAX_PER_PRODUCT - items.reduce((n, i) => (i.product_id === productId && !same(i, productId, color) ? n + i.quantity : n), 0)
+
 let syncTimer: ReturnType<typeof setTimeout> | undefined
 const scheduleSync = (items: CartLine[]) => {
   if (!isSignedIn()) return
@@ -54,14 +59,16 @@ export const useCart = create<CartState>()(
         shippingMethod: 'standard',
         add: (productId, quantity = 1, color = null) => {
           const items = get().items
+          const max = lineMax(items, productId, color)
+          if (max <= 0) return
           commit(items.some((i) => same(i, productId, color))
-            ? items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(99, i.quantity + quantity) } : i))
-            : [...items, { product_id: productId, quantity, color }])
+            ? items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(max, i.quantity + quantity) } : i))
+            : [...items, { product_id: productId, quantity: Math.min(max, quantity), color }])
         },
         setQuantity: (productId, color, quantity) =>
           commit(quantity <= 0
             ? get().items.filter((i) => !same(i, productId, color))
-            : get().items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(99, quantity) } : i))),
+            : get().items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(lineMax(get().items, productId, color), quantity) } : i))),
         remove: (productId, color) => commit(get().items.filter((i) => !same(i, productId, color))),
         setColor: (productId, from, to) => {
           if (from === to) return
@@ -70,7 +77,7 @@ export const useCart = create<CartState>()(
           if (!moving) return
           const target = items.find((i) => same(i, productId, to))
           commit(target
-            ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(99, i.quantity + moving.quantity) } : i))
+            ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(MAX_PER_PRODUCT, i.quantity + moving.quantity) } : i))
             : items.map((i) => (i === moving ? { ...i, color: to } : i)))
         },
         clear: () => set({ items: [], couponCode: null, couponAmount: null, shippingMethod: 'standard' }),

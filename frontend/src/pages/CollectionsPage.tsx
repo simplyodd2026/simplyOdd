@@ -8,6 +8,7 @@ import { Container } from '@/components/layout/Container'
 import { ButtonLink } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/misc'
 import { SplitReveal, Reveal } from '@/components/motion/Reveal'
+import { responsive } from '@/lib/image'
 
 // Behind each empty collection: a pebble in one of the palette's tones, carrying the collection's initial.
 const EMPTY_TONES = ['bg-clay/35', 'bg-sage/45', 'bg-tan/45']
@@ -92,12 +93,12 @@ function Chapter({ category: c, index }: { category: Category; index: number }) 
             ) : (
               <>
                 <Link to={`/collections/${c.slug}`} aria-label={`Shop ${c.name}`} className="table-shadow arch block aspect-[3/4] overflow-hidden bg-ash">
-                  {main && <img src={main} alt={lead?.images[0]?.alt || c.name} loading="lazy" decoding="async"
+                  {main && <img {...responsive(main, '(min-width: 480px) 480px, 100vw')} alt={lead?.images[0]?.alt || c.name} loading="lazy" decoding="async"
                     className="size-full object-cover transition-transform duration-[1.4s] ease-[var(--ease-out-quint)] hover:scale-[1.03]" />}
                 </Link>
                 {inset && (
                   <div className={cn('plate absolute -bottom-8 w-[36%] overflow-hidden border-[6px] bg-ash', flip ? '-left-3 border-stone sm:-left-12' : '-right-3 border-paper sm:-right-12')}>
-                    <img src={inset} alt="" loading="lazy" className="aspect-square size-full object-cover" />
+                    <img {...responsive(inset, '(min-width: 480px) 180px, 36vw')} alt="" loading="lazy" className="aspect-square size-full object-cover" />
                   </div>
                 )}
               </>

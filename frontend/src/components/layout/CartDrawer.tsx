@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useConfig, useQuote } from '@/lib/queries'
-import { useCart } from '@/stores/cart'
+import { lineMax, useCart } from '@/stores/cart'
 import { useUi } from '@/stores/ui'
 import { money } from '@/lib/format'
 import { Drawer } from '@/components/ui/Overlay'
@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { Skeleton } from '@/components/ui/misc'
 import { LineColor } from '@/features/checkout/LineColor'
+import { responsive } from '@/lib/image'
 
 export function CartDrawer() {
   const { cartOpen, setCart } = useUi()
@@ -70,7 +71,7 @@ export function CartDrawer() {
                   exit={{ opacity: 0, x: 40, transition: { duration: 0.35 } }}
                   className="flex gap-5 border-b border-rule px-6 py-5 sm:px-8">
                   <Link to={`/product/${line.slug}`} onClick={close} className="w-24 shrink-0 overflow-hidden bg-ash">
-                    {line.image && <img src={line.image} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}
+                    {line.image && <img {...responsive(line.image, '96px')} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-3">
@@ -81,7 +82,7 @@ export function CartDrawer() {
                     <LineColor line={line} />
                     {line.issue && <p className="mt-1 text-sm text-accent">{line.issue}</p>}
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <QuantityStepper size="sm" value={line.quantity} max={Math.max(1, line.stock)} onChange={(n) => setQuantity(line.product_id, line.color, n)} />
+                      <QuantityStepper size="sm" value={line.quantity} max={lineMax(items, line.product_id, line.color)} onChange={(n) => setQuantity(line.product_id, line.color, n)} />
                       <button onClick={() => remove(line.product_id, line.color)} className="link-draw text-[13px] text-fog hover:text-ink">Remove</button>
                     </div>
                   </div>

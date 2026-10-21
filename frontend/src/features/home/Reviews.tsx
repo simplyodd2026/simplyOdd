@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Container } from '@/components/layout/Container'
 import { Stars } from '@/components/ui/misc'
 import { useRecentReviews } from '@/lib/queries'
+import { responsive } from '@/lib/image'
 
 /** Three recent reviews from verified buyers, each tied to the piece it's about. */
 export function Reviews() {
@@ -33,7 +34,7 @@ export function Reviews() {
                 <p className="line-clamp-6">{r.body}</p>
               </blockquote>
               <div className="mt-6 flex items-center gap-3">
-                {r.product_image && <img src={r.product_image} alt="" loading="lazy" className="size-12 rounded-full bg-paper-2 object-cover" />}
+                {r.product_image && <img {...responsive(r.product_image, '48px')} alt="" loading="lazy" className="size-12 rounded-full bg-paper-2 object-cover" />}
                 <div className="min-w-0 text-[13px]">
                   <p className="font-medium text-ink">{r.author_name}</p>
                   <Link to={`/product/${r.product_slug}`} className="link-draw truncate text-fog hover:text-ink">On {r.product_name}</Link>

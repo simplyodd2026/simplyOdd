@@ -49,7 +49,7 @@ cd frontend && npm run build                  # typecheck + production build
 **The API owns every business rule.** React never computes money or decides whether a payment succeeded.
 
 - **Pricing** (`services/pricing.py`) is the single source of truth. The bag, drawer and checkout render `POST /api/cart/quote`, and checkout recomputes the quote server-side.
-- **Stock** is reserved atomically when an order is placed (a Firestore transaction). It is released on cancel or when payment can't start.
+- **No stock tracking.** Every piece is made to order, so anything published can be bought in any quantity. Placing an order adds to each product's `sales_count`; cancelling takes it back off.
 - **Orders** follow a guarded status flow: `pending → confirmed → processing → shipped → out_for_delivery → delivered`, with `cancelled`/`refunded` branches. Invalid jumps are rejected.
 - **Reviews** are only accepted from verified purchasers (a confirmed-or-later order containing the product). Each change recomputes the product's average and distribution.
 - **Storage abstraction** (`repositories/store.py`): services talk to a small `DocumentStore` interface. `FirestoreStore` is used in production and `MemoryStore` in tests and local dev. Moving to another database means one new class.
@@ -128,4 +128,4 @@ Nothing is provider-specific: the API is a plain ASGI app (there's also a `Docke
 - **Transactional email** (order confirmation, shipped). Hook it into `OrderService` status changes, e.g. with the Firebase "Trigger Email" extension or Resend.
 - **FCM push notifications.** The spec made these optional. The same status-change hook is the place to send them.
 - **Razorpay webhooks** as a backup to client-side confirmation. Add a `/payments/razorpay/webhook` route that calls `confirm_payment`.
-- **Expiring unpaid orders.** Unpaid `pending` orders hold stock until cancelled. A Cloud Scheduler job that cancels them after ~30 minutes is recommended.
+- **Expiring unpaid orders.** Unpaid `pending` orders stay open until cancelled. A Cloud Scheduler job that cancels them after ~30 minutes is recommended.

@@ -1,7 +1,8 @@
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/cn'
+import { MAX_PER_PRODUCT } from '@/lib/constants'
 
-export function QuantityStepper({ value, onChange, max = 99, size = 'md', label = 'Quantity' }: {
+export function QuantityStepper({ value, onChange, max = MAX_PER_PRODUCT, size = 'md', label = 'Quantity' }: {
   value: number; onChange: (n: number) => void; max?: number; size?: 'sm' | 'md'; tone?: 'dark' | 'light'; label?: string
 }) {
   const h = size === 'sm' ? 'h-9' : 'h-14'

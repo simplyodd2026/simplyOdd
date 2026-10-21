@@ -129,7 +129,7 @@ export default function AdminOrderDetailPage() {
       </div>
 
       <Modal open={dialog === 'cancel'} onClose={() => setDialog(null)} title={`Cancel ${order.number}?`}>
-        <p className="text-smoke">Stock is returned to inventory. {['paid', 'partially_paid'].includes(order.payment.status) ? 'The payment will be marked as awaiting refund.' : 'Nothing was collected, so there is nothing to refund.'}</p>
+        <p className="text-smoke">{['paid', 'partially_paid'].includes(order.payment.status) ? 'The payment will be marked as awaiting refund.' : 'Nothing was collected, so there is nothing to refund.'}</p>
         <Input className="mt-4" label="Reason (shown in history)" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/cancel`, { body: { status: 'cancelled', note: note || null } }), 'Order cancelled')}>Cancel order</Button>

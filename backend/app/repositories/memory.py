@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from app.repositories.store import InsufficientStock, Where
+from app.repositories.store import Where
 
 
 def _get_path(doc: dict, dotted: str) -> Any:
@@ -122,18 +122,12 @@ class MemoryStore:
             self._flush()
             return doc["value"]
 
-    async def adjust_stock(self, deltas):
+    async def record_sales(self, deltas):
         async with self._lock:
             products = self._col("products")
             for pid, delta in deltas.items():
-                p = products.get(pid)
-                available = p.get("stock", 0) if p else 0
-                if p is None or available + delta < 0:
-                    raise InsufficientStock(pid, available)
-            for pid, delta in deltas.items():
-                p = products[pid]
-                p["stock"] = p.get("stock", 0) + delta
-                p["sales_count"] = max(0, p.get("sales_count", 0) - delta)
+                if p := products.get(pid):
+                    p["sales_count"] = max(0, p.get("sales_count", 0) + delta)
             self._flush()
 
     async def increment(self, collection, doc_id, field, delta):

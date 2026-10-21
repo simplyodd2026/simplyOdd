@@ -53,7 +53,6 @@ class CatalogService:
         category: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
-        in_stock: bool = False,
         tags: list[str] | None = None,
         flag: Literal["featured", "bestseller", "new"] | None = None,
         sort: SortKey = "newest",
@@ -72,8 +71,6 @@ class CatalogService:
             items = [p for p in items if p.price >= min_price]
         if max_price is not None:
             items = [p for p in items if p.price <= max_price]
-        if in_stock:
-            items = [p for p in items if p.stock > 0]
         if tags:
             wanted = {t.lower() for t in tags}
             items = [p for p in items if wanted & {t.lower() for t in p.tags}]
@@ -124,11 +121,11 @@ class CatalogService:
 
     async def frequently_bought(self, product: Product, limit: int = 2) -> list[Product]:
         chosen = await self.get_products(product.frequently_bought_with)
-        items = [p for p in chosen.values() if p.is_published and p.stock > 0]
+        items = [p for p in chosen.values() if p.is_published]
         if len(items) < limit:
             # Fall back to bestsellers from other categories: complementary, not duplicates.
             pool = [p for p in await self._all_products()
-                    if p.is_published and p.stock > 0 and p.id != product.id
+                    if p.is_published and p.id != product.id
                     and not set(p.category_ids) & set(product.category_ids) and p not in items]
             pool.sort(key=lambda p: p.sales_count, reverse=True)
             items += pool[: limit - len(items)]

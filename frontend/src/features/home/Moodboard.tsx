@@ -10,6 +10,7 @@ import { useWishlist } from '@/stores/wishlist'
 import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { useImageAspect } from '@/lib/hooks'
+import { responsive } from '@/lib/image'
 
 type Note =
   | { kind: 'note'; text: string; tone: keyof typeof NOTE_TONES; voice: 'serif' | 'script' }
@@ -114,7 +115,7 @@ function Polaroid({ piece, i }: { piece: Piece; i: number }) {
   return (
     <Link to={`/product/${product.slug}`} className="group relative block bg-[#FBFAF7] p-2.5 pb-3 shadow-[0_14px_22px_-12px_rgb(66_44_28/0.55)] sm:p-3">
       <div className="relative overflow-hidden bg-ash">
-        {img && <img {...fit.img} style={fit.style} src={img.url} alt={img.alt || product.name} loading="lazy" decoding="async"
+        {img && <img {...fit.img} style={fit.style} {...responsive(img.url, '(min-width: 1024px) 22vw, (min-width: 640px) 33vw, 50vw')} alt={img.alt || product.name} loading="lazy" decoding="async"
           className={cn('w-full object-cover transition-transform duration-[1.2s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]', ASPECTS[i % ASPECTS.length])} />}
         <button type="button" aria-pressed={saved} aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); void toggle(product.id, product.name) }}

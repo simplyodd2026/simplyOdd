@@ -32,7 +32,6 @@ class ProductBase(Schema):
     description: str = ""
     price: float = Field(ge=0)
     compare_at_price: float | None = Field(default=None, ge=0)
-    stock: int = Field(default=0, ge=0)
     # A piece can sit in several categories; the first is its home, used for breadcrumbs and "more like this".
     category_ids: list[str] = []
     tags: list[str] = []
@@ -75,7 +74,6 @@ class ProductUpdate(Schema):
     description: str | None = None
     price: float | None = Field(default=None, ge=0)
     compare_at_price: float | None = None
-    stock: int | None = Field(default=None, ge=0)
     category_ids: list[str] | None = None
     tags: list[str] | None = None
     materials: list[str] | None = None
@@ -106,13 +104,6 @@ class Product(ProductBase):
         if self.compare_at_price and self.compare_at_price > self.price:
             return round((1 - self.price / self.compare_at_price) * 100)
         return 0
-
-    @computed_field
-    @property
-    def availability(self) -> Literal["in_stock", "low_stock", "out_of_stock"]:
-        if self.stock <= 0:
-            return "out_of_stock"
-        return "low_stock" if self.stock <= 5 else "in_stock"
 
 
 class CategoryBase(Schema):

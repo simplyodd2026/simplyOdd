@@ -4,6 +4,7 @@ import { useCart } from '@/stores/cart'
 import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { ColorTag } from '@/components/product/ColorSwatches'
+import { responsive } from '@/lib/image'
 
 const TEETH = 46
 const DEPTH = '9px'
@@ -53,7 +54,7 @@ export function ReceiptLines({ quote }: { quote: Quote }) {
       <ul className="flex flex-col gap-4">
         {quote.lines.filter((l) => l.available).map((l) => (
           <li key={`${l.product_id}:${l.color ?? ''}`} className="flex items-center gap-3">
-            <span className="plate size-10 shrink-0 overflow-hidden bg-ash">{l.image && <img src={l.image} alt="" className="size-full object-cover" />}</span>
+            <span className="plate size-10 shrink-0 overflow-hidden bg-ash">{l.image && <img {...responsive(l.image, '40px')} alt="" className="size-full object-cover" />}</span>
             <dl className="min-w-0 flex-1">
               <Leader label={<><span className="text-fog">{l.quantity} ×</span> <span className="font-display text-[1.15rem] text-ink">{l.name}</span></>}
                 value={money(l.line_total)} />

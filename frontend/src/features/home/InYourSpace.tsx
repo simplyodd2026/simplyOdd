@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { gsap, useGSAP, MQ } from '@/lib/motion'
 import type { Product, ProductImage } from '@/lib/types'
 import { useHomePieces, type Piece } from './pieces'
+import { responsive } from '@/lib/image'
 
 type Shot = { product: Product; image: ProductImage; ratio: number }
 
@@ -62,7 +63,7 @@ export function InYourSpace() {
   return (
     <section ref={root} className="relative isolate h-[88svh] min-h-[32rem] overflow-hidden bg-ash"
       style={{ height: `calc(100vw / ${ratio})` }}>
-      <img src={image.url} alt={image.alt || `${p.name} at home`} loading="lazy" decoding="async"
+      <img {...responsive(image.url, '100vw')} alt={image.alt || `${p.name} at home`} loading="lazy" decoding="async"
         className="room-img absolute inset-0 -z-10 size-full object-cover" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[rgb(42_31_23/0.62)] via-[rgb(42_31_23/0.12)] to-transparent" />
       <div className="mx-auto flex h-full max-w-[1520px] flex-col justify-end px-5 pb-12 sm:px-8 sm:pb-16 lg:px-10">

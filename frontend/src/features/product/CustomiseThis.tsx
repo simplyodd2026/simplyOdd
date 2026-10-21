@@ -9,6 +9,7 @@ import { Input, Textarea } from '@/components/ui/Field'
 import { Icon } from '@/components/ui/Icon'
 import { Swatch } from '@/components/product/ColorSwatches'
 import { cn } from '@/lib/cn'
+import { responsive } from '@/lib/image'
 
 const CHANGES = [['size', 'Size'], ['colour', 'Colour'], ['personalise', 'A name or text'], ['other', 'Something else']] as const
 type Change = (typeof CHANGES)[number][0]
@@ -86,7 +87,7 @@ export function CustomiseThis({ product, category, className }: { product: Produ
         ) : (
           <form onSubmit={submit} className="flex flex-col gap-6">
             <div className="flex items-center gap-4 rounded-lg bg-paper-2 p-3">
-              {product.images[0] && <img src={product.images[0].url} alt="" className="plate size-14 shrink-0 bg-ash object-cover" />}
+              {product.images[0] && <img {...responsive(product.images[0].url, '56px')} alt="" className="plate size-14 shrink-0 bg-ash object-cover" />}
               <div className="min-w-0">
                 <p className="text-[12px] text-fog">Starting from</p>
                 <p className="truncate font-display text-[1.25rem] leading-tight text-ink">{product.name}</p>

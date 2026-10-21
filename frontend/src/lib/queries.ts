@@ -12,7 +12,6 @@ export interface ProductQuery {
   category?: string
   min_price?: number
   max_price?: number
-  in_stock?: boolean
   flag?: 'featured' | 'bestseller' | 'new'
   sort?: SortKey
   page?: number

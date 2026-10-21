@@ -17,7 +17,7 @@ import { useFilaments } from '@/lib/filaments'
 import { Swatch } from '@/components/product/ColorSwatches'
 
 const EMPTY: ProductInput = {
-  name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, stock: 0, category_ids: [],
+  name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, category_ids: [],
   tags: [], materials: [], dimensions: {}, weight_g: null, manufacturing: '', images: [],
   is_featured: false, is_bestseller: false, is_new_arrival: true, is_published: false, frequently_bought_with: [],
   colors: [], default_color: null,
@@ -27,7 +27,7 @@ const GROUPS = [['essential', 'Essentials'], ['extended', 'Extended'], ['special
 
 const toInput = (p: Product): ProductInput => ({
   name: p.name, slug: p.slug, tagline: p.tagline, description: p.description, price: p.price, compare_at_price: p.compare_at_price,
-  stock: p.stock, category_ids: p.category_ids, tags: p.tags, materials: p.materials, dimensions: p.dimensions, weight_g: p.weight_g,
+  category_ids: p.category_ids, tags: p.tags, materials: p.materials, dimensions: p.dimensions, weight_g: p.weight_g,
   manufacturing: p.manufacturing, images: p.images, is_featured: p.is_featured, is_bestseller: p.is_bestseller,
   is_new_arrival: p.is_new_arrival, is_published: p.is_published, frequently_bought_with: p.frequently_bought_with,
   colors: p.colors, default_color: p.default_color,
@@ -167,6 +167,7 @@ export default function ProductEditPage() {
     <div>
       <Link to="/admin/products" className="text-sm text-fog hover:text-ink">All products</Link>
       <AdminHeader title={isNew ? 'New product' : form.name || 'Untitled'}
+        sub={product && `${product.sales_count} ${product.sales_count === 1 ? 'piece' : 'pieces'} sold`}
         actions={<>
           {!isNew && product?.is_published && <Button variant="ghost" onClick={() => window.open(`/product/${product.slug}`, '_blank')}><Icon name="external" size={16} /> View in store</Button>}
           <Button loading={busy} onClick={save}>{isNew ? 'Create product' : 'Save changes'}</Button>
@@ -317,11 +318,10 @@ export default function ProductEditPage() {
           </section>
 
           <section className={card}>
-            <h2 className={h2}>Price and stock</h2>
+            <h2 className={h2}>Price</h2>
             <Input label="Price (₹)" inputMode="decimal" value={form.price || ''} onChange={(e) => set('price', Number(e.target.value) || 0)} error={errors.price} />
             <Input label="Compare-at price (₹)" inputMode="decimal" value={form.compare_at_price ?? ''} onChange={(e) => set('compare_at_price', numOrNull(e.target.value))}
               error={errors.compare_at_price} hint={form.compare_at_price && form.compare_at_price > form.price ? `Shows as ${Math.round((1 - form.price / form.compare_at_price) * 100)}% off` : 'Set higher than the price to show a discount'} />
-            <Input label="Stock" inputMode="numeric" value={form.stock} onChange={(e) => set('stock', Math.max(0, parseInt(e.target.value, 10) || 0))} />
           </section>
 
           <section className={card}>

@@ -37,7 +37,6 @@ async def list_products(
     category: str | None = None,
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
-    in_stock: bool = False,
     tag: list[str] | None = Query(None),
     flag: Literal["featured", "bestseller", "new"] | None = None,
     sort: SortKey = "newest",
@@ -49,7 +48,7 @@ async def list_products(
     if q and track:
         bg.add_task(svc.catalog.record_search, q)
     return await svc.catalog.list_products(
-        q=q, category=category, min_price=min_price, max_price=max_price, in_stock=in_stock,
+        q=q, category=category, min_price=min_price, max_price=max_price,
         tags=tag, flag=flag, sort=sort, page=page, page_size=page_size)
 
 

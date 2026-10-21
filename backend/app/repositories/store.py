@@ -13,13 +13,6 @@ WhereOp = Literal["==", "!=", "<", "<=", ">", ">=", "in", "array_contains"]
 Where = tuple[str, WhereOp, Any]
 
 
-class InsufficientStock(Exception):
-    def __init__(self, product_id: str, available: int):
-        self.product_id = product_id
-        self.available = available
-        super().__init__(f"Only {available} left of {product_id}")
-
-
 class DocumentStore(Protocol):
     async def get(self, collection: str, doc_id: str) -> dict | None: ...
 
@@ -42,10 +35,9 @@ class DocumentStore(Protocol):
 
     async def next_sequence(self, name: str, start: int = 1000) -> int: ...
 
-    async def adjust_stock(self, deltas: dict[str, int]) -> None:
-        """Atomically add `delta` to each product's stock (negative = reserve).
-        Also moves `sales_count` in the opposite direction. Raises
-        InsufficientStock and applies nothing if any product would go below 0."""
+    async def record_sales(self, deltas: dict[str, int]) -> None:
+        """Atomically add `delta` to each product's `sales_count` (negative = undo
+        a sale). Products that no longer exist are skipped."""
         ...
 
     async def increment(self, collection: str, doc_id: str, field: str, delta: float) -> None: ...

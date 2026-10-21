@@ -45,7 +45,6 @@ class InsightsService:
                 u["units"] += it.quantity
                 u["revenue"] = money(u["revenue"] + it.line_total)
 
-        products = (await self.catalog.list_products(include_unpublished=True, page_size=100)).items
         status_counts: dict[str, int] = defaultdict(int)
         for o in orders:
             status_counts[o.status] += 1
@@ -60,8 +59,6 @@ class InsightsService:
             "status_counts": dict(status_counts),
             "revenue_series": series,
             "top_products": sorted(units.values(), key=lambda u: u["revenue"], reverse=True)[:5],
-            "low_stock": [{"id": p.id, "name": p.name, "stock": p.stock} for p in sorted(products, key=lambda p: p.stock)
-                          if p.stock <= 5][:8],
             "recent_orders": [o.model_dump(include={"id", "number", "email", "total", "status", "created_at"})
                               for o in orders[:6]],
         }

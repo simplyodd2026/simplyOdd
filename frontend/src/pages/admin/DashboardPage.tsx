@@ -56,19 +56,6 @@ export default function DashboardPage() {
               </Table>
             ) : <p className="text-smoke">No sales in this period yet.</p>}
           </section>
-          <section>
-            <h2 className="mb-4 text-lg font-semibold">Low stock</h2>
-            {data.low_stock.length ? (
-              <ul className="divide-y divide-rule border-y border-rule">
-                {data.low_stock.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between py-3 text-sm">
-                    <Link to={`/admin/products/${p.id}`} className="hover:text-accent">{p.name}</Link>
-                    <span className={p.stock === 0 ? 'text-accent' : 'text-smoke'}>{p.stock === 0 ? 'Sold out' : `${p.stock} left`}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : <p className="text-smoke">Everything is well stocked.</p>}
-          </section>
         </div>
       </div>
     </div>

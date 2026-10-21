@@ -10,10 +10,11 @@ import { ButtonLink } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { Reveal } from '@/components/motion/Reveal'
 import { useHomePieces, type Piece } from './pieces'
+import { responsive } from '@/lib/image'
 
 /** One object as a magazine would caption it: the picture first, then its name, a line, the price. */
-function ObjectTile({ piece, frame, aspect, className, shape }: {
-  piece: Piece; frame: string; aspect: string; className?: string; shape?: string
+function ObjectTile({ piece, frame, aspect, className, shape, sizes }: {
+  piece: Piece; frame: string; aspect: string; className?: string; shape?: string; sizes: string
 }) {
   const p = piece.product
   const tilt = useTilt<HTMLDivElement>(4)
@@ -28,9 +29,9 @@ function ObjectTile({ piece, frame, aspect, className, shape }: {
       <div ref={tilt}>
         <Link to={`/product/${p.slug}`} aria-label={`${p.name}, ${money(p.price)}`}
           className={cn('relative block overflow-hidden bg-ash table-shadow', frame, aspect)} style={fit.style}>
-          {primary && <img {...fit.img} src={primary.url} alt={primary.alt || p.name} loading="lazy" decoding="async"
+          {primary && <img {...fit.img} {...responsive(primary.url, sizes)} alt={primary.alt || p.name} loading="lazy" decoding="async"
             className={cn('absolute inset-0 size-full object-cover transition-[opacity,transform] duration-[1.4s] ease-[var(--ease-out-quint)] group-hover:scale-[1.03]', secondary && 'group-hover:opacity-0')} />}
-          {secondary && <img src={secondary.url} alt="" aria-hidden loading="lazy" decoding="async"
+          {secondary && <img {...responsive(secondary.url, sizes)} alt="" aria-hidden loading="lazy" decoding="async"
             className="absolute inset-0 size-full scale-[1.05] object-cover opacity-0 transition-[opacity,transform] duration-[1.4s] ease-[var(--ease-out-quint)] group-hover:scale-100 group-hover:opacity-100" />}
         </Link>
       </div>
@@ -86,7 +87,7 @@ function Slider({ pieces }: { pieces: Piece[] }) {
       <div ref={track} onScroll={measure}
         className="-mx-5 flex snap-x snap-mandatory scroll-px-5 items-start gap-5 overflow-x-auto px-5 pb-10 pt-2 scrollbar-none sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:gap-8 lg:scroll-px-0 lg:px-0">
         {pieces.map((p, i) => (
-          <ObjectTile key={p.product.id} piece={p} frame={FRAMES[i % FRAMES.length]} aspect="aspect-[4/5]"
+          <ObjectTile key={p.product.id} piece={p} frame={FRAMES[i % FRAMES.length]} aspect="aspect-[4/5]" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 30vw, 44vw"
             className={cn('w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[calc((100%-6rem)/4)]', OFFSETS[i % OFFSETS.length])} />
         ))}
       </div>
@@ -118,13 +119,13 @@ export function Collection() {
 
           <div className="grid gap-20 lg:grid-cols-12 lg:gap-8">
             <Reveal y={60} className="mx-auto w-full max-w-[calc((100svh-12rem)*0.8)] lg:col-span-6">
-              <ObjectTile piece={a} frame="pebble-3" aspect="aspect-[4/5]" />
+              <ObjectTile piece={a} frame="pebble-3" aspect="aspect-[4/5]" sizes="(min-width: 1024px) 50vw, 100vw" />
             </Reveal>
 
             <div className="flex flex-col gap-16 lg:col-span-5 lg:col-start-8 lg:pt-40">
               {b && (
                 <Reveal y={60} className="px-6 sm:px-10 lg:px-0">
-                  <ObjectTile piece={b} frame="slab" aspect="aspect-[4/5]" className="mx-auto max-w-[24rem] lg:mx-0"
+                  <ObjectTile piece={b} frame="slab" aspect="aspect-[4/5]" sizes="(min-width: 480px) 384px, 100vw" className="mx-auto max-w-[24rem] lg:mx-0"
                     shape="-bottom-6 -right-6 top-10 left-10 slab-r bg-clay/70 sm:-right-10" />
                 </Reveal>
               )}

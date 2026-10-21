@@ -10,6 +10,7 @@ import { Tape } from '@/components/paper/Fasteners'
 import { useProducts } from '@/lib/queries'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/cn'
+import { responsive } from '@/lib/image'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 const KINDS = [['lighting', 'Lighting'], ['decor', 'Décor piece'], ['desk', 'Desk object'], ['gift', 'Gift'], ['other', 'Something else']] as const
@@ -121,7 +122,7 @@ export function CustomOrder() {
             <span aria-hidden className="pebble morph absolute -left-[22%] bottom-[6%] -z-10 aspect-square w-[78%] bg-clay/60" />
             <motion.div initial={{ clipPath: 'inset(100% 0% 0% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} transition={{ duration: 1.4, ease: EASE, delay: 0.25 }}
               className="table-shadow arch aspect-[3/4] overflow-hidden bg-ash">
-              {photo && <img src={photo.url} alt={photo.alt || piece?.name || 'A piece made in our studio'} className="size-full object-cover" />}
+              {photo && <img {...responsive(photo.url, '(min-width: 480px) 384px, 100vw')} alt={photo.alt || piece?.name || 'A piece made in our studio'} className="size-full object-cover" />}
             </motion.div>
             {/* A torn note taped over the corner of the photograph. */}
             <motion.div initial={{ opacity: 0, rotate: 0, y: 12 }} animate={{ opacity: 1, rotate: -6, y: 0 }} transition={{ duration: 1, ease: EASE, delay: 0.9 }}

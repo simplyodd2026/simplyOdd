@@ -21,7 +21,7 @@ def test_products_carry_only_their_own_options(client, products):
 
 
 def test_quote_keeps_colours_as_separate_lines_and_validates_them(client, products):
-    vase = products["spine-vase"]  # stock 22, essentials only
+    vase = products["spine-vase"]  # essentials only
     q = client.post("/api/cart/quote", json={"items": [
         {"product_id": vase["id"], "quantity": 1, "color": "sage-green"},
         {"product_id": vase["id"], "quantity": 2, "color": "navy-blue"},
@@ -45,16 +45,9 @@ def test_quote_keeps_colours_as_separate_lines_and_validates_them(client, produc
     assert not q["has_issues"] and q["lines"][0]["color"] is None
 
 
-def test_stock_is_shared_across_colours(client, products):
-    bell = products["hanging-bell"]  # stock 4
-    items = [{"product_id": bell["id"], "quantity": 3, "color": "ivory"},
-             {"product_id": bell["id"], "quantity": 2, "color": "matte-black"}]
-    q = client.post("/api/cart/quote", json={"items": items}).json()
-    assert q["has_issues"] and all(line["issue"] == "Only 4 left" for line in q["lines"])
-
-
-def test_checkout_records_colour_and_reserves_stock_per_product(client, products):
-    lamp = products["fungal-lamp"]  # stock 9
+def test_checkout_records_colour_and_counts_sales_per_product(client, products):
+    lamp = products["fungal-lamp"]
+    sold = lamp["sales_count"]
     body = {"items": [{"product_id": lamp["id"], "quantity": 2, "color": "translucent-amber"},
                       {"product_id": lamp["id"], "quantity": 1, "color": "ivory"}],
             "address": address(), "payment_provider": "mock"}
@@ -66,15 +59,15 @@ def test_checkout_records_colour_and_reserves_stock_per_product(client, products
         "id": "translucent-amber", "name": "Translucent Amber", "finish": "translucent",
         "finish_label": "Translucent", "hex": "#C98A2E"}
     assert items["ivory"]["quantity"] == 1
-    assert client.get("/api/products/fungal-lamp").json()["product"]["stock"] == 6
+    assert client.get("/api/products/fungal-lamp").json()["product"]["sales_count"] == sold + 3
 
     # The seller sees the same detail.
     admin_view = client.get(f"/api/admin/orders/{order['id']}", headers=ADMIN).json()["order"]
     assert {i["filament"]["name"] for i in admin_view["items"]} == {"Translucent Amber", "Ivory"}
 
-    # Cancelling returns all three to stock.
+    # Cancelling uncounts all three.
     client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER)
-    assert client.get("/api/products/fungal-lamp").json()["product"]["stock"] == 9
+    assert client.get("/api/products/fungal-lamp").json()["product"]["sales_count"] == sold
 
     # Checkout refuses a colour the piece isn't offered in.
     bad = {**body, "items": [{"product_id": lamp["id"], "quantity": 1, "color": "silk-gold"}]}
@@ -135,3 +128,13 @@ def test_customise_request_is_linked_to_the_product(client, products):
     # The general brief still works without a product.
     plain = {k: v for k, v in body.items() if k not in ("product_id", "changes")}
     assert client.post("/api/custom-requests", json=plain).status_code == 201
+
+
+def test_order_limit_covers_every_colour(client, products):
+    bell = products["hanging-bell"]
+    items = [{"product_id": bell["id"], "quantity": 6, "color": "ivory"},
+             {"product_id": bell["id"], "quantity": 4, "color": "matte-black"}]
+    assert not client.post("/api/cart/quote", json={"items": items}).json()["has_issues"]
+    items[1]["quantity"] = 5
+    q = client.post("/api/cart/quote", json={"items": items}).json()
+    assert q["has_issues"] and all(line["issue"] == "You can order up to 10 of this piece" for line in q["lines"])

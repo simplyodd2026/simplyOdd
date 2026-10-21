@@ -6,7 +6,6 @@ from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.firebase import get_app
-from app.repositories.store import InsufficientStock
 
 
 class FirestoreStore:
@@ -70,22 +69,15 @@ class FirestoreStore:
 
         return await _txn(self.db.transaction())
 
-    async def adjust_stock(self, deltas):
+    async def record_sales(self, deltas):
         refs = {pid: self.db.collection("products").document(pid) for pid in deltas}
 
         @firestore.async_transactional
         async def _txn(txn):
             snaps = {pid: await ref.get(transaction=txn) for pid, ref in refs.items()}
             for pid, delta in deltas.items():
-                snap = snaps[pid]
-                available = (snap.to_dict() or {}).get("stock", 0) if snap.exists else 0
-                if not snap.exists or available + delta < 0:
-                    raise InsufficientStock(pid, available)
-            for pid, delta in deltas.items():
-                txn.update(refs[pid], {
-                    "stock": firestore.Increment(delta),
-                    "sales_count": firestore.Increment(-delta),
-                })
+                if snaps[pid].exists:
+                    txn.update(refs[pid], {"sales_count": firestore.Increment(delta)})
 
         await _txn(self.db.transaction())
 

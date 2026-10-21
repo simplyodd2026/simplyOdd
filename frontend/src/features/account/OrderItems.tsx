@@ -3,6 +3,7 @@ import type { Order } from '@/lib/types'
 import { money } from '@/lib/format'
 import { Totals } from '@/features/checkout/OrderSummary'
 import { ColorTag } from '@/components/product/ColorSwatches'
+import { responsive } from '@/lib/image'
 
 export function OrderItems({ order, linkProducts = true }: { order: Order; linkProducts?: boolean }) {
   return (
@@ -10,7 +11,7 @@ export function OrderItems({ order, linkProducts = true }: { order: Order; linkP
       <ul className="divide-y divide-rule border-y border-rule">
         {order.items.map((it) => (
           <li key={`${it.product_id}:${it.color ?? ''}`} className="flex items-center gap-4 py-4">
-            <div className="w-16 shrink-0 bg-ash">{it.image && <img src={it.image} alt="" className="aspect-[4/5] w-full object-cover" />}</div>
+            <div className="w-16 shrink-0 bg-ash">{it.image && <img {...responsive(it.image, '64px')} alt="" className="aspect-[4/5] w-full object-cover" />}</div>
             <div className="flex-1">
               {linkProducts ? <Link to={`/product/${it.slug}`} className="font-semibold hover:text-accent">{it.name}</Link> : <span className="font-semibold">{it.name}</span>}
               {it.filament && <ColorTag filament={it.filament} className="mt-0.5 text-[13px] text-smoke" />}

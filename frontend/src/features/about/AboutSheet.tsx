@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import { useProducts } from '@/lib/queries'
 import { PaperClip } from '@/components/paper/Fasteners'
+import { responsive } from '@/lib/image'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 // How far the bottom-right corner of the sheet is folded back.
@@ -61,7 +62,7 @@ export function AboutSheet() {
   return (
     <section className="relative isolate overflow-hidden bg-night px-4 pb-24 pt-14 sm:px-8 sm:pb-32 sm:pt-20">
       {/* The table the sheet rests on: the studio's work, out of focus and in black and white. */}
-      {backdrop && <img src={backdrop.url} alt="" aria-hidden className="absolute inset-0 -z-10 size-full scale-110 object-cover opacity-45 blur-[6px] grayscale" />}
+      {backdrop && <img {...responsive(backdrop.url, '(min-width: 1024px) 960px, 480px')} alt="" aria-hidden className="absolute inset-0 -z-10 size-full scale-110 object-cover opacity-45 blur-[6px] grayscale" />}
       <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(46_35_27/0.25),rgb(46_35_27/0.85))]" />
 
       <motion.div initial={{ opacity: 0, y: 40, rotate: 1.2 }} animate={{ opacity: 1, y: 0, rotate: 0 }} transition={{ duration: 1.3, ease: EASE }}
@@ -95,7 +96,7 @@ export function AboutSheet() {
               className="relative mx-auto w-full max-w-[min(26rem,calc((100svh-12rem)*0.8))] bg-[#FBFAF7] p-3 pb-14 shadow-[0_18px_30px_-12px_rgb(0_0_0/0.4)] sm:p-4 sm:pb-16 md:-ml-10">
               <PaperClip className="absolute -left-2 -top-11 z-10 w-8 rotate-[8deg] drop-shadow-[0_2px_2px_rgb(0_0_0/0.25)] sm:-top-14 sm:w-10" />
               <div className="aspect-[4/4.4] overflow-hidden bg-ash">
-                {photo && <img src={photo.url} alt={photo.alt || piece?.name || 'A piece from the studio'} className="size-full object-cover" />}
+                {photo && <img {...responsive(photo.url, '(min-width: 480px) 416px, 100vw')} alt={photo.alt || piece?.name || 'A piece from the studio'} className="size-full object-cover" />}
               </div>
               {piece && <figcaption className="absolute inset-x-0 bottom-4 text-center font-script text-[1.9rem] leading-none text-graphite sm:bottom-5">{piece.name}</figcaption>}
             </motion.figure>

@@ -19,7 +19,7 @@ export default function SearchPage() {
   const navigate = useNavigate()
   const { data: popular } = usePopularSearches()
   const { data, isLoading, isFetching } = useProducts({
-    q, category: params.category, min_price: params.min_price, max_price: params.max_price, in_stock: params.in_stock,
+    q, category: params.category, min_price: params.min_price, max_price: params.max_price,
     sort: params.sort, page: params.page, page_size: 20, track: params.page === 1,
   }, q.length > 0)
   const { data: fallback } = useProducts({ flag: 'bestseller', sort: 'popular', page_size: 3 }, !!data && data.total === 0)

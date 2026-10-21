@@ -6,6 +6,7 @@ import { Container } from '@/components/layout/Container'
 import { SplitReveal, Reveal } from '@/components/motion/Reveal'
 import { Icon } from '@/components/ui/Icon'
 import { SHIPPING } from '@/lib/constants'
+import { responsive } from '@/lib/image'
 
 // Terracotta, linen and olive, like three swatches laid across a strip of sand.
 const TONES = [
@@ -44,7 +45,7 @@ export function Kinds() {
                     i % 2 ? 'slab-r' : 'slab', c.image ? 'bg-ash text-paper' : TONES[i % TONES.length], !c.image && i % 3 === 1 && 'ring-1 ring-ink/5')}>
                   {c.image && (
                     <>
-                      <img src={c.image} alt="" loading="lazy" decoding="async"
+                      <img {...responsive(c.image, '(min-width: 768px) 33vw, 100vw')} alt="" loading="lazy" decoding="async"
                         className="absolute inset-0 -z-10 size-full object-cover transition-transform duration-[1.4s] ease-[var(--ease-out-quint)] group-hover:scale-[1.04]" />
                       {/* Darken the top and foot so the label and the name stay legible over any photo. */}
                       <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b from-ink/35 via-ink/0 via-40% to-ink/70" />
