@@ -28,7 +28,7 @@ const topics = (rates: Rates): Record<string, { title: string; intro: string; se
     intro: 'Returns, refunds and what to do if something arrives damaged.',
     sections: [
       ['Can I return something?', 'Unused pieces in their original packaging can be returned within 14 days of delivery for a full refund of the item price.'],
-      ['It arrived damaged.', 'Email hello@simplyodd.in with your order number and a photo within 48 hours of delivery. We’ll remake it at no cost.'],
+      ['It arrived damaged.', 'Email simplyodd2026@gmail.com with your order number and a photo within 48 hours of delivery. We’ll remake it at no cost.'],
       ['How do refunds work?', 'Refunds go back to the original payment method within 5–7 business days of the return reaching us. Cash-on-delivery orders are refunded by bank transfer.'],
       ['Can I cancel my order?', 'You can cancel from your account until the order is in production. After that, return it once it arrives.'],
     ],
@@ -41,7 +41,7 @@ const topics = (rates: Rates): Record<string, { title: string; intro: string; se
       ['Why can I see lines on the surface?', 'They’re the fine layer lines left as each piece is built up. We keep them on purpose, because they show how the object was made.'],
       ['Are vases watertight?', 'Vases marked watertight have a sealed interior. Planters include a drainage insert.'],
       ['Do you ship outside India?', 'Not yet. We’re working on it.'],
-      ['Can you make something custom?', 'Yes. Use the Customise page to send us a brief, or email hello@simplyodd.in.'],
+      ['Can you make something custom?', 'Yes. Use the Customise page to send us a brief, or email simplyodd2026@gmail.com.'],
     ],
   },
 })
@@ -67,7 +67,7 @@ export default function HelpPage() {
         </nav>
         <Reveal key={topic} className="border-t border-rule lg:col-span-8 lg:col-start-5">
           {page.sections.map(([q, a], i) => <Accordion key={q} title={q} defaultOpen={i === 0}><p>{a}</p></Accordion>)}
-          <p className="mt-10 text-smoke">Still need help? <a href="mailto:hello@simplyodd.in" className="link-draw text-ink">hello@simplyodd.in</a></p>
+          <p className="mt-10 text-smoke">Still need help? <a href="mailto:simplyodd2026@gmail.com" className="link-draw text-ink">simplyodd2026@gmail.com</a></p>
         </Reveal>
       </Container>
     </>

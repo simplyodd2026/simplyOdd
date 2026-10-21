@@ -80,8 +80,8 @@ export function Footer() {
             <p className={head}>Studio</p>
             <Link to="/about" className={a}>About</Link>
             <Link to="/customise" className={a}>Customise</Link>
-            <a href="mailto:hello@simplyodd.in" className={a}>hello@simplyodd.in</a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className={`${a} inline-flex items-center gap-1`}>Instagram <Icon name="arrowUpRight" size={14} /></a>
+            <a href="mailto:simplyodd2026@gmail.com" className={a}>simplyodd2026@gmail.com</a>
+            <a href="https://www.instagram.com/simply__odd/" target="_blank" rel="noreferrer" className={`${a} inline-flex items-center gap-1`}>Instagram <Icon name="arrowUpRight" size={14} /></a>
           </div>
         </nav>
       </div>
