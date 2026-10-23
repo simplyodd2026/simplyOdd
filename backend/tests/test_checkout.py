@@ -3,6 +3,15 @@ from tests.conftest import ADMIN, CUSTOMER, OTHER, address
 from tests.test_media import photo
 
 
+def pay(client, body, outcome="success", headers=CUSTOMER):
+    """Run a mock checkout end to end and return the confirm response."""
+    started = client.post("/api/checkout", json=body, headers=headers)
+    assert started.status_code == 201, started.text
+    ref = started.json()["payment"]["reference"]
+    return client.post("/api/checkout/confirm", json={"checkout": body, "reference": ref, "payload": {"outcome": outcome}},
+                       headers=headers)
+
+
 def test_quote_applies_shipping_and_coupon(client, products):
     pid = products["vortex-pen-cup"]["id"]  # 1290
     q = client.post("/api/cart/quote", json={"items": [{"product_id": pid, "quantity": 1}]}).json()
@@ -37,8 +46,36 @@ def test_custom_total_coupon_sets_what_the_shopper_pays(client, products):
     body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
             "coupon_code": "PAYYOURWAY"}
     assert client.post("/api/checkout", json=body, headers=CUSTOMER).status_code == 400
-    order = client.post("/api/checkout", json={**body, "coupon_amount": 750}, headers=CUSTOMER).json()["order"]
+    order = pay(client, {**body, "coupon_amount": 750}).json()
     assert order["total"] == 750 and order["payment"]["amount"] == 750 and order["coupon_code"] == "PAYYOURWAY"
+
+
+def test_coupon_valid_when_payment_started_is_honoured(client, products):
+    cp = client.post("/api/admin/coupons", json={"code": "lastone", "kind": "percent", "value": 10, "usage_limit": 1},
+                     headers=ADMIN).json()
+    pid = products["vortex-pen-cup"]["id"]  # 1290 + 199 shipping
+    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
+            "coupon_code": "LASTONE"}
+    started = client.post("/api/checkout", json=body, headers=CUSTOMER).json()
+    assert started["order"]["discount"] == 129
+
+    # Someone else uses the last redemption while this shopper is paying
+    assert pay(client, body, headers=OTHER).status_code == 201
+    assert client.post("/api/checkout", json=body, headers=CUSTOMER).status_code == 400
+
+    # The shopper who started first still gets the discount they paid for
+    r = client.post("/api/checkout/confirm", json={"checkout": body, "reference": started["payment"]["reference"],
+                                                   "payload": {"outcome": "success"}}, headers=CUSTOMER)
+    assert r.status_code == 201, r.text
+    assert r.json()["discount"] == 129 and r.json()["coupon_code"] == "LASTONE"
+
+    # The bag must still qualify for it
+    client.patch(f"/api/admin/coupons/{cp['id']}", json={"usage_limit": 10}, headers=ADMIN)
+    ref = client.post("/api/checkout", json=body, headers=CUSTOMER).json()["payment"]["reference"]
+    client.patch(f"/api/admin/coupons/{cp['id']}", json={"min_subtotal": 5000}, headers=ADMIN)
+    r = client.post("/api/checkout/confirm", json={"checkout": body, "reference": ref, "payload": {"outcome": "success"}},
+                    headers=CUSTOMER)
+    assert r.status_code == 400
 
 
 def test_quote_has_no_stock_limit(client, products):
@@ -56,19 +93,35 @@ def test_mock_payment_flow_counts_and_uncounts_sales(client, products):
     p = products["facet-planter"]
     sold = p["sales_count"]
     body = {"items": [{"product_id": p["id"], "quantity": 2, "color": p["default_color"]}], "address": address(), "payment_provider": "mock"}
+    client.put("/api/me/cart", json={"items": body["items"]}, headers=CUSTOMER)
     r = client.post("/api/checkout", json=body, headers=CUSTOMER)
     assert r.status_code == 201, r.text
-    order = r.json()["order"]
-    assert order["status"] == "pending" and order["number"].startswith("OM-")
-    assert order["payment"]["plan"] == "full" and order["payment"]["amount"] == order["total"]
-    assert client.get("/api/products/facet-planter").json()["product"]["sales_count"] == sold + 2
+    preview, ref = r.json()["order"], r.json()["payment"]["reference"]
+    assert preview["payment"]["plan"] == "full" and preview["payment"]["amount"] == preview["total"]
 
-    # Declined, then paid
-    bad = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "failure"}}, headers=CUSTOMER)
-    assert bad.status_code == 400
-    assert client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {}}, headers=OTHER).status_code == 404
-    ok = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "success"}}, headers=CUSTOMER).json()
-    assert ok["status"] == "confirmed" and ok["payment"]["status"] == "paid"
+    # Starting a payment saves nothing and keeps the bag
+    assert client.get("/api/me/orders", headers=CUSTOMER).json() == []
+    assert client.get("/api/products/facet-planter").json()["product"]["sales_count"] == sold
+    assert len(client.get("/api/me/cart", headers=CUSTOMER).json()["items"]) == 1
+
+    # Declined: still no order, bag kept
+    confirm = lambda outcome, headers=CUSTOMER: client.post(  # noqa: E731
+        "/api/checkout/confirm", json={"checkout": body, "reference": ref, "payload": {"outcome": outcome}}, headers=headers)
+    assert confirm("failure").status_code == 400
+    assert client.get("/api/me/orders", headers=CUSTOMER).json() == []
+    assert len(client.get("/api/me/cart", headers=CUSTOMER).json()["items"]) == 1
+
+    # Paid: the order exists, the bag is cleared, and a repeat confirm returns the same order
+    r = confirm("success")
+    assert r.status_code == 201, r.text
+    ok = r.json()
+    assert ok["status"] == "confirmed" and ok["payment"]["status"] == "paid" and ok["number"].startswith("OM-")
+    assert client.get("/api/products/facet-planter").json()["product"]["sales_count"] == sold + 2
+    assert client.get("/api/me/cart", headers=CUSTOMER).json()["items"] == []
+    assert confirm("success").json()["number"] == ok["number"]
+    assert confirm("success", OTHER).status_code == 404
+    assert [o["id"] for o in client.get("/api/me/orders", headers=CUSTOMER).json()] == [ok["id"]]
+    order = ok
 
     # Customer cancels → the sale is uncounted, payment awaits refund
     c = client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER).json()
@@ -84,11 +137,9 @@ def test_admin_status_flow_and_reviews(client, products):
     pid = products["grid-tray"]["id"]
     body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
             "payment_plan": "partial"}
-    order = client.post("/api/checkout", json=body, headers=CUSTOMER).json()["order"]
+    order = pay(client, body).json()
     assert order["payment"]["amount"] + order["payment"]["balance"] == order["total"]
     assert order["payment"]["amount"] == round(order["total"] / 2, 2)
-    order = client.post(f"/api/orders/{order['id']}/payment/confirm", json={"payload": {"outcome": "success"}},
-                        headers=CUSTOMER).json()
     assert order["status"] == "confirmed" and order["payment"]["status"] == "partially_paid"
 
     # Non-admins are refused

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.core.container import Services, services
 from app.core.security import current_user
-from app.models.order import CheckoutRequest, CheckoutResponse, Order, PaymentConfirm
+from app.models.order import CheckoutConfirm, CheckoutRequest, CheckoutResponse, Order
 from app.models.user import AuthUser
 
 router = APIRouter(tags=["orders"])
@@ -10,22 +10,18 @@ router = APIRouter(tags=["orders"])
 
 @router.post("/checkout", response_model=CheckoutResponse, status_code=201)
 async def checkout(body: CheckoutRequest, user: AuthUser = Depends(current_user), svc: Services = Depends(services)):
+    # Starts the payment only; nothing is saved until /checkout/confirm.
     order, payment = await svc.orders.checkout(user, body)
-    # The bag has become an order; clear the saved bag.
+    return CheckoutResponse(order=order, payment=payment)
+
+
+@router.post("/checkout/confirm", response_model=Order, status_code=201)
+async def confirm_checkout(body: CheckoutConfirm, user: AuthUser = Depends(current_user),
+                           svc: Services = Depends(services)):
+    order = await svc.orders.confirm_checkout(user, body.checkout, body.reference, body.payload)
+    # Paid: the bag has become an order; clear the saved bag.
     await svc.accounts.put_cart(user.uid, [])
-    return CheckoutResponse(order=order, payment=payment)
-
-
-@router.post("/orders/{order_id}/payment/confirm", response_model=Order)
-async def confirm_payment(order_id: str, body: PaymentConfirm, user: AuthUser = Depends(current_user),
-                          svc: Services = Depends(services)):
-    return await svc.orders.confirm_payment(user, order_id, body.payload)
-
-
-@router.post("/orders/{order_id}/payment/restart", response_model=CheckoutResponse)
-async def restart_payment(order_id: str, user: AuthUser = Depends(current_user), svc: Services = Depends(services)):
-    order, payment = await svc.orders.restart_payment(user, order_id)
-    return CheckoutResponse(order=order, payment=payment)
+    return order
 
 
 @router.get("/me/orders", response_model=list[Order])

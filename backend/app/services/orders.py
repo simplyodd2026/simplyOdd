@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections.abc import Iterable
 
@@ -12,7 +13,7 @@ from app.models.user import AuthUser
 from app.repositories.store import DocumentStore
 from app.services.catalog import CatalogService
 from app.services.coupons import CouponService
-from app.services.payments.base import PaymentRegistry
+from app.services.payments.base import PaymentProvider, PaymentRegistry
 from app.services.pricing import PricingService
 
 log = logging.getLogger(__name__)
@@ -28,6 +29,11 @@ def _per_product(deltas: Iterable[tuple[str, int]]) -> dict[str, int]:
     for pid, delta in deltas:
         out[pid] = out.get(pid, 0) + delta
     return out
+
+
+def _order_id(provider: str, reference: str) -> str:
+    """One payment, one order: the id comes from the payment, so a replayed confirm finds the same order."""
+    return "o_" + hashlib.sha256(f"{provider}:{reference}".encode()).hexdigest()[:16]
 
 
 class OrderService:
@@ -74,28 +80,25 @@ class OrderService:
                 await self.coupons.mark_used(coupon)
 
     # -------------------------------------------------------------- checkout
-    async def checkout(self, user: AuthUser, req: CheckoutRequest) -> tuple[Order, dict]:
+    async def _build(self, user: AuthUser, req: CheckoutRequest, paid: bool = False) -> tuple[Order, PaymentProvider]:
+        """Price the request into an unsaved order. `paid` honours a coupon that was valid when payment started."""
         provider = self.payments.get(req.payment_provider)
         if provider is None:
             raise BadRequest("Choose a payment method")
 
         quote, coupon = await self.pricing.quote_lines(
             req.items, coupon_code=req.coupon_code, coupon_amount=req.coupon_amount,
-            shipping_method=req.shipping_method, country=req.address.country)
+            shipping_method=req.shipping_method, country=req.address.country, paid=paid)
         if quote.has_issues:
             problems = "; ".join(f"{line.name}: {line.issue}" for line in quote.lines if line.issue)
             raise Conflict(f"Update your bag before checking out. {problems}")
         if req.coupon_code and not coupon:
             raise BadRequest(quote.coupon_message or "That coupon can't be applied")
 
-        await self.store.record_sales(_per_product((line.product_id, line.quantity) for line in quote.lines))
-        self.catalog.invalidate()
-
         due_now = quote.deposit if req.payment_plan == "partial" else quote.total
         ts = now()
-        seq = await self.store.next_sequence("orders", start=10000)
         order = Order(
-            id=new_id("o_"), number=f"OM-{seq}", user_id=user.uid, email=req.address.email,
+            id=new_id("o_"), number="", user_id=user.uid, email=req.address.email,
             items=[OrderItem(product_id=line.product_id, color=line.color, filament=line.filament, name=line.name, slug=line.slug, image=line.image,
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
@@ -105,60 +108,49 @@ class OrderService:
             payment=PaymentInfo(provider=provider.id, plan=req.payment_plan, amount=due_now,
                                 balance=money(quote.total - due_now), currency=quote.currency),
             history=[StatusEvent(status="pending", at=ts, note="Order placed")],
-            created_at=ts, updated_at=ts,
+            sales_counted=False, created_at=ts, updated_at=ts,
         )
-        await self._save(order)
+        return order, provider
 
+    async def checkout(self, user: AuthUser, req: CheckoutRequest) -> tuple[Order, dict]:
+        """Start a payment. Nothing is saved: the order is created by confirm_checkout once paid."""
+        order, provider = await self._build(user, req)
         try:
             started = await provider.start(order)
         except Exception as exc:
-            log.exception("Payment start failed for %s", order.number)
-            await self._undo_sales(order)
-            self._event(order, "cancelled", "Payment could not be started")
-            order.payment.status = "failed"
-            await self._save(order)
+            log.exception("Payment start failed for %s", user.uid)
             raise BadRequest("We couldn't reach the payment provider. Your bag is unchanged; try again.") from exc
-
         order.payment.reference = started.reference
-        await self._save(order)
-        return order, {"provider": provider.id, **started.client_payload}
+        return order, {"provider": provider.id, "reference": started.reference, **started.client_payload}
 
-    async def restart_payment(self, user: AuthUser, order_id: str) -> tuple[Order, dict]:
-        order = await self.get_for_user(user, order_id)
-        if order.status != "pending" or order.payment.status not in ("pending", "failed"):
-            raise Conflict("This order doesn't need payment")
-        provider = self.payments.get(order.payment.provider)
-        if provider is None:
-            raise BadRequest("That payment method is no longer available")
-        try:
-            started = await provider.start(order)
-        except Exception as exc:
-            log.exception("Payment restart failed for %s", order.number)
-            raise BadRequest("We couldn't reach the payment provider. Try again in a moment.") from exc
-        order.payment.reference = started.reference
-        order.payment.status = "pending"
-        await self._save(order)
-        return order, {"provider": provider.id, **started.client_payload}
-
-    async def confirm_payment(self, user: AuthUser, order_id: str, payload: dict) -> Order:
-        order = await self.get_for_user(user, order_id)
-        if order.payment.status in ("paid", "partially_paid"):
+    async def confirm_checkout(self, user: AuthUser, req: CheckoutRequest, reference: str, payload: dict) -> Order:
+        """Verify the payment for a checkout and, only if it succeeded, create the order."""
+        order_id = _order_id(req.payment_provider, reference)
+        existing = await self.store.get(ORDERS, order_id)
+        if existing:
+            order = Order.model_validate(existing)
+            if order.user_id != user.uid:
+                raise NotFound("Order")
             return order  # idempotent
-        if order.status != "pending":
-            raise Conflict("This order can no longer be paid")
-        provider = self.payments.get(order.payment.provider)
-        if provider is None:
-            raise BadRequest("That payment method is no longer available")
+
+        # The provider checks below that the amount charged matches this price.
+        order, provider = await self._build(user, req, paid=True)
+        order.id = order_id
+        order.payment.reference = reference
         result = await provider.verify(order, payload)
         if not result.ok:
-            order.payment.status = "failed"
-            await self._save(order)
             raise BadRequest(result.message or "Payment failed. Try again or use another method.")
+
+        seq = await self.store.next_sequence("orders", start=10000)
+        order.number = f"OM-{seq}"
         partial = order.payment.balance > 0
         order.payment.status = "partially_paid" if partial else "paid"
         order.payment.transaction_id = result.transaction_id
         order.payment.paid_at = now()
         self._event(order, "confirmed", "50% advance received" if partial else "Payment received")
+        await self.store.record_sales(_per_product((i.product_id, i.quantity) for i in order.items))
+        order.sales_counted = True
+        self.catalog.invalidate()
         await self._on_confirmed(order)
         return await self._save(order)
 

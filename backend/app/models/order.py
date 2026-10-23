@@ -123,8 +123,10 @@ class CheckoutResponse(Schema):
     payment: dict  # provider-specific payload the client adapter needs
 
 
-class PaymentConfirm(Schema):
-    payload: dict = {}
+class CheckoutConfirm(Schema):
+    checkout: CheckoutRequest  # the same request sent to /checkout; re-priced on the server
+    reference: str = Field(min_length=1)  # from the /checkout payment payload
+    payload: dict = {}  # what the provider returned to the client
 
 
 class StatusUpdate(Schema):

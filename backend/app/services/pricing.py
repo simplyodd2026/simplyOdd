@@ -26,7 +26,8 @@ class PricingService:
                            fee=EXPRESS_SHIPPING_FEE if subtotal else 0),
         ]
 
-    async def quote(self, req: QuoteRequest) -> tuple[Quote, Coupon | None]:
+    async def quote(self, req: QuoteRequest, paid: bool = False) -> tuple[Quote, Coupon | None]:
+        """`paid`: re-pricing a bag the shopper has already paid for (see CouponService.problem)."""
         products = await self.catalog.get_products(list(dict.fromkeys(line.product_id for line in req.items)))
         # One line per product and colour. A colour sent for a piece that has no
         # colour options is dropped, so it can't split or fail an otherwise valid line.
@@ -74,7 +75,7 @@ class PricingService:
         if req.coupon_code and req.coupon_code.strip():
             found = await self.coupons.find(req.coupon_code)
             applied, discount, shipping, message = self.coupons.evaluate(
-                found, req.coupon_code, subtotal, shipping, req.coupon_amount)
+                found, req.coupon_code, subtotal, shipping, req.coupon_amount, paid)
             coupon = found if applied else None
             needs_amount = found is not None and found.kind == "custom_total" \
                 and self.coupons.problem(found, req.coupon_code, subtotal) is None
@@ -91,5 +92,5 @@ class PricingService:
         )
         return quote, coupon
 
-    async def quote_lines(self, items: list[CartLine], **kw) -> tuple[Quote, Coupon | None]:
-        return await self.quote(QuoteRequest(items=items, **kw))
+    async def quote_lines(self, items: list[CartLine], paid: bool = False, **kw) -> tuple[Quote, Coupon | None]:
+        return await self.quote(QuoteRequest(items=items, **kw), paid)

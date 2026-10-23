@@ -3,7 +3,7 @@ import type { ComponentType } from 'react'
 /**
  * Frontend half of the payment provider contract. The backend's `start()`
  * returns an opaque payload; the matching adapter turns it into whatever the
- * provider's SDK needs and resolves with the payload for /payment/confirm.
+ * provider's SDK needs and resolves with the payload for /checkout/confirm.
  * React never decides whether a payment succeeded; the backend verifies it.
  */
 export interface PaymentAdapter<PanelState = unknown> {
@@ -17,5 +17,5 @@ export interface PaymentAdapter<PanelState = unknown> {
 }
 
 export class PaymentCancelled extends Error {
-  constructor() { super('Payment was cancelled. Your order is saved; you can try again.') }
+  constructor() { super('Payment was cancelled. Nothing was charged and your bag is unchanged.') }
 }

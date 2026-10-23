@@ -3,10 +3,12 @@
 Flow: start() creates a Razorpay order server-side → the client opens
 checkout.js with the returned payload → on success the client posts
 {razorpay_order_id, razorpay_payment_id, razorpay_signature} to
-/orders/{id}/payment/confirm → verify() checks the HMAC signature.
+/checkout/confirm → verify() checks the HMAC signature and that the Razorpay
+order was for this shopper and this amount.
 """
 import hashlib
 import hmac
+import time
 
 import httpx
 
@@ -15,6 +17,8 @@ from app.services.payments.base import PaymentProvider, StartResult, VerifyResul
 
 API = "https://api.razorpay.com/v1"
 MIN_AMOUNT = 100  # Razorpay rejects orders under ₹1 (100 paise)
+# Coupons valid when payment started are honoured at confirm, so don't accept stale payment sessions.
+MAX_SESSION_AGE = 24 * 3600
 
 
 class RazorpayError(RuntimeError):
@@ -37,9 +41,10 @@ class RazorpayProvider(PaymentProvider):
     async def start(self, order: Order) -> StartResult:
         amount = round(order.payment.amount * 100)  # due now, in the smallest currency unit
         if amount < MIN_AMOUNT:
-            raise RazorpayError(f"Order {order.number} is below Razorpay's minimum of {MIN_AMOUNT} paise")
+            raise RazorpayError(f"Checkout {order.id} is below Razorpay's minimum of {MIN_AMOUNT} paise")
         async with self._client() as c:
-            r = await c.post("/orders", json={"amount": amount, "currency": order.currency, "receipt": order.number})
+            r = await c.post("/orders", json={"amount": amount, "currency": order.currency, "receipt": order.id,
+                                              "notes": {"user_id": order.user_id}})
         if r.status_code == 401:
             raise RazorpayError("Razorpay rejected the API keys; check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET")
         if r.is_error:
@@ -47,7 +52,7 @@ class RazorpayProvider(PaymentProvider):
         rp_order = r.json()
         return StartResult(reference=rp_order["id"], client_payload={
             "key": self.key_id, "order_id": rp_order["id"], "amount": amount, "currency": order.currency,
-            "name": self.brand_name, "description": f"Order {order.number}",
+            "name": self.brand_name, "description": f"{self.brand_name} order",
             "prefill": {"name": order.address.full_name, "email": order.email, "contact": order.address.phone},
         })
 
@@ -60,6 +65,17 @@ class RazorpayProvider(PaymentProvider):
         expected = hmac.new(self.key_secret.encode(), f"{order_id}|{payment_id}".encode(), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(expected, signature):
             return VerifyResult(ok=False, message="Payment signature could not be verified")
+        # The signature proves Razorpay took a payment for this Razorpay order; check it was for this bag.
+        async with self._client() as c:
+            r = await c.get(f"/orders/{order_id}")
+        if r.is_error:
+            return VerifyResult(ok=False, message="We couldn't check your payment with Razorpay. Try again in a moment.")
+        rp_order = r.json()
+        if (rp_order.get("amount") != round(order.payment.amount * 100) or rp_order.get("currency") != order.currency
+                or (rp_order.get("notes") or {}).get("user_id") != order.user_id):
+            return VerifyResult(ok=False, message="This payment doesn't match your bag. Contact us and we'll sort it out.")
+        if time.time() - rp_order.get("created_at", 0) > MAX_SESSION_AGE:
+            return VerifyResult(ok=False, message="This payment session has expired. Contact us and we'll sort it out.")
         return VerifyResult(ok=True, transaction_id=payment_id)
 
     async def refund(self, order: Order) -> str | None:

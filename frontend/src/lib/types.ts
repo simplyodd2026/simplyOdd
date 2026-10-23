@@ -202,7 +202,7 @@ export interface Order {
   updated_at: string
 }
 
-export interface CheckoutResponse { order: Order; payment: { provider: string } & Record<string, unknown> }
+export interface CheckoutResponse { order: Order; payment: { provider: string; reference: string } & Record<string, unknown> }
 
 export interface Review {
   id: string

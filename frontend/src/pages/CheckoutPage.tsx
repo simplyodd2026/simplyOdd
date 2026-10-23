@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import { refreshProfile, useConfig, useQuote } from '@/lib/queries'
 import type { AddressInput, CheckoutResponse, Order, PaymentPlan, ShippingAddress } from '@/lib/types'
 import { useCart } from '@/stores/cart'
@@ -49,7 +49,9 @@ export default function CheckoutPage() {
   const [provider, setProvider] = useState<string>('')
   const [panelState, setPanelState] = useState<unknown>(undefined)
   const [busy, setBusy] = useState(false)
-  const [pending, setPending] = useState<Order | null>(null)
+  // A payment that went through but whose order couldn't be created yet (e.g. the network dropped).
+  // Retrying re-sends this instead of charging again.
+  const [paid, setPaid] = useState<{ checkout: object; reference: string; payload: Record<string, unknown> } | null>(null)
   const [payError, setPayError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function CheckoutPage() {
     return { full_name, phone, line1, line2, city, state, postal_code, country, email }
   }, [addressId, draft, saved, email])
 
-  if (!cart.items.length && !pending) {
+  if (!cart.items.length) {
     return (
       <Container className="pt-16">
         <EmptyState title="Your bag is empty." body="Add something strange before checking out." action={<ButtonLink to="/shop" variant="light">Browse the shop</ButtonLink>} />
@@ -96,15 +98,15 @@ export default function CheckoutPage() {
     setStep('shipping')
   }
 
-  const finish = async (order: Order, payment: Record<string, unknown>) => {
-    const adapter = getAdapter(order.payment.provider)
-    if (order.status !== 'pending') {
-      return done(order)
+  // The order is only created here, once the payment has gone through.
+  const confirm = async (p: NonNullable<typeof paid>) => {
+    try {
+      done(await api<Order>('/checkout/confirm', { body: p }))
+    } catch (e) {
+      // A declined or mismatched payment won't succeed on retry; anything else (network, server) can.
+      setPaid(e instanceof ApiError && e.status >= 400 && e.status < 500 ? null : p)
+      throw e
     }
-    if (!adapter) throw new Error('This payment method isn’t available in this version of the site. Refresh and try again.')
-    const payload = await adapter.collect(payment, panelState)
-    const confirmed = await api<Order>(`/orders/${order.id}/payment/confirm`, { body: { payload } })
-    done(confirmed)
   }
 
   const done = (order: Order) => {
@@ -119,19 +121,16 @@ export default function CheckoutPage() {
     setBusy(true)
     setPayError(null)
     try {
-      if (pending) {
-        const res = await api<CheckoutResponse>(`/orders/${pending.id}/payment/restart`, { method: 'POST' })
-        await finish(res.order, res.payment)
-      } else {
-        const res = await api<CheckoutResponse>('/checkout', {
-          body: {
-            items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode, coupon_amount: cart.couponAmount,
-            payment_provider: provider, payment_plan: plan, notes: null,
-          },
-        })
-        setPending(res.order)
-        await finish(res.order, res.payment)
+      if (paid) return await confirm(paid)
+      const checkout = {
+        items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode, coupon_amount: cart.couponAmount,
+        payment_provider: provider, payment_plan: plan, notes: null,
       }
+      const { payment } = await api<CheckoutResponse>('/checkout', { body: checkout })
+      const adapter = getAdapter(payment.provider)
+      if (!adapter) throw new Error('This payment method isn’t available in this version of the site. Refresh and try again.')
+      const payload = await adapter.collect(payment, panelState)
+      await confirm({ checkout, reference: payment.reference, payload })
     } catch (e) {
       const msg = e instanceof PaymentCancelled ? e.message : e instanceof Error ? e.message : 'Payment failed. Try again.'
       setPayError(msg)
@@ -144,10 +143,10 @@ export default function CheckoutPage() {
   const adapter = getAdapter(provider)
   const shippingOptions = quote?.shipping_options ?? []
   // What the customer pays now: the whole total, or the 50% advance on the partial plan.
-  const dueNow = pending?.payment.amount ?? (quote && (plan === 'partial' ? quote.deposit : quote.total))
+  const dueNow = quote && (plan === 'partial' ? quote.deposit : quote.total)
   const totalLabel = dueNow != null ? money(dueNow) : ''
 
-  const receiptNo = pending?.number ?? 'Draft'
+  const receiptNo = 'Draft'
   const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
   const itemCount = cart.items.reduce((n, l) => n + l.quantity, 0)
   // A choice on the slip: dashed when open, a solid ink outline once chosen.
@@ -184,7 +183,7 @@ export default function CheckoutPage() {
               {quote.has_issues && (
                 <p className="mt-4 text-[14px] text-accent">Some items in your bag changed. <Link to="/cart" className="underline underline-offset-4">Review your bag</Link>.</p>
               )}
-              {!pending && <div className="mt-6"><ReceiptCoupon quote={quote} /></div>}
+              {!paid && <div className="mt-6"><ReceiptCoupon quote={quote} /></div>}
             </>
           )}
 
@@ -194,7 +193,7 @@ export default function CheckoutPage() {
           <ol className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[15px]" aria-label="Checkout progress">
             {STEPS.map((st, i) => (
               <li key={st.id}>
-                <button disabled={i > stepIndex || !!pending} onClick={() => setStep(st.id)} aria-current={st.id === step ? 'step' : undefined}
+                <button disabled={i > stepIndex || !!paid} onClick={() => setStep(st.id)} aria-current={st.id === step ? 'step' : undefined}
                   className={cn('flex items-baseline gap-2 pb-1 transition-colors',
                     st.id === step ? 'border-b border-ink text-ink' : i < stepIndex ? 'text-smoke hover:text-ink' : 'text-fog')}>
                   <span className="font-odd text-accent">{['i', 'ii', 'iii'][i]}.</span>
@@ -273,9 +272,9 @@ export default function CheckoutPage() {
             {step === 'payment' && (
               <section className="flex flex-col gap-6">
                 <h2 className="font-display text-[1.6rem] text-ink">Payment</h2>
-                {pending && (
+                {paid && (
                   <p className="border border-dashed border-accent/60 p-4 text-[14px] text-graphite">
-                    Order {pending.number} is saved and waiting for payment. Your items are held for you.
+                    Your payment went through, but we couldn’t finish placing the order. Try again; you won’t be charged twice.
                   </p>
                 )}
                 {quote && (
@@ -284,10 +283,10 @@ export default function CheckoutPage() {
                       ['full', 'Full payment', 'Pay the whole amount now.', quote.total],
                       ['partial', 'Partial payment', `Pay 50% now and ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
                     ] as const).map(([id, label, note, amount]) => {
-                      const active = (pending?.payment.plan ?? plan) === id
+                      const active = plan === id
                       const unavailable = id === 'partial' && !PARTIAL_PAYMENT_AVAILABLE
                       return (
-                        <button key={id} role="radio" aria-checked={active} disabled={unavailable || (!!pending && !active)} onClick={() => setPlan(id)}
+                        <button key={id} role="radio" aria-checked={active} disabled={unavailable || (!!paid && !active)} onClick={() => setPlan(id)}
                           className={cn(option(active), 'flex items-center gap-3 disabled:cursor-not-allowed disabled:opacity-40')}>
                           {tick(active)}
                           <span className="flex-1">
@@ -311,7 +310,7 @@ export default function CheckoutPage() {
                       const Panel = a?.Panel
                       return (
                         <div key={pr.id} className={option(active)}>
-                          <button role="radio" aria-checked={active} disabled={!!pending && pending.payment.provider !== pr.id}
+                          <button role="radio" aria-checked={active} disabled={!!paid && !active}
                             onClick={() => { setProvider(pr.id); setPanelState(a?.initialState) }}
                             className="flex w-full items-start gap-3 text-left disabled:opacity-40">
                             {tick(active)}
@@ -329,7 +328,7 @@ export default function CheckoutPage() {
                 )}
                 {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
                 <Button size="lg" variant="terra" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
-                  {pending ? `Try payment again` : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
+                  {paid ? 'Finish placing order' : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
                 </Button>
               </section>
             )}

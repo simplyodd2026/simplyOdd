@@ -1,5 +1,6 @@
 from app.models.filament import FILAMENTS
 from tests.conftest import ADMIN, CUSTOMER, address
+from tests.test_checkout import pay
 
 
 def test_palette_is_served_with_all_28_options(client):
@@ -51,9 +52,9 @@ def test_checkout_records_colour_and_counts_sales_per_product(client, products):
     body = {"items": [{"product_id": lamp["id"], "quantity": 2, "color": "translucent-amber"},
                       {"product_id": lamp["id"], "quantity": 1, "color": "ivory"}],
             "address": address(), "payment_provider": "mock"}
-    r = client.post("/api/checkout", json=body, headers=CUSTOMER)
+    r = pay(client, body)
     assert r.status_code == 201, r.text
-    order = r.json()["order"]
+    order = r.json()
     items = {i["color"]: i for i in order["items"]}
     assert items["translucent-amber"]["filament"] == {
         "id": "translucent-amber", "name": "Translucent Amber", "finish": "translucent",

@@ -42,9 +42,15 @@ class CouponService:
     async def mark_used(self, coupon: Coupon) -> None:
         await self.store.increment(COUPONS, coupon.id, "used_count", 1)
 
-    def problem(self, coupon: Coupon | None, code: str, subtotal: float) -> str | None:
-        """Why the coupon can't be used on this order, or None when it can."""
-        if coupon is None or not coupon.active:
+    def problem(self, coupon: Coupon | None, code: str, subtotal: float, paid: bool = False) -> str | None:
+        """Why the coupon can't be used on this order, or None when it can. `paid` means the shopper
+        has already paid with it, so a coupon that expired or ran out mid-payment is still honoured."""
+        if coupon is None:
+            return f"{code.upper()} isn't a valid code"
+        if paid:
+            return f"Add items worth {coupon.min_subtotal - subtotal:.0f} more to use {coupon.code}" \
+                if subtotal < coupon.min_subtotal else None
+        if not coupon.active:
             return f"{code.upper()} isn't a valid code"
         ts = now()
         if coupon.starts_at and ts < coupon.starts_at:
@@ -58,10 +64,10 @@ class CouponService:
         return None
 
     def evaluate(self, coupon: Coupon | None, code: str, subtotal: float, shipping: float,
-                 amount: float | None = None) -> tuple[bool, float, float, str]:
+                 amount: float | None = None, paid: bool = False) -> tuple[bool, float, float, str]:
         """Returns (applied, discount, shipping_after, message). `amount` is what the
         shopper chose to pay, used only by custom_total coupons."""
-        if problem := self.problem(coupon, code, subtotal):
+        if problem := self.problem(coupon, code, subtotal, paid):
             return False, 0, shipping, problem
         assert coupon is not None
         if coupon.kind == "custom_total":
