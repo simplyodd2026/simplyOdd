@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import { startSession } from './lib/session'
+import { initAnalytics } from './lib/analytics'
 import { ApiError } from './lib/api'
 import './styles.css'
 
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 })
 
 startSession(queryClient)
+initAnalytics(router)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
