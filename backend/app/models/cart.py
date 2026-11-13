@@ -9,13 +9,16 @@ ShippingMethod = Literal["standard", "express"]
 
 
 class CartLine(Schema):
-    product_id: str
+    product_id: str = Field(min_length=1, max_length=100)
     quantity: int = Field(ge=1, le=99)
     color: str | None = Field(default=None, max_length=40)  # filament id; one line per product and colour
 
 
+MAX_LINES = 100
+
+
 class CartIn(Schema):
-    items: list[CartLine] = []
+    items: list[CartLine] = Field(default_factory=list, max_length=MAX_LINES)
 
 
 class Cart(Schema):
@@ -23,11 +26,11 @@ class Cart(Schema):
 
 
 class QuoteRequest(Schema):
-    items: list[CartLine]
-    coupon_code: str | None = None
+    items: list[CartLine] = Field(max_length=MAX_LINES)
+    coupon_code: str | None = Field(default=None, max_length=32)
     coupon_amount: float | None = Field(default=None, gt=0)  # what the shopper pays with a custom_total coupon
     shipping_method: ShippingMethod = "standard"
-    country: str | None = None
+    country: str | None = Field(default=None, max_length=100)
 
 
 class QuoteLine(Schema):

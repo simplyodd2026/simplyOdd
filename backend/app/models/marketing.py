@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import EmailStr, Field
 
@@ -72,7 +72,7 @@ class CustomRequestIn(Schema):
     idea: str = Field(min_length=10, max_length=2000)
     kind: CustomKind = "other"
     size: CustomSize = "not_sure"
-    colours: list[str] = Field(default_factory=list, max_length=8)
+    colours: list[Annotated[str, Field(max_length=40)]] = Field(default_factory=list, max_length=8)
     budget: CustomBudget = "not_sure"
     reference_url: str | None = Field(default=None, max_length=500)
     product_id: str | None = Field(default=None, max_length=60)  # set when customising an existing piece

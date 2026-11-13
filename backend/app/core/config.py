@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     data_backend: Literal["memory", "firestore"] = "memory"
     memory_persist_path: str | None = ".data/store.json"
     seed_demo_data: bool = True
-    allow_dev_auth: bool = True
+    # Off unless asked for, so a deploy that forgets ENV=production still can't accept dev tokens.
+    allow_dev_auth: bool = False
+    rate_limit: bool = True
 
     cors_origins: Csv = ["http://localhost:5173"]
     # Public URL of this API, used to build local-disk image links.

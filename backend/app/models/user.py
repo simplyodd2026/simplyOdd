@@ -6,15 +6,15 @@ from app.models.common import Schema
 
 
 class AddressIn(Schema):
-    label: str = "Home"
+    label: str = Field(default="Home", max_length=40)
     full_name: str = Field(min_length=1, max_length=120)
     phone: str = Field(min_length=6, max_length=20)
     line1: str = Field(min_length=1, max_length=200)
-    line2: str = ""
-    city: str = Field(min_length=1)
-    state: str = Field(min_length=1)
+    line2: str = Field(default="", max_length=200)
+    city: str = Field(min_length=1, max_length=100)
+    state: str = Field(min_length=1, max_length=100)
     postal_code: str = Field(min_length=3, max_length=12)
-    country: str = "India"
+    country: str = Field(default="India", max_length=100)
     is_default: bool = False
 
 
@@ -34,9 +34,13 @@ class UserProfile(Schema):
     updated_at: datetime
 
 
-class ProfileUpdate(Schema):
+class ProfileIn(Schema):
+    """What a customer may change on their own profile. The photo is set only by uploading one."""
     name: str | None = Field(default=None, max_length=120)
     phone: str | None = Field(default=None, max_length=20)
+
+
+class ProfileUpdate(ProfileIn):
     profile_image: str | None = None
 
 

@@ -1,4 +1,7 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, UploadFile
+from pydantic import Field
 
 from app.core.container import Services, services
 from app.core.errors import BadRequest
@@ -6,8 +9,8 @@ from app.core.security import current_user
 from app.models.cart import Cart, CartIn, Quote, QuoteRequest
 from app.models.catalog import Product
 from app.models.common import Schema
-from app.models.user import Address, AddressIn, AuthUser, ProfileUpdate, UserProfile
-from app.services.media import validate_upload
+from app.models.user import Address, AddressIn, AuthUser, ProfileIn, ProfileUpdate, UserProfile
+from app.services.media import PASSTHROUGH, validate_upload
 
 router = APIRouter(tags=["account"])
 
@@ -25,8 +28,8 @@ async def me(user: AuthUser = Depends(current_user), svc: Services = Depends(ser
 
 
 @router.patch("/me", response_model=UserProfile)
-async def update_me(body: ProfileUpdate, user: AuthUser = Depends(current_user), svc: Services = Depends(services)):
-    return await svc.accounts.update_profile(user, body)
+async def update_me(body: ProfileIn, user: AuthUser = Depends(current_user), svc: Services = Depends(services)):
+    return await svc.accounts.update_profile(user, ProfileUpdate(**body.model_dump(exclude_unset=True)))
 
 
 @router.post("/me/avatar", response_model=UserProfile)
@@ -34,12 +37,14 @@ async def upload_avatar(file: UploadFile = File(...), user: AuthUser = Depends(c
                         svc: Services = Depends(services)):
     data = await file.read()
     ct = validate_upload(data, file.content_type)
-    if ct == "image/svg+xml":  # SVG can carry script; not accepted from customers
+    if ct in PASSTHROUGH:  # SVG/GIF are stored as sent, unchecked; customers get re-encoded formats only
         raise BadRequest("Upload a JPEG, PNG or WebP image")
     profile = await svc.accounts.ensure_profile(user)
     url, _ = await svc.media.upload(f"avatars/{user.uid}", file.filename or "avatar", data, ct)
     updated = await svc.accounts.update_profile(user, ProfileUpdate(profile_image=url))
-    if old := svc.media.path_from_url(profile.profile_image):  # don't leave the previous photo behind
+    # Don't leave the previous photo behind, but only ever delete this shopper's own uploads.
+    old = svc.media.path_from_url(profile.profile_image)
+    if old and old.startswith(f"avatars/{user.uid}/"):
         await svc.media.delete(old)
     return updated
 
@@ -84,7 +89,7 @@ async def merge_cart(body: CartIn, user: AuthUser = Depends(current_user), svc: 
 
 # ------------------------------------------------------------------- wishlist
 class WishlistIn(Schema):
-    product_ids: list[str]
+    product_ids: list[Annotated[str, Field(max_length=100)]] = Field(max_length=200)
 
 
 class WishlistOut(Schema):

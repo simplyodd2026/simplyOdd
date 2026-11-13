@@ -1,9 +1,11 @@
 from typing import Literal
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
 from app.core.constants import CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
 from app.core.container import Services, services
+from app.core.errors import BadRequest
 from app.models.catalog import Category, Product, SortKey
 from app.models.common import Page
 from app.models.filament import FILAMENTS
@@ -33,11 +35,11 @@ async def homepage(svc: Services = Depends(services)):
 @router.get("/products", response_model=Page[Product])
 async def list_products(
     bg: BackgroundTasks,
-    q: str | None = None,
-    category: str | None = None,
+    q: str | None = Query(None, max_length=200),
+    category: str | None = Query(None, max_length=100),
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),
-    tag: list[str] | None = Query(None),
+    tag: list[str] | None = Query(None, max_length=20),
     flag: Literal["featured", "bestseller", "new"] | None = None,
     sort: SortKey = "newest",
     page: int = Query(1, ge=1),
@@ -82,7 +84,7 @@ async def get_category(id_or_slug: str, svc: Services = Depends(services)):
 
 
 @router.get("/search/suggest")
-async def suggest(q: str = "", svc: Services = Depends(services)):
+async def suggest(q: str = Query("", max_length=200), svc: Services = Depends(services)):
     return await svc.catalog.suggestions(q)
 
 
@@ -93,6 +95,10 @@ async def popular(svc: Services = Depends(services)):
 
 @router.post("/custom-requests", status_code=201)
 async def request_custom(body: CustomRequestIn, svc: Services = Depends(services)):
+    # Shown as a link in the admin, so only web addresses are accepted.
+    if body.reference_url and (urlsplit(body.reference_url).scheme.lower() not in ("http", "https")
+                               or not urlsplit(body.reference_url).netloc):
+        raise BadRequest("The reference link should be a web address starting with https://")
     req = await svc.insights.request_custom(body)
     return {"ok": True, "id": req.id}
 

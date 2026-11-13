@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import EmailStr, Field, model_validator
 
-from app.models.cart import CartLine, ShippingMethod
+from app.models.cart import MAX_LINES, CartLine, ShippingMethod
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
@@ -35,11 +35,11 @@ class ShippingAddress(Schema):
     phone: str = Field(min_length=6, max_length=20)
     email: EmailStr
     line1: str = Field(min_length=1, max_length=200)
-    line2: str = ""
-    city: str = Field(min_length=1)
-    state: str = Field(min_length=1)
+    line2: str = Field(default="", max_length=200)
+    city: str = Field(min_length=1, max_length=100)
+    state: str = Field(min_length=1, max_length=100)
     postal_code: str = Field(min_length=3, max_length=12)
-    country: str = Field(min_length=2)
+    country: str = Field(min_length=2, max_length=100)
 
 
 class OrderItem(Schema):
@@ -75,12 +75,12 @@ class PaymentInfo(Schema):
 
 
 class CheckoutRequest(Schema):
-    items: list[CartLine] = Field(min_length=1)
+    items: list[CartLine] = Field(min_length=1, max_length=MAX_LINES)
     address: ShippingAddress
     shipping_method: ShippingMethod = "standard"
-    coupon_code: str | None = None
+    coupon_code: str | None = Field(default=None, max_length=32)
     coupon_amount: float | None = Field(default=None, gt=0)
-    payment_provider: str
+    payment_provider: str = Field(max_length=40)
     payment_plan: PaymentPlan = "full"
     notes: str | None = Field(default=None, max_length=500)
 
@@ -125,7 +125,7 @@ class CheckoutResponse(Schema):
 
 class CheckoutConfirm(Schema):
     checkout: CheckoutRequest  # the same request sent to /checkout; re-priced on the server
-    reference: str = Field(min_length=1)  # from the /checkout payment payload
+    reference: str = Field(min_length=1, max_length=200)  # from the /checkout payment payload
     payload: dict = {}  # what the provider returned to the client
 
 

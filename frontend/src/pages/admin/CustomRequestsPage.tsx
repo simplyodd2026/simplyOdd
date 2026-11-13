@@ -66,7 +66,7 @@ export default function CustomRequestsPage() {
                 <div key={k} className="flex gap-1.5"><dt className="text-fog">{k}</dt><dd className="text-ink">{v ?? '—'}</dd></div>
               ))}
             </dl>
-            {r.reference_url && (
+            {r.reference_url && /^https?:\/\//i.test(r.reference_url) && (
               <a href={r.reference_url} target="_blank" rel="noreferrer noopener" className="truncate text-sm text-accent underline underline-offset-4">{r.reference_url}</a>
             )}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-3 text-sm">

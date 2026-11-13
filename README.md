@@ -117,9 +117,9 @@ Images go to the Firebase Storage bucket `simply-odd.firebasestorage.app` in `us
 
 The service scales to zero when idle, so the first request after a quiet period takes a few seconds.
 
-**Frontend → Vercel or Netlify**
+**Frontend → Vercel**
 
-Build command `npm run build`, output `dist`. `vercel.json` and `netlify.toml` already include SPA rewrites.
+Build command `npm run build`, output `dist`. `vercel.json` already includes SPA rewrites and security headers.
 
 Nothing is provider-specific: the API is a plain ASGI app (there's also a `Dockerfile`), and the frontend is static files plus one env var.
 
