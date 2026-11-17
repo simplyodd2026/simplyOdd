@@ -28,7 +28,7 @@ export function LineColor({ line }: { line: QuoteLine }) {
       </div>
       {showing && options.length > 0 && (
         <ColorSwatches className="mt-3" size="sm" manual label={`Colour for ${line.name}`} options={options} value={line.filament?.id ?? null}
-          onChange={(id) => { setColor(line.product_id, line.color, id); setOpen(false) }} />
+          onChange={(id) => { setColor(line, id); setOpen(false) }} />
       )}
     </div>
   )

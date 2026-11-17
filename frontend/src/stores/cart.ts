@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { api } from '@/lib/api'
-import type { Cart, CartLine, ShippingMethod } from '@/lib/types'
+import type { Cart, CartLine, Personalization, ShippingMethod } from '@/lib/types'
 import { isSignedIn } from './session'
 import { MAX_PER_PRODUCT } from '@/lib/constants'
 
@@ -16,12 +16,17 @@ interface CartState {
   /** What the shopper chose to pay, for a code that lets them set the total. */
   couponAmount: number | null
   shippingMethod: ShippingMethod
-  /** `color` is a filament id; the same product in two colours is two lines. */
-  add: (productId: string, quantity?: number, color?: string | null) => void
-  setQuantity: (productId: string, color: string | null, quantity: number) => void
-  remove: (productId: string, color: string | null) => void
+  /**
+   * `color` is a filament id; `personalization` is what to write on the piece. The same product in two
+   * colours, or with two different names on it, is two lines.
+   */
+  add: (productId: string, quantity?: number, color?: string | null, personalization?: Personalization | null) => void
+  setQuantity: (line: LineRef, quantity: number) => void
+  remove: (line: LineRef) => void
   /** Move a line to another colour, folding it into that colour's line if there already is one. */
-  setColor: (productId: string, from: string | null, to: string) => void
+  setColor: (line: LineRef, to: string) => void
+  /** Change what's written on a line, folding it into an identical line if there already is one. */
+  setPersonalization: (line: LineRef, to: Personalization) => void
   clear: () => void
   replace: (items: CartLine[]) => void
   setCoupon: (code: string | null) => void
@@ -29,12 +34,29 @@ interface CartState {
   setShipping: (m: ShippingMethod) => void
 }
 
-/** A line is a product in a colour; a line without a colour is stored as null. */
-const same = (l: CartLine, productId: string, color: string | null) => l.product_id === productId && (l.color ?? null) === color
+/** What identifies a bag line: a bag line itself or the quote line priced from it. */
+export type LineRef = Pick<CartLine, 'product_id' | 'color' | 'personalization'>
 
-/** How many of a product one line may hold: the limit is shared by every colour of the piece. */
-export const lineMax = (items: CartLine[], productId: string, color: string | null) =>
-  MAX_PER_PRODUCT - items.reduce((n, i) => (i.product_id === productId && !same(i, productId, color) ? n + i.quantity : n), 0)
+/** Trim and collapse whitespace and drop empty values, as the server does, so lines match up. */
+export function tidyPersonalization(values: Personalization | null | undefined): Personalization | null {
+  const out: Personalization = {}
+  for (const [k, v] of Object.entries(values ?? {})) {
+    const t = v.trim().replace(/\s+/g, ' ')
+    if (t) out[k] = t
+  }
+  return Object.keys(out).length ? out : null
+}
+
+/** A stable key for a line: product, colour (null when none) and personalisation. */
+export const lineKey = (l: LineRef) => {
+  const p = tidyPersonalization(l.personalization)
+  return `${l.product_id}:${l.color ?? ''}:${p ? JSON.stringify(Object.entries(p).sort(([a], [b]) => a.localeCompare(b))) : ''}`
+}
+const same = (a: LineRef, b: LineRef) => lineKey(a) === lineKey(b)
+
+/** How many of a product one line may hold: the limit is shared by every line of the piece. */
+export const lineMax = (items: CartLine[], line: LineRef) =>
+  MAX_PER_PRODUCT - items.reduce((n, i) => (i.product_id === line.product_id && !same(i, line) ? n + i.quantity : n), 0)
 
 let syncTimer: ReturnType<typeof setTimeout> | undefined
 const scheduleSync = (items: CartLine[]) => {
@@ -57,28 +79,39 @@ export const useCart = create<CartState>()(
         couponCode: null,
         couponAmount: null,
         shippingMethod: 'standard',
-        add: (productId, quantity = 1, color = null) => {
+        add: (productId, quantity = 1, color = null, personalization = null) => {
           const items = get().items
-          const max = lineMax(items, productId, color)
+          const line: CartLine = { product_id: productId, quantity, color, personalization: tidyPersonalization(personalization) }
+          const max = lineMax(items, line)
           if (max <= 0) return
-          commit(items.some((i) => same(i, productId, color))
-            ? items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(max, i.quantity + quantity) } : i))
-            : [...items, { product_id: productId, quantity: Math.min(max, quantity), color }])
+          commit(items.some((i) => same(i, line))
+            ? items.map((i) => (same(i, line) ? { ...i, quantity: Math.min(max, i.quantity + quantity) } : i))
+            : [...items, { ...line, quantity: Math.min(max, quantity) }])
         },
-        setQuantity: (productId, color, quantity) =>
+        setQuantity: (line, quantity) =>
           commit(quantity <= 0
-            ? get().items.filter((i) => !same(i, productId, color))
-            : get().items.map((i) => (same(i, productId, color) ? { ...i, quantity: Math.min(lineMax(get().items, productId, color), quantity) } : i))),
-        remove: (productId, color) => commit(get().items.filter((i) => !same(i, productId, color))),
-        setColor: (productId, from, to) => {
-          if (from === to) return
+            ? get().items.filter((i) => !same(i, line))
+            : get().items.map((i) => (same(i, line) ? { ...i, quantity: Math.min(lineMax(get().items, line), quantity) } : i))),
+        remove: (line) => commit(get().items.filter((i) => !same(i, line))),
+        setColor: (line, to) => {
+          if ((line.color ?? null) === to) return
           const items = get().items
-          const moving = items.find((i) => same(i, productId, from))
+          const moving = items.find((i) => same(i, line))
           if (!moving) return
-          const target = items.find((i) => same(i, productId, to))
+          const target = items.find((i) => same(i, { ...line, color: to }))
           commit(target
             ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(MAX_PER_PRODUCT, i.quantity + moving.quantity) } : i))
             : items.map((i) => (i === moving ? { ...i, color: to } : i)))
+        },
+        setPersonalization: (line, to) => {
+          const items = get().items
+          const moving = items.find((i) => same(i, line))
+          const next = { ...line, personalization: tidyPersonalization(to) }
+          if (!moving || same(moving, next)) return
+          const target = items.find((i) => same(i, next))
+          commit(target
+            ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(MAX_PER_PRODUCT, i.quantity + moving.quantity) } : i))
+            : items.map((i) => (i === moving ? { ...i, personalization: next.personalization } : i)))
         },
         clear: () => set({ items: [], couponCode: null, couponAmount: null, shippingMethod: 'standard' }),
         replace: (items) => set({ items }),

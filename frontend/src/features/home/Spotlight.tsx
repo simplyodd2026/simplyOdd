@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '@/stores/cart'
 import { defaultColor, useFilaments } from '@/lib/filaments'
 import { toast } from '@/stores/toast'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Reveal } from '@/components/motion/Reveal'
 import { useHomePieces } from './pieces'
 import { responsive } from '@/lib/image'
+import { needsPersonalization } from '@/components/product/Personalization'
 
 /**
  * The object. One piece, very large, in a pebble-shaped frame on a linen band, with its own name set huge
@@ -22,10 +23,13 @@ export function Spotlight() {
   const filaments = useFilaments()
   const tilt = useTilt<HTMLDivElement>(4)
   const shape = useImageAspect(0.75, 1.6)
+  const navigate = useNavigate()
   if (!p) return null
+  const personalise = needsPersonalization(p)
 
   const main = spotlight?.image ?? p.images[0]
   const addToBag = () => {
+    if (personalise) { navigate(`/product/${p.slug}`); return }
     const color = defaultColor(p)
     add(p.id, 1, color)
     const shade = color && filaments.byId.get(color)
@@ -63,7 +67,7 @@ export function Spotlight() {
               {p.compare_at_price && p.compare_at_price > p.price && <s className="text-[14px] text-fog">{money(p.compare_at_price)}</s>}
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Button onClick={addToBag} size="lg">Add to bag</Button>
+              <Button onClick={addToBag} size="lg">{personalise ? 'Personalise' : 'Add to bag'}</Button>
               <Link to={`/product/${p.slug}`} className="link-draw text-[15px] font-medium text-ink">Explore object</Link>
             </div>
           </div>

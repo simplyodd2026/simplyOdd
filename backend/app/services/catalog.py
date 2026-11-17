@@ -165,6 +165,9 @@ class CatalogService:
             patch["category_ids"] = list(dict.fromkeys(patch["category_ids"]))
         if "dimensions" in patch and patch["dimensions"] is not None:
             patch["dimensions"] = data.dimensions.model_dump()
+        for key in ("personalization", "personalization_fee"):
+            if key in patch and patch[key] is None:
+                patch.pop(key)
         if {"colors", "default_color", "images"} & patch.keys():
             colors, default, images = _check_colors(
                 current.colors if data.colors is None else data.colors,

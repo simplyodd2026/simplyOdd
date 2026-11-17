@@ -99,7 +99,9 @@ class OrderService:
         ts = now()
         order = Order(
             id=new_id("o_"), number="", user_id=user.uid, email=req.address.email,
-            items=[OrderItem(product_id=line.product_id, color=line.color, filament=line.filament, name=line.name, slug=line.slug, image=line.image,
+            items=[OrderItem(product_id=line.product_id, color=line.color, filament=line.filament,
+                             personalization=line.personalization,
+                             personalization_details=line.personalization_details, name=line.name, slug=line.slug, image=line.image,
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
             address=req.address, shipping_method=req.shipping_method, subtotal=quote.subtotal,

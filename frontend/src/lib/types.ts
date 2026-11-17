@@ -7,6 +7,12 @@ export type FilamentFinish = 'solid' | 'transparent' | 'translucent' | 'silk'
 export interface Filament { id: string; name: string; group: FilamentGroup; finish: FilamentFinish; finish_label: string; hex: string }
 /** The chosen filament as recorded on a quote line or order item. */
 export interface FilamentChoice { id: string; name: string; finish: FilamentFinish; finish_label: string; hex: string }
+/** Something the shopper writes on a made-to-order piece, like the name on a keychain. */
+export interface PersonalizationField { key: string; label: string; placeholder: string; max_length: number; required: boolean }
+/** Values by field key. */
+export type Personalization = Record<string, string>
+/** A filled-in field with its label, as recorded on a quote line or order item. */
+export interface PersonalizationValue { key: string; label: string; value: string }
 export interface Dimensions { width_cm?: number | null; height_cm?: number | null; depth_cm?: number | null }
 export interface RatingSummary { average: number; count: number; distribution: Record<string, number> }
 
@@ -34,6 +40,10 @@ export interface Product {
   /** Filament ids this piece is offered in; empty means it comes as pictured. */
   colors: string[]
   default_color: string | null
+  /** What the shopper writes on the piece; empty means it isn't personalised. */
+  personalization: PersonalizationField[]
+  /** Added to the price when any field is filled in. */
+  personalization_fee: number
   rating: RatingSummary
   sales_count: number
   discount_percent: number
@@ -64,8 +74,8 @@ export interface ProductDetail {
   frequently_bought: Product[]
 }
 
-/** One line per product and colour. */
-export interface CartLine { product_id: string; quantity: number; color?: string | null }
+/** One line per product, colour and personalisation. */
+export interface CartLine { product_id: string; quantity: number; color?: string | null; personalization?: Personalization | null }
 export interface Cart { items: CartLine[] }
 export type ShippingMethod = 'standard' | 'express'
 
@@ -74,6 +84,12 @@ export interface QuoteLine {
   /** The filament id as sent, so the line can be matched back to the bag. */
   color: string | null
   filament: FilamentChoice | null
+  /** As sent, so the line can be matched back to the bag. */
+  personalization: Personalization | null
+  personalization_details: PersonalizationValue[]
+  /** What the piece asks the shopper to write, for editing from the bag. */
+  personalization_fields: PersonalizationField[]
+  personalization_fee: number
   /** What the product can be printed in, for changing the choice from the bag. */
   colors: string[]
   name: string
@@ -158,6 +174,8 @@ export interface OrderItem {
   product_id: string
   color?: string | null
   filament?: FilamentChoice | null
+  personalization?: Personalization | null
+  personalization_details?: PersonalizationValue[]
   name: string
   slug: string
   image: string | null

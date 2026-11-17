@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Product } from '@/lib/types'
 import { useCart } from '@/stores/cart'
 import { defaultColor, useFilaments } from '@/lib/filaments'
@@ -9,6 +9,7 @@ import { WishlistButton } from './WishlistButton'
 import { Icon } from '@/components/ui/Icon'
 import { useTilt } from '@/lib/useTilt'
 import { responsive } from '@/lib/image'
+import { needsPersonalization } from '@/components/product/Personalization'
 
 export function ProductCard({ product, className, priority, aspect = 'aspect-[4/5]', showTagline = true, sizes = '(min-width: 1024px) 25vw, (min-width: 640px) 42vw, 70vw' }: {
   product: Product; className?: string; priority?: boolean; index?: number; aspect?: string; showTagline?: boolean
@@ -20,8 +21,13 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
   const [primary, secondary] = product.images
   const badge = product.discount_percent > 0 ? `−${product.discount_percent}%` : product.is_new_arrival ? 'New' : null
 
+  const navigate = useNavigate()
+  // A piece that needs a name or text on it is personalised on its own page, not added blank.
+  const personalise = needsPersonalization(product)
+  const quickLabel = personalise ? 'Personalise' : 'Add to bag'
   const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
+    if (personalise) { navigate(`/product/${product.slug}`); return }
     const color = defaultColor(product)
     add(product.id, 1, color)
     const shade = color && filaments.byId.get(color)
@@ -54,8 +60,8 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
           <button onClick={quickAdd}
             className="absolute bottom-4 right-4 hidden h-10 translate-y-3 items-center gap-2 rounded-full bg-ink pl-4 pr-3 text-[13px] font-medium text-paper opacity-0
               transition-[transform,opacity,background-color] duration-500 ease-[var(--ease-out-quint)] hover:bg-accent focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
-            aria-label={`Add ${product.name} to bag`}>
-            Add to bag <Icon name="plus" size={15} />
+            aria-label={personalise ? `Personalise ${product.name}` : `Add ${product.name} to bag`}>
+            {quickLabel} <Icon name={personalise ? 'arrowRight' : 'plus'} size={15} />
           </button>
         </div>
       </Link>
@@ -73,8 +79,8 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
         <Price price={product.price} compareAt={product.compare_at_price} className="shrink-0 flex-col items-end gap-0 pt-1 text-right font-display text-[1.2rem] leading-[1.05] text-ink [&_s]:text-[12px] [&_s]:font-sans [&_s]:normal-case" />
       </div>
       <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink/20 text-[13px] text-ink active:bg-ink active:text-paper sm:hidden"
-        aria-label={`Add ${product.name} to bag`}>
-        <Icon name="plus" size={15} /> Add to bag
+        aria-label={personalise ? `Personalise ${product.name}` : `Add ${product.name} to bag`}>
+        <Icon name={personalise ? 'arrowRight' : 'plus'} size={15} /> {quickLabel}
       </button>
     </article>
   )

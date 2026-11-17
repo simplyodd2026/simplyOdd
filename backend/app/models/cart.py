@@ -1,17 +1,49 @@
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
+from app.models.catalog import PersonalizationField
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
 ShippingMethod = Literal["standard", "express"]
 
 
+Personalization = dict[str, str]
+
+
+def personalization_key(values: Personalization | None) -> tuple[tuple[str, str], ...]:
+    """A hashable form of the values, so the same piece with different text stays on separate lines."""
+    return tuple(sorted((values or {}).items()))
+
+
 class CartLine(Schema):
     product_id: str = Field(min_length=1, max_length=100)
     quantity: int = Field(ge=1, le=99)
     color: str | None = Field(default=None, max_length=40)  # filament id; one line per product and colour
+    # What the shopper wants written on a personalised piece, by field key.
+    # One line per product, colour and personalisation.
+    personalization: Personalization | None = None
+
+    @field_validator("personalization")
+    @classmethod
+    def _tidy_personalization(cls, v: Personalization | None) -> Personalization | None:
+        if not v:
+            return None
+        if len(v) > 10:
+            raise ValueError("Too many personalisation fields")
+        tidy = {}
+        for key, value in v.items():
+            if len(key) > 24 or len(value) > 200:
+                raise ValueError("Personalisation is too long")
+            value = " ".join(value.split())  # trim and collapse whitespace, as the storefront does
+            if value:
+                tidy[key] = value
+        return tidy or None
+
+    @property
+    def key(self) -> tuple:
+        return self.product_id, self.color, personalization_key(self.personalization)
 
 
 MAX_LINES = 100
@@ -33,9 +65,21 @@ class QuoteRequest(Schema):
     country: str | None = Field(default=None, max_length=100)
 
 
+class PersonalizationValue(Schema):
+    """A filled-in field with its label, kept on quote lines and order items so
+    an order still reads correctly if the product's fields change later."""
+    key: str
+    label: str
+    value: str
+
+
 class QuoteLine(Schema):
     product_id: str
     color: str | None = None              # the filament id as requested, so the client can match its line
+    personalization: Personalization | None = None  # as requested, so the client can match its line
+    personalization_details: list[PersonalizationValue] = []  # the accepted values, labelled, in field order
+    personalization_fields: list[PersonalizationField] = []  # what the piece asks for, for editing from the bag
+    personalization_fee: float = 0
     filament: FilamentChoice | None = None  # the resolved choice, when it is valid for the product
     colors: list[str] = []                # what the product can be printed in, for changing the choice
     name: str

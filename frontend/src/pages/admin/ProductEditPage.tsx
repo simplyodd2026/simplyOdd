@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, qs } from '@/lib/api'
-import type { Page, Product, ProductImage, ProductInput } from '@/lib/types'
+import type { Page, PersonalizationField, Product, ProductImage, ProductInput } from '@/lib/types'
 import { useCategories } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
 import { toast, toastError } from '@/stores/toast'
@@ -20,8 +20,29 @@ const EMPTY: ProductInput = {
   name: '', slug: '', tagline: '', description: '', price: 0, compare_at_price: null, category_ids: [],
   tags: [], materials: [], dimensions: {}, weight_g: null, manufacturing: '', images: [],
   is_featured: false, is_bestseller: false, is_new_arrival: true, is_published: false, frequently_bought_with: [],
-  colors: [], default_color: null,
+  colors: [], default_color: null, personalization: [], personalization_fee: 0,
 }
+
+const MAX_FIELDS = 5
+// Starting points for common made-to-order pieces; every field stays editable.
+const PRESETS: { label: string; fields: Omit<PersonalizationField, 'key'>[] }[] = [
+  { label: 'Keychain name', fields: [{ label: 'Name', placeholder: 'e.g. Aanya', max_length: 12, required: true }] },
+  { label: 'Name plate', fields: [
+    { label: 'Name', placeholder: 'e.g. The Sharmas', max_length: 24, required: true },
+    { label: 'Second line', placeholder: 'e.g. House no. 12', max_length: 30, required: false },
+  ] },
+  { label: 'Initials', fields: [{ label: 'Initials', placeholder: 'e.g. AK', max_length: 3, required: true }] },
+]
+
+/** A key for a new field from its label, unique among the others. Kept when the label is later edited. */
+function fieldKey(label: string, taken: string[]) {
+  const base = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 20) || 'text'
+  let key = base
+  for (let n = 2; taken.includes(key); n++) key = `${base}_${n}`
+  return key
+}
+const withKeys = (fields: Omit<PersonalizationField, 'key'>[]) =>
+  fields.reduce<PersonalizationField[]>((all, f) => [...all, { ...f, key: fieldKey(f.label, all.map((x) => x.key)) }], [])
 
 const GROUPS = [['essential', 'Essentials'], ['extended', 'Extended'], ['special', 'Special finishes']] as const
 
@@ -31,6 +52,7 @@ const toInput = (p: Product): ProductInput => ({
   manufacturing: p.manufacturing, images: p.images, is_featured: p.is_featured, is_bestseller: p.is_bestseller,
   is_new_arrival: p.is_new_arrival, is_published: p.is_published, frequently_bought_with: p.frequently_bought_with,
   colors: p.colors, default_color: p.default_color,
+  personalization: p.personalization ?? [], personalization_fee: p.personalization_fee ?? 0,
 })
 
 const numOrNull = (v: string) => (v.trim() === '' || Number.isNaN(Number(v)) ? null : Number(v))
@@ -82,6 +104,7 @@ export default function ProductEditPage() {
     if (!form.name.trim()) e.name = 'Give the product a name'
     if (!(form.price > 0)) e.price = 'Set a price above zero'
     if (form.compare_at_price !== null && form.compare_at_price <= form.price) e.compare_at_price = 'Must be higher than the price, or leave empty'
+    form.personalization.forEach((f, i) => { if (!f.label.trim()) e[`field_${i}`] = 'Give the field a label' })
     setErrors(e)
     return !Object.keys(e).length
   }
@@ -144,6 +167,19 @@ export default function ProductEditPage() {
 
   const toggleColor = (id: string) => setColors(form.colors.includes(id) ? form.colors.filter((c) => c !== id)
     : filaments.list.map((f) => f.id).filter((c) => c === id || form.colors.includes(c)))
+
+  // Personalisation: the fields a customer fills in, like the name on a keychain.
+  const fields = form.personalization
+  const setFields = (next: PersonalizationField[]) => set('personalization', next)
+  const updateField = (i: number, patch: Partial<PersonalizationField>) => setFields(fields.map((f, j) => (j === i ? { ...f, ...patch } : f)))
+  const addField = () => setFields([...fields, { key: fieldKey('text', fields.map((f) => f.key)), label: '', placeholder: '', max_length: 20, required: true }])
+  const moveField = (i: number, to: number) => {
+    if (to < 0 || to >= fields.length) return
+    const next = [...fields]
+    const [m] = next.splice(i, 1)
+    next.splice(to, 0, m)
+    setFields(next)
+  }
 
   const remove = async () => {
     setBusy(true)
@@ -219,6 +255,55 @@ export default function ProductEditPage() {
                 hint={`${form.colors.length} of ${filaments.list.length} offered. Quick add from listings uses the default.`}>
                 {form.colors.map((c) => <option key={c} value={c}>{filaments.byId.get(c)?.name ?? c}</option>)}
               </Select>
+            )}
+          </section>
+
+          <section className={card}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className={h2}>Personalisation</h2>
+              {fields.length > 0 && <Button variant="ghost" size="sm" onClick={() => setFields([])}>Turn off</Button>}
+            </div>
+            <p className="text-sm text-fog">
+              For pieces made with the customer&rsquo;s own text, like a name on a keychain or a name plate. Customers fill these in on
+              the product page before adding it to their bag, and you see exactly what to print on the order.
+            </p>
+            {fields.length === 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {PRESETS.map((preset) => (
+                  <Button key={preset.label} variant="outline" size="sm" onClick={() => setFields(withKeys(preset.fields))}>{preset.label}</Button>
+                ))}
+                <Button variant="ghost" size="sm" onClick={addField}><Icon name="plus" size={15} /> Custom field</Button>
+              </div>
+            ) : (
+              <>
+                <ul className="flex flex-col gap-3">
+                  {fields.map((f, i) => (
+                    <li key={f.key} className="grid gap-3 rounded-md border border-rule p-4 sm:grid-cols-[1fr_1fr_7rem]">
+                      <Input label="Label" value={f.label} onChange={(e) => updateField(i, { label: e.target.value })} maxLength={40}
+                        placeholder="e.g. Name" error={errors[`field_${i}`]} />
+                      <Input label="Example text" value={f.placeholder} onChange={(e) => updateField(i, { placeholder: e.target.value })} maxLength={80}
+                        placeholder="e.g. Aanya" />
+                      <Input label="Max characters" inputMode="numeric" value={f.max_length || ''}
+                        onChange={(e) => updateField(i, { max_length: Math.min(200, Math.max(1, Number(e.target.value) || 1)) })} />
+                      <div className="flex items-center justify-between gap-3 sm:col-span-3">
+                        <Checkbox label="Required" checked={f.required} onChange={(e) => updateField(i, { required: e.target.checked })} />
+                        <div className="flex text-smoke">
+                          <button type="button" onClick={() => moveField(i, i - 1)} disabled={i === 0} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move up"><Icon name="chevronLeft" size={16} className="rotate-90" /></button>
+                          <button type="button" onClick={() => moveField(i, i + 1)} disabled={i === fields.length - 1} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move down"><Icon name="chevronRight" size={16} className="rotate-90" /></button>
+                          <button type="button" onClick={() => setFields(fields.filter((_, j) => j !== i))} className="p-1 hover:text-accent" aria-label={`Remove ${f.label || 'field'}`}><Icon name="trash" size={16} /></button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  <Button variant="outline" size="sm" disabled={fields.length >= MAX_FIELDS} onClick={addField}><Icon name="plus" size={15} /> Add field</Button>
+                  <Input label="Extra charge (₹)" inputMode="decimal" className="w-44" value={form.personalization_fee || ''}
+                    onChange={(e) => set('personalization_fee', Math.max(0, Number(e.target.value) || 0))}
+                    hint={form.personalization_fee ? 'Added when any field is filled in' : 'Leave empty for no charge'} />
+                </div>
+                {fields.every((f) => !f.required) && <p className="text-[13px] text-fog">All fields are optional, so customers can also buy it plain.</p>}
+              </>
             )}
           </section>
 

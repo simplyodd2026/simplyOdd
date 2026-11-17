@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import EmailStr, Field, model_validator
 
-from app.models.cart import MAX_LINES, CartLine, ShippingMethod
+from app.models.cart import MAX_LINES, CartLine, Personalization, PersonalizationValue, ShippingMethod
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
@@ -46,6 +46,8 @@ class OrderItem(Schema):
     product_id: str
     color: str | None = None
     filament: FilamentChoice | None = None  # snapshot of the colour and finish at the time of purchase
+    personalization: Personalization | None = None
+    personalization_details: list[PersonalizationValue] = []  # what to print on the piece, labelled
     name: str
     slug: str
     image: str | None

@@ -19,6 +19,19 @@ class Dimensions(Schema):
     depth_cm: float | None = None
 
 
+class PersonalizationField(Schema):
+    """One thing the shopper writes on a made-to-order piece, like the name on a
+    keychain or the text on a name plate."""
+    key: str = Field(pattern=r"^[a-z0-9_]{1,24}$")  # stable id; cart lines and orders store values under it
+    label: str = Field(min_length=1, max_length=40)
+    placeholder: str = Field(default="", max_length=80)
+    max_length: int = Field(default=20, ge=1, le=200)
+    required: bool = True
+
+
+MAX_PERSONALIZATION_FIELDS = 5
+
+
 class RatingSummary(Schema):
     average: float = 0
     count: int = 0
@@ -49,6 +62,17 @@ class ProductBase(Schema):
     # it comes as pictured and the storefront shows no colour choice.
     colors: list[str] = []
     default_color: str | None = None
+    # What the shopper writes on the piece. Empty means it isn't personalised.
+    personalization: list[PersonalizationField] = Field(default_factory=list, max_length=MAX_PERSONALIZATION_FIELDS)
+    # Added to the unit price when the shopper fills in any field.
+    personalization_fee: float = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def _unique_personalization_keys(self):
+        keys = [f.key for f in self.personalization]
+        if len(keys) != len(set(keys)):
+            raise ValueError("Each personalisation field needs its own key")
+        return self
 
     @model_validator(mode="before")
     @classmethod
@@ -88,6 +112,15 @@ class ProductUpdate(Schema):
     frequently_bought_with: list[str] | None = None
     colors: list[str] | None = None
     default_color: str | None = None
+    personalization: list[PersonalizationField] | None = Field(default=None, max_length=MAX_PERSONALIZATION_FIELDS)
+    personalization_fee: float | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def _unique_personalization_keys(self):
+        keys = [f.key for f in self.personalization or []]
+        if len(keys) != len(set(keys)):
+            raise ValueError("Each personalisation field needs its own key")
+        return self
 
 
 class Product(ProductBase):

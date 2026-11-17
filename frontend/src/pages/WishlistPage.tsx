@@ -12,6 +12,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/misc'
 import { ProductCardSkeleton } from '@/components/product/ProductCard'
 import { Price } from '@/components/product/Price'
+import { needsPersonalization } from '@/components/product/Personalization'
 
 export default function WishlistPage() {
   const ids = useWishlist((s) => s.ids)
@@ -43,11 +44,13 @@ export default function WishlistPage() {
                 <Link to={`/product/${p.slug}`} className="mt-4 text-[15px] font-medium text-ink"><span className="link-draw">{p.name}</span></Link>
                 <Price price={p.price} compareAt={p.compare_at_price} className="mt-1 tabular-nums text-[13px] text-fog" />
                 <div className="mt-4 flex flex-col gap-2">
-                  <Button size="sm" onClick={() => {
+                  {needsPersonalization(p) ? (
+                    <ButtonLink size="sm" to={`/product/${p.slug}`}>Personalise</ButtonLink>
+                  ) : <Button size="sm" onClick={() => {
                     add(p.id, 1, defaultColor(p))
                     void remove(p.id)
                     toast(`Moved ${p.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
-                  }}>Move to bag</Button>
+                  }}>Move to bag</Button>}
                   <button onClick={() => void remove(p.id)} className="link-draw self-center text-sm text-smoke hover:text-ink">Remove</button>
                 </div>
               </li>

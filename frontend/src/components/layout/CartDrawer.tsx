@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useConfig, useQuote } from '@/lib/queries'
-import { lineMax, useCart } from '@/stores/cart'
+import { lineKey, lineMax, useCart } from '@/stores/cart'
 import { useUi } from '@/stores/ui'
 import { money } from '@/lib/format'
 import { Drawer } from '@/components/ui/Overlay'
@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { Skeleton } from '@/components/ui/misc'
 import { LineColor } from '@/features/checkout/LineColor'
+import { LinePersonalization } from '@/features/checkout/LinePersonalization'
 import { responsive } from '@/lib/image'
 
 export function CartDrawer() {
@@ -49,7 +50,7 @@ export function CartDrawer() {
           <ButtonLink to="/shop" onClick={close} size="lg" className="self-start">Browse the shop</ButtonLink>
         </div>
       ) : isLoading || !quote ? (
-        <div className="flex flex-col gap-4 p-6">{items.map((i) => <Skeleton key={`${i.product_id}:${i.color ?? ''}`} className="h-28" />)}</div>
+        <div className="flex flex-col gap-4 p-6">{items.map((i) => <Skeleton key={lineKey(i)} className="h-28" />)}</div>
       ) : (
         <>
           {threshold > 0 && (
@@ -66,7 +67,7 @@ export function CartDrawer() {
           <ul>
             <AnimatePresence initial={false}>
               {quote.lines.map((line, i) => (
-                <motion.li key={`${line.product_id}:${line.color ?? ''}`} layout
+                <motion.li key={lineKey(line)} layout
                   initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.05 * i, duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
                   exit={{ opacity: 0, x: 40, transition: { duration: 0.35 } }}
                   className="flex gap-5 border-b border-rule px-6 py-5 sm:px-8">
@@ -80,10 +81,11 @@ export function CartDrawer() {
                     </div>
                     <span className="mt-1 tabular-nums text-[12px] text-fog">{money(line.unit_price)} each</span>
                     <LineColor line={line} />
+                    <LinePersonalization key={lineKey(line)} line={line} />
                     {line.issue && <p className="mt-1 text-sm text-accent">{line.issue}</p>}
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <QuantityStepper size="sm" value={line.quantity} max={lineMax(items, line.product_id, line.color)} onChange={(n) => setQuantity(line.product_id, line.color, n)} />
-                      <button onClick={() => remove(line.product_id, line.color)} className="link-draw text-[13px] text-fog hover:text-ink">Remove</button>
+                      <QuantityStepper size="sm" value={line.quantity} max={lineMax(items, line)} onChange={(n) => setQuantity(line, n)} />
+                      <button onClick={() => remove(line)} className="link-draw text-[13px] text-fog hover:text-ink">Remove</button>
                     </div>
                   </div>
                 </motion.li>

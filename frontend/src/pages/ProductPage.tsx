@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
+import type { Personalization } from '@/lib/types'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useProduct, useConfig } from '@/lib/queries'
@@ -11,6 +12,7 @@ import { Container } from '@/components/layout/Container'
 import { Viewer } from '@/components/product/Gallery'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { ColorSwatches, Swatch } from '@/components/product/ColorSwatches'
+import { PersonalizationForm, personalizationErrors } from '@/components/product/Personalization'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { Button } from '@/components/ui/Button'
 import { Accordion } from '@/components/ui/Accordion'
@@ -52,6 +54,9 @@ export default function ProductPage() {
   const [shot, setShot] = useState(0)
   const [viewer, setViewer] = useState<number | null>(null)
   const [color, setColor] = useState<string | null>(null)
+  const [personal, setPersonal] = useState<Personalization>({})
+  const [triedToAdd, setTriedToAdd] = useState(false)
+  const personalBox = useRef<HTMLDivElement>(null)
   // Each photo's own width/height, learned as it loads, so the frame fits the photo instead of cropping it.
   const [ratios, setRatios] = useState<Record<string, number>>({})
   const measure = (e: SyntheticEvent<HTMLImageElement>) => {
@@ -60,7 +65,7 @@ export default function ProductPage() {
   }
   const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
-  useEffect(() => { setQty(1); setShot(0); setColor(null) }, [slug])
+  useEffect(() => { setQty(1); setShot(0); setColor(null); setPersonal({}); setTriedToAdd(false) }, [slug])
 
   // On small screens, a slim purchase bar docks to the bottom once the main buttons scroll away.
   useEffect(() => {
@@ -109,8 +114,19 @@ export default function ProductPage() {
   // The order limit covers every colour of the piece, so count what's already in the bag.
   const room = MAX_PER_PRODUCT - bag.reduce((n, i) => (i.product_id === p.id ? n + i.quantity : n), 0)
   const count = Math.max(1, Math.min(qty, room))
-  const addToBag = () => { add(p.id, count, chosen?.id ?? null); setCart(true) }
-  const buyNow = () => { add(p.id, count, chosen?.id ?? null); navigate('/checkout') }
+  // Personalisation: what the shopper writes on the piece. The fee applies once anything is filled in.
+  const personalErrors = personalizationErrors(p.personalization, personal)
+  const personalised = p.personalization.some((f) => (personal[f.key] ?? '').trim())
+  const unitPrice = p.price + (personalised ? p.personalization_fee : 0)
+  const ready = () => {
+    if (!Object.keys(personalErrors).length) return true
+    setTriedToAdd(true)
+    personalBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    personalBox.current?.querySelector<HTMLInputElement>('input[aria-invalid]')?.focus({ preventScroll: true })
+    return false
+  }
+  const addToBag = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal); setCart(true) }
+  const buyNow = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal); navigate('/checkout') }
 
   const details: [string, string][] = [
     ['Material', p.materials.join(', ') || 'Plant-based PLA'],
@@ -188,6 +204,13 @@ export default function ProductPage() {
                 <ColorSwatches className="mt-7" options={options} value={chosen?.id ?? null} onChange={chooseColor} note={colorNote} />
               )}
 
+              {p.personalization.length > 0 && (
+                <div ref={personalBox} className="mt-7">
+                  <PersonalizationForm fields={p.personalization} fee={p.personalization_fee} values={personal}
+                    onChange={setPersonal} errors={triedToAdd ? personalErrors : undefined} />
+                </div>
+              )}
+
               <div ref={buyBox} className="mt-7">
                 <div className="flex items-center gap-3">
                   <QuantityStepper value={count} onChange={setQty} max={Math.max(1, room)} />
@@ -195,7 +218,7 @@ export default function ProductPage() {
                   <WishlistButton productId={p.id} name={p.name} size={18}
                     className="grid size-14 shrink-0 place-items-center rounded-full border border-ink/15 text-ink hover:border-ink" />
                 </div>
-                <Button size="lg" variant="outline" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(p.price * count)}</Button>
+                <Button size="lg" variant="outline" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(unitPrice * count)}</Button>
                 {room < MAX_PER_PRODUCT && (
                   <p className="mt-3 text-[13px] text-smoke">
                     {room > 0 ? `You can add ${room} more. Orders are limited to ${MAX_PER_PRODUCT} of each piece.` : `Your bag already has the most you can order: ${MAX_PER_PRODUCT} of this piece.`}
@@ -293,7 +316,7 @@ export default function ProductPage() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-display text-[16px] text-ink">{p.name}</p>
               <p className="flex items-center gap-2 text-[13px] tabular-nums text-fog">
-                {money(p.price)}
+                {money(unitPrice)}
                 {chosen && <><Swatch filament={chosen} className="size-2.5" /><span className="truncate">{chosen.name}</span></>}
               </p>
             </div>

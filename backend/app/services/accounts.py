@@ -98,23 +98,22 @@ class AccountService:
         return Cart.model_validate(doc) if doc else Cart()
 
     async def put_cart(self, uid: str, items: list[CartLine]) -> Cart:
-        merged: dict[tuple[str, str | None], int] = {}
+        merged: dict[tuple, CartLine] = {}
         for line in items:
-            key = (line.product_id, line.color)
-            merged[key] = min(99, merged.get(key, 0) + line.quantity)
-        cart = Cart(items=[CartLine(product_id=pid, color=color, quantity=q) for (pid, color), q in merged.items()])
+            seen = merged.get(line.key)
+            merged[line.key] = line.model_copy(update={"quantity": min(99, (seen.quantity if seen else 0) + line.quantity)})
+        cart = Cart(items=list(merged.values()))
         await self.store.set(CARTS, uid, {**cart.model_dump(), "updated_at": now()})
         return cart
 
     async def merge_cart(self, uid: str, guest_items: list[CartLine]) -> Cart:
         """Guest bag + saved bag. Takes the larger quantity for duplicates so a
-        re-login doesn't double quantities. Different colours are different lines."""
-        current = {(line.product_id, line.color): line.quantity for line in (await self.get_cart(uid)).items}
+        re-login doesn't double quantities. Different colours and personalisations are different lines."""
+        current = {line.key: line for line in (await self.get_cart(uid)).items}
         for line in guest_items:
-            key = (line.product_id, line.color)
-            current[key] = max(current.get(key, 0), line.quantity)
-        return await self.put_cart(uid, [CartLine(product_id=pid, color=color, quantity=q)
-                                         for (pid, color), q in current.items()])
+            seen = current.get(line.key)
+            current[line.key] = line.model_copy(update={"quantity": max(seen.quantity if seen else 0, line.quantity)})
+        return await self.put_cart(uid, list(current.values()))
 
     # -------------------------------------------------------------- wishlist
     async def get_wishlist(self, uid: str) -> list[str]:
