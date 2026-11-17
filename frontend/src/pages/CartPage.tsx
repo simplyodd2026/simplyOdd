@@ -13,6 +13,7 @@ import { Totals } from '@/features/checkout/OrderSummary'
 import { CouponField } from '@/features/checkout/CouponField'
 import { ProductRail } from '@/features/home/ProductRail'
 import { LineColor } from '@/features/checkout/LineColor'
+import { LineVariant } from '@/features/checkout/LineVariant'
 import { LinePersonalization } from '@/features/checkout/LinePersonalization'
 import { responsive } from '@/lib/image'
 
@@ -54,6 +55,7 @@ export default function CartPage() {
                     <span className="mt-2 tabular-nums text-[12px] text-fog">
                       {money(l.unit_price)}{l.compare_at_price && l.compare_at_price > l.unit_price && <s className="ml-2 text-fog">{money(l.compare_at_price)}</s>}
                     </span>
+                    <LineVariant line={l} />
                     <LineColor line={l} />
                     <LinePersonalization key={lineKey(l)} line={l} />
                     {l.issue && <p className="mt-2 text-sm text-accent">{l.issue}</p>}

@@ -31,34 +31,41 @@ class PricingService:
     async def quote(self, req: QuoteRequest, paid: bool = False) -> tuple[Quote, Coupon | None]:
         """`paid`: re-pricing a bag the shopper has already paid for (see CouponService.problem)."""
         products = await self.catalog.get_products(list(dict.fromkeys(line.product_id for line in req.items)))
-        # One line per product, colour and personalisation. A colour or personalisation sent for a piece
-        # that doesn't offer one is dropped, so it can't split or fail an otherwise valid line.
-        merged: dict[tuple, tuple[str, str | None, Personalization | None, int]] = {}
+        # One line per product, variant, colour and personalisation. A variant, colour or personalisation sent
+        # for a piece that doesn't offer one is dropped, so it can't split or fail an otherwise valid line.
+        merged: dict[tuple, tuple[str, str | None, str | None, Personalization | None, int]] = {}
         for line in req.items:
             p = products.get(line.product_id)
+            variant = line.variant if p is None or p.variants else None
             color = line.color if p is None or p.colors else None
             values = line.personalization if p is None or p.personalization else None
-            key = (line.product_id, color, personalization_key(values))
-            qty = merged[key][3] if key in merged else 0
-            merged[key] = (line.product_id, color, values, qty + line.quantity)
-        # The order limit covers every colour and personalisation of a product together.
+            key = (line.product_id, variant, color, personalization_key(values))
+            qty = merged[key][4] if key in merged else 0
+            merged[key] = (line.product_id, variant, color, values, qty + line.quantity)
+        # The order limit covers every version, colour and personalisation of a product together.
         per_product: dict[str, int] = {}
-        for pid, _, _, qty in merged.values():
+        for pid, _, _, _, qty in merged.values():
             per_product[pid] = per_product.get(pid, 0) + qty
 
         lines: list[QuoteLine] = []
-        for pid, color, values, qty in merged.values():
+        for pid, variant, color, values, qty in merged.values():
             p = products.get(pid)
             if p is None or not p.is_published:
-                lines.append(QuoteLine(product_id=pid, color=color, personalization=values, name="Unavailable item",
+                lines.append(QuoteLine(product_id=pid, variant=variant, color=color, personalization=values, name="Unavailable item",
                                        slug="", image=None, unit_price=0, compare_at_price=None, quantity=qty,
                                        line_total=0, available=False, issue="This item is no longer available"))
                 continue
             offered = [c for c in p.colors if c in FILAMENTS_BY_ID]
             filament = FILAMENTS_BY_ID.get(color) if color in offered else None
             details, personalization_issue = _personalize(p, values)
+            version = next((v for v in p.variants if v.key == variant), None)
+            choice = (p.variant_label or "option").lower()
             issue = None
-            if offered and color is None:
+            if p.variants and variant is None:
+                issue = f"Choose a {choice}"
+            elif variant is not None and version is None:
+                issue = f"This {choice} isn't available any more. Choose another"
+            elif offered and color is None:
                 issue = "Choose a colour"
             elif color is not None and filament is None:
                 issue = "This colour isn't available for this piece. Choose another"
@@ -66,16 +73,18 @@ class PricingService:
                 issue = personalization_issue
             elif per_product[pid] > MAX_PER_PRODUCT:
                 issue = f"You can order up to {MAX_PER_PRODUCT} of this piece"
-            image = next((i.url for i in p.images if color and i.color == color), None) \
-                or (p.images[0].url if p.images else None)
+            image = _line_image(p, variant if version else None, color)
             fee = p.personalization_fee if details else 0
-            unit_price = money(p.price + fee)
+            base, base_compare = (version.price, version.compare_at_price) if version else (p.price, p.compare_at_price)
+            unit_price = money(base + fee)
             lines.append(QuoteLine(
                 product_id=pid, color=color, filament=FilamentChoice.of(filament) if filament else None,
+                variant=variant, variant_label=version.label if version else None,
+                variant_name=p.variant_label, variants=p.variants,
                 personalization=values, personalization_details=details,
                 personalization_fields=p.personalization, personalization_fee=p.personalization_fee,
                 colors=offered, name=p.name, slug=p.slug, image=image,
-                unit_price=unit_price, compare_at_price=money(p.compare_at_price + fee) if p.compare_at_price else None,
+                unit_price=unit_price, compare_at_price=money(base_compare + fee) if base_compare else None,
                 quantity=qty, line_total=money(unit_price * qty), available=issue is None, issue=issue,
             ))
 
@@ -106,6 +115,14 @@ class PricingService:
 
     async def quote_lines(self, items: list[CartLine], paid: bool = False, **kw) -> tuple[Quote, Coupon | None]:
         return await self.quote(QuoteRequest(items=items, **kw), paid)
+
+
+def _line_image(p: Product, variant: str | None, color: str | None) -> str | None:
+    """The photo that best shows what this line buys: its version in its colour, then its version, then its
+    colour, then the first photo. Photos of another version never stand in for this one."""
+    fits = [i for i in p.images if i.variant in (None, variant)] or p.images
+    ranked = sorted(fits, key=lambda i: (not (variant and i.variant == variant), not (color and i.color == color)))
+    return ranked[0].url if ranked else None
 
 
 def _personalize(p: Product, values: Personalization | None) -> tuple[list[PersonalizationValue], str | None]:

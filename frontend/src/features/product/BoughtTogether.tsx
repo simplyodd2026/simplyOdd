@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Product } from '@/lib/types'
 import { useCart } from '@/stores/cart'
 import { defaultColor } from '@/lib/filaments'
+import { defaultVariant } from '@/lib/variants'
 import { toast } from '@/stores/toast'
 import { money } from '@/lib/format'
 import { Button } from '@/components/ui/Button'
@@ -45,7 +46,7 @@ export function BoughtTogether({ product, others }: { product: Product; others: 
           <p className="label text-fog">Total for {all.length === 1 ? 'this piece' : `all ${all.length}`}</p>
           <p className="font-display text-5xl tabular-nums text-ink">{money(total)}</p>
           <Button size="lg" onClick={() => {
-            all.forEach((p) => add(p.id, 1, defaultColor(p)))
+            all.forEach((p) => add(p.id, 1, defaultColor(p), null, defaultVariant(p)))
             toast(`Added ${all.length} ${all.length === 1 ? 'piece' : 'pieces'} to your bag`, { action: { label: 'View bag', href: '/cart' } })
           }}>
             Add {all.length === 1 ? 'to bag' : `all ${all.length} to bag`}

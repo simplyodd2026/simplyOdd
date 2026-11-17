@@ -15,7 +15,7 @@ from typing import Literal
 from app.core.errors import BadRequest, Conflict, NotFound
 from app.core.utils import new_id, now, slugify
 from app.models.catalog import (
-    Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, SortKey,
+    Category, CategoryCreate, CategoryUpdate, Product, ProductCreate, ProductImage, ProductUpdate, ProductVariant, SortKey,
 )
 from app.models.common import Page
 from app.models.filament import FILAMENTS_BY_ID
@@ -142,6 +142,8 @@ class CatalogService:
     async def create_product(self, data: ProductCreate) -> Product:
         data.category_ids = list(dict.fromkeys(data.category_ids))
         data.colors, data.default_color, data.images = _check_colors(data.colors, data.default_color, data.images)
+        data.variants, data.default_variant, data.price, data.compare_at_price, data.images = _check_variants(
+            data.variants, data.default_variant, data.price, data.compare_at_price, data.images)
         ts = now()
         pid = new_id("p_")
         product = Product(
@@ -174,6 +176,17 @@ class CatalogService:
                 data.default_color if "default_color" in patch else current.default_color,
                 current.images if data.images is None else data.images)
             patch.update(colors=colors, default_color=default, images=[i.model_dump() for i in images])
+        if patch.get("variant_label") is None:
+            patch.pop("variant_label", None)
+        if {"variants", "default_variant", "images", "price", "compare_at_price"} & patch.keys():
+            variants, default, price, compare_at, images = _check_variants(
+                current.variants if data.variants is None else data.variants,
+                data.default_variant if "default_variant" in patch else current.default_variant,
+                current.price if data.price is None else data.price,
+                data.compare_at_price if "compare_at_price" in patch else current.compare_at_price,
+                [ProductImage.model_validate(i) for i in patch["images"]] if patch.get("images") is not None else current.images)
+            patch.update(variants=[v.model_dump() for v in variants], default_variant=default, price=price,
+                         compare_at_price=compare_at, images=[i.model_dump() for i in images])
         patch["updated_at"] = now()
         doc = await self.store.update(PRODUCTS, pid, patch)
         self.invalidate()
@@ -274,6 +287,20 @@ def _check_colors(colors: list[str], default: str | None, images: list[ProductIm
         default = colors[0] if colors else None
     images = [i if i.color is None or i.color in colors else i.model_copy(update={"color": None}) for i in images]
     return colors, default, images
+
+
+def _check_variants(variants: list[ProductVariant], default: str | None, price: float, compare_at: float | None,
+                    images: list[ProductImage]):
+    """The default variant falls back to the first, the headline price mirrors it so listings, sorting and
+    quick add agree, and photos stop claiming a variant that's no longer offered."""
+    keys = [v.key for v in variants]
+    if default not in keys:
+        default = keys[0] if keys else None
+    if variants:
+        chosen = next(v for v in variants if v.key == default)
+        price, compare_at = chosen.price, chosen.compare_at_price
+    images = [i if i.variant is None or i.variant in keys else i.model_copy(update={"variant": None}) for i in images]
+    return variants, default, price, compare_at, images
 
 
 def _score(p: Product, q: str, category_name: str) -> float:

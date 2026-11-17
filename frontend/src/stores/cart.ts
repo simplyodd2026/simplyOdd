@@ -20,11 +20,13 @@ interface CartState {
    * `color` is a filament id; `personalization` is what to write on the piece. The same product in two
    * colours, or with two different names on it, is two lines.
    */
-  add: (productId: string, quantity?: number, color?: string | null, personalization?: Personalization | null) => void
+  add: (productId: string, quantity?: number, color?: string | null, personalization?: Personalization | null, variant?: string | null) => void
   setQuantity: (line: LineRef, quantity: number) => void
   remove: (line: LineRef) => void
   /** Move a line to another colour, folding it into that colour's line if there already is one. */
   setColor: (line: LineRef, to: string) => void
+  /** Move a line to another variant (say, framed), folding it into that variant's line if there already is one. */
+  setVariant: (line: LineRef, to: string) => void
   /** Change what's written on a line, folding it into an identical line if there already is one. */
   setPersonalization: (line: LineRef, to: Personalization) => void
   clear: () => void
@@ -35,7 +37,7 @@ interface CartState {
 }
 
 /** What identifies a bag line: a bag line itself or the quote line priced from it. */
-export type LineRef = Pick<CartLine, 'product_id' | 'color' | 'personalization'>
+export type LineRef = Pick<CartLine, 'product_id' | 'variant' | 'color' | 'personalization'>
 
 /** Trim and collapse whitespace and drop empty values, as the server does, so lines match up. */
 export function tidyPersonalization(values: Personalization | null | undefined): Personalization | null {
@@ -47,10 +49,10 @@ export function tidyPersonalization(values: Personalization | null | undefined):
   return Object.keys(out).length ? out : null
 }
 
-/** A stable key for a line: product, colour (null when none) and personalisation. */
+/** A stable key for a line: product, variant and colour (empty when none) and personalisation. */
 export const lineKey = (l: LineRef) => {
   const p = tidyPersonalization(l.personalization)
-  return `${l.product_id}:${l.color ?? ''}:${p ? JSON.stringify(Object.entries(p).sort(([a], [b]) => a.localeCompare(b))) : ''}`
+  return `${l.product_id}:${l.variant ?? ''}:${l.color ?? ''}:${p ? JSON.stringify(Object.entries(p).sort(([a], [b]) => a.localeCompare(b))) : ''}`
 }
 const same = (a: LineRef, b: LineRef) => lineKey(a) === lineKey(b)
 
@@ -79,9 +81,9 @@ export const useCart = create<CartState>()(
         couponCode: null,
         couponAmount: null,
         shippingMethod: 'standard',
-        add: (productId, quantity = 1, color = null, personalization = null) => {
+        add: (productId, quantity = 1, color = null, personalization = null, variant = null) => {
           const items = get().items
-          const line: CartLine = { product_id: productId, quantity, color, personalization: tidyPersonalization(personalization) }
+          const line: CartLine = { product_id: productId, quantity, variant, color, personalization: tidyPersonalization(personalization) }
           const max = lineMax(items, line)
           if (max <= 0) return
           commit(items.some((i) => same(i, line))
@@ -102,6 +104,16 @@ export const useCart = create<CartState>()(
           commit(target
             ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(MAX_PER_PRODUCT, i.quantity + moving.quantity) } : i))
             : items.map((i) => (i === moving ? { ...i, color: to } : i)))
+        },
+        setVariant: (line, to) => {
+          if ((line.variant ?? null) === to) return
+          const items = get().items
+          const moving = items.find((i) => same(i, line))
+          if (!moving) return
+          const target = items.find((i) => same(i, { ...line, variant: to }))
+          commit(target
+            ? items.filter((i) => i !== moving).map((i) => (i === target ? { ...i, quantity: Math.min(MAX_PER_PRODUCT, i.quantity + moving.quantity) } : i))
+            : items.map((i) => (i === moving ? { ...i, variant: to } : i)))
         },
         setPersonalization: (line, to) => {
           const items = get().items

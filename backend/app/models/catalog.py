@@ -11,6 +11,7 @@ class ProductImage(Schema):
     path: str | None = None  # Storage object path, used for deletion
     alt: str = ""
     color: str | None = None  # filament id this photo shows, if it shows a specific colour
+    variant: str | None = None  # variant key this photo shows, like the framed version of a print
 
 
 class Dimensions(Schema):
@@ -30,6 +31,24 @@ class PersonalizationField(Schema):
 
 
 MAX_PERSONALIZATION_FIELDS = 5
+
+
+class ProductVariant(Schema):
+    """One version of a piece the shopper picks between, each at its own price,
+    like a print "Without frame" or "With frame"."""
+    key: str = Field(pattern=r"^[a-z0-9_]{1,24}$")  # stable id; cart lines, orders and photos refer to it
+    label: str = Field(min_length=1, max_length=40)
+    price: float = Field(gt=0)
+    compare_at_price: float | None = Field(default=None, ge=0)
+
+
+MAX_VARIANTS = 6
+
+
+def _check_variant_keys(variants: list[ProductVariant] | None) -> None:
+    keys = [v.key for v in variants or []]
+    if len(keys) != len(set(keys)):
+        raise ValueError("Each variant needs its own key")
 
 
 class RatingSummary(Schema):
@@ -66,12 +85,18 @@ class ProductBase(Schema):
     personalization: list[PersonalizationField] = Field(default_factory=list, max_length=MAX_PERSONALIZATION_FIELDS)
     # Added to the unit price when the shopper fills in any field.
     personalization_fee: float = Field(default=0, ge=0)
+    # Versions at their own price, like with or without a frame. Empty means one version at `price`.
+    # When set, `price` and `compare_at_price` mirror the default variant, so listings show what quick add buys.
+    variant_label: str = Field(default="", max_length=30)  # what the choice is called, like "Frame"
+    variants: list[ProductVariant] = Field(default_factory=list, max_length=MAX_VARIANTS)
+    default_variant: str | None = None
 
     @model_validator(mode="after")
     def _unique_personalization_keys(self):
         keys = [f.key for f in self.personalization]
         if len(keys) != len(set(keys)):
             raise ValueError("Each personalisation field needs its own key")
+        _check_variant_keys(self.variants)
         return self
 
     @model_validator(mode="before")
@@ -114,12 +139,16 @@ class ProductUpdate(Schema):
     default_color: str | None = None
     personalization: list[PersonalizationField] | None = Field(default=None, max_length=MAX_PERSONALIZATION_FIELDS)
     personalization_fee: float | None = Field(default=None, ge=0)
+    variant_label: str | None = Field(default=None, max_length=30)
+    variants: list[ProductVariant] | None = Field(default=None, max_length=MAX_VARIANTS)
+    default_variant: str | None = None
 
     @model_validator(mode="after")
     def _unique_personalization_keys(self):
         keys = [f.key for f in self.personalization or []]
         if len(keys) != len(set(keys)):
             raise ValueError("Each personalisation field needs its own key")
+        _check_variant_keys(self.variants)
         return self
 
 

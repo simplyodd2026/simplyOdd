@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '@/components/ui/Button'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { Skeleton } from '@/components/ui/misc'
 import { LineColor } from '@/features/checkout/LineColor'
+import { LineVariant } from '@/features/checkout/LineVariant'
 import { LinePersonalization } from '@/features/checkout/LinePersonalization'
 import { responsive } from '@/lib/image'
 
@@ -80,6 +81,7 @@ export function CartDrawer() {
                       <span className="tabular-nums text-[13px] text-ink">{money(line.line_total)}</span>
                     </div>
                     <span className="mt-1 tabular-nums text-[12px] text-fog">{money(line.unit_price)} each</span>
+                    <LineVariant line={line} />
                     <LineColor line={line} />
                     <LinePersonalization key={lineKey(line)} line={line} />
                     {line.issue && <p className="mt-1 text-sm text-accent">{line.issue}</p>}

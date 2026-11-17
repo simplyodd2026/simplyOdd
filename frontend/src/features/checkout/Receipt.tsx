@@ -5,6 +5,7 @@ import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { ColorTag } from '@/components/product/ColorSwatches'
 import { PersonalizationTag } from '@/components/product/Personalization'
+import { VariantTag } from '@/components/product/VariantPicker'
 import { responsive } from '@/lib/image'
 
 const TEETH = 46
@@ -59,6 +60,7 @@ export function ReceiptLines({ quote }: { quote: Quote }) {
             <dl className="min-w-0 flex-1">
               <Leader label={<><span className="text-fog">{l.quantity} ×</span> <span className="font-display text-[1.15rem] text-ink">{l.name}</span></>}
                 value={money(l.line_total)} />
+              <VariantTag label={l.variant_label} name={l.variant_name} className="mt-1 text-[12.5px] text-fog" />
               {l.filament && <ColorTag filament={l.filament} className="mt-1 text-[12.5px] text-fog" />}
               <PersonalizationTag details={l.personalization_details} className="mt-1 text-[12.5px] text-fog" />
               {l.quantity > 1 && <p className="mt-0.5 text-[12.5px] text-fog">{money(l.unit_price)} each</p>}

@@ -46,6 +46,8 @@ class OrderItem(Schema):
     product_id: str
     color: str | None = None
     filament: FilamentChoice | None = None  # snapshot of the colour and finish at the time of purchase
+    variant: str | None = None
+    variant_label: str | None = None  # snapshot of the version bought, like "With frame"
     personalization: Personalization | None = None
     personalization_details: list[PersonalizationValue] = []  # what to print on the piece, labelled
     name: str

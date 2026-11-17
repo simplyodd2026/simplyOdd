@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '@/stores/cart'
+import { defaultVariant } from '@/lib/variants'
 import { defaultColor, useFilaments } from '@/lib/filaments'
 import { toast } from '@/stores/toast'
 import { money } from '@/lib/format'
@@ -31,7 +32,7 @@ export function Spotlight() {
   const addToBag = () => {
     if (personalise) { navigate(`/product/${p.slug}`); return }
     const color = defaultColor(p)
-    add(p.id, 1, color)
+    add(p.id, 1, color, null, defaultVariant(p))
     const shade = color && filaments.byId.get(color)
     toast(`${p.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import type { Product } from '@/lib/types'
 import { useCart } from '@/stores/cart'
+import { defaultVariant } from '@/lib/variants'
 import { defaultColor, useFilaments } from '@/lib/filaments'
 import { toast } from '@/stores/toast'
 import { cn } from '@/lib/cn'
@@ -29,7 +30,7 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
     e.preventDefault()
     if (personalise) { navigate(`/product/${product.slug}`); return }
     const color = defaultColor(product)
-    add(product.id, 1, color)
+    add(product.id, 1, color, null, defaultVariant(product))
     const shade = color && filaments.byId.get(color)
     toast(`${product.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }

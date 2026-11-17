@@ -3,6 +3,7 @@ import { useProductsByIds } from '@/lib/queries'
 import { useWishlist } from '@/stores/wishlist'
 import { useCart } from '@/stores/cart'
 import { defaultColor } from '@/lib/filaments'
+import { defaultVariant } from '@/lib/variants'
 import { useSession } from '@/stores/session'
 import { toast } from '@/stores/toast'
 import { useDocumentTitle } from '@/lib/hooks'
@@ -47,7 +48,7 @@ export default function WishlistPage() {
                   {needsPersonalization(p) ? (
                     <ButtonLink size="sm" to={`/product/${p.slug}`}>Personalise</ButtonLink>
                   ) : <Button size="sm" onClick={() => {
-                    add(p.id, 1, defaultColor(p))
+                    add(p.id, 1, defaultColor(p), null, defaultVariant(p))
                     void remove(p.id)
                     toast(`Moved ${p.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
                   }}>Move to bag</Button>}

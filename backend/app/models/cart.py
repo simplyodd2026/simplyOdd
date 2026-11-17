@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from app.models.catalog import PersonalizationField
+from app.models.catalog import PersonalizationField, ProductVariant
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
@@ -21,6 +21,7 @@ class CartLine(Schema):
     product_id: str = Field(min_length=1, max_length=100)
     quantity: int = Field(ge=1, le=99)
     color: str | None = Field(default=None, max_length=40)  # filament id; one line per product and colour
+    variant: str | None = Field(default=None, max_length=24)  # variant key, like "framed"; one line per variant
     # What the shopper wants written on a personalised piece, by field key.
     # One line per product, colour and personalisation.
     personalization: Personalization | None = None
@@ -43,7 +44,7 @@ class CartLine(Schema):
 
     @property
     def key(self) -> tuple:
-        return self.product_id, self.color, personalization_key(self.personalization)
+        return self.product_id, self.variant, self.color, personalization_key(self.personalization)
 
 
 MAX_LINES = 100
@@ -76,6 +77,10 @@ class PersonalizationValue(Schema):
 class QuoteLine(Schema):
     product_id: str
     color: str | None = None              # the filament id as requested, so the client can match its line
+    variant: str | None = None            # the variant key as requested, so the client can match its line
+    variant_label: str | None = None      # the chosen variant's name, like "With frame", when it is valid
+    variant_name: str = ""                # what the choice is called, like "Frame"
+    variants: list[ProductVariant] = []   # what the product comes in, for changing the choice from the bag
     personalization: Personalization | None = None  # as requested, so the client can match its line
     personalization_details: list[PersonalizationValue] = []  # the accepted values, labelled, in field order
     personalization_fields: list[PersonalizationField] = []  # what the piece asks for, for editing from the bag

@@ -13,6 +13,8 @@ import { Viewer } from '@/components/product/Gallery'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { ColorSwatches, Swatch } from '@/components/product/ColorSwatches'
 import { PersonalizationForm, personalizationErrors } from '@/components/product/Personalization'
+import { VariantPicker } from '@/components/product/VariantPicker'
+import { chosenVariant, variantPhotos } from '@/lib/variants'
 import { WishlistButton } from '@/components/product/WishlistButton'
 import { Button } from '@/components/ui/Button'
 import { Accordion } from '@/components/ui/Accordion'
@@ -54,6 +56,7 @@ export default function ProductPage() {
   const [shot, setShot] = useState(0)
   const [viewer, setViewer] = useState<number | null>(null)
   const [color, setColor] = useState<string | null>(null)
+  const [variant, setVariant] = useState<string | null>(null)
   const [personal, setPersonal] = useState<Personalization>({})
   const [triedToAdd, setTriedToAdd] = useState(false)
   const personalBox = useRef<HTMLDivElement>(null)
@@ -65,7 +68,7 @@ export default function ProductPage() {
   }
   const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
-  useEffect(() => { setQty(1); setShot(0); setColor(null); setPersonal({}); setTriedToAdd(false) }, [slug])
+  useEffect(() => { setQty(1); setShot(0); setColor(null); setVariant(null); setPersonal({}); setTriedToAdd(false) }, [slug])
 
   // On small screens, a slim purchase bar docks to the bottom once the main buttons scroll away.
   useEffect(() => {
@@ -87,7 +90,14 @@ export default function ProductPage() {
   }
 
   const { product: p, category, related, frequently_bought } = data
-  const discounted = !!p.compare_at_price && p.compare_at_price > p.price
+  // Variants: versions at their own price, like with or without a frame. Until the shopper picks, the default stands,
+  // and the price and photos follow whichever is chosen.
+  const version = chosenVariant(p, variant)
+  const price = version?.price ?? p.price
+  const compareAt = version ? version.compare_at_price ?? null : p.compare_at_price
+  const discounted = !!compareAt && compareAt > price
+  const discountPercent = discounted ? Math.round((1 - price / compareAt!) * 100) : 0
+  const photos = variantPhotos(p.images, version?.key ?? null)
   const dims = [p.dimensions.width_cm, p.dimensions.height_cm, p.dimensions.depth_cm]
   const paragraphs = (p.description || '').split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean)
   const [lede, ...story] = paragraphs
@@ -98,15 +108,16 @@ export default function ProductPage() {
   // The photographs: the chosen colour's own photos first, then the general ones (tagged with no colour).
   // Photos of other colours are left out. A colour without photos of its own shows the general set,
   // or everything if there is no general set, and says so plainly below the swatches.
-  const ownPhotos = chosen ? p.images.filter((img) => img.color === chosen.id) : []
-  const generalPhotos = p.images.filter((img) => !img.color)
-  const gallery = ownPhotos.length ? [...ownPhotos, ...generalPhotos] : generalPhotos.length ? generalPhotos : p.images
+  const ownPhotos = chosen ? photos.filter((img) => img.color === chosen.id) : []
+  const generalPhotos = photos.filter((img) => !img.color)
+  const gallery = ownPhotos.length ? [...ownPhotos, ...generalPhotos] : generalPhotos.length ? generalPhotos : photos
   const hero = gallery[shot] ?? gallery[0]
   // The frame follows the photo's shape, held between 2:3 and 3:2 so extreme shots don't wreck the layout.
   // Until the photo has loaded, the classic 4:5 stands. Width is capped so the whole frame fits on screen.
   const ratio = Math.min(1.5, Math.max(2 / 3, (hero && ratios[hero.url]) || 0.8))
   const frameWidth = { maxWidth: `calc((100svh - 10rem) * ${ratio})` }
   const chooseColor = (id: string) => { setColor(id); setShot(0) }
+  const chooseVariant = (key: string) => { setVariant(key); setShot(0) }
   const pictured = hero?.color ? filaments.byId.get(hero.color) : undefined
   const colorNote = chosen && hero && !ownPhotos.length
     ? `${pictured ? `Pictured in ${pictured.name}` : 'Pictured in our studio sample'}. Yours is printed in ${filamentLabel(chosen)}.`
@@ -117,7 +128,7 @@ export default function ProductPage() {
   // Personalisation: what the shopper writes on the piece. The fee applies once anything is filled in.
   const personalErrors = personalizationErrors(p.personalization, personal)
   const personalised = p.personalization.some((f) => (personal[f.key] ?? '').trim())
-  const unitPrice = p.price + (personalised ? p.personalization_fee : 0)
+  const unitPrice = price + (personalised ? p.personalization_fee : 0)
   const ready = () => {
     if (!Object.keys(personalErrors).length) return true
     setTriedToAdd(true)
@@ -125,8 +136,8 @@ export default function ProductPage() {
     personalBox.current?.querySelector<HTMLInputElement>('input[aria-invalid]')?.focus({ preventScroll: true })
     return false
   }
-  const addToBag = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal); setCart(true) }
-  const buyNow = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal); navigate('/checkout') }
+  const addToBag = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); setCart(true) }
+  const buyNow = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); navigate('/checkout') }
 
   const details: [string, string][] = [
     ['Material', p.materials.join(', ') || 'Plant-based PLA'],
@@ -195,10 +206,14 @@ export default function ProductPage() {
               )}
 
               <div className="mt-8 flex flex-wrap items-baseline gap-x-4 gap-y-2 border-t border-rule pt-7">
-                <span className={cn('font-display text-[clamp(2.6rem,3.6vw,3.4rem)] leading-none tabular-nums text-ink', discounted && 'text-accent')}>{money(p.price)}</span>
-                {discounted && <s className="text-[15px] text-fog" aria-label={`was ${money(p.compare_at_price!)}`}>{money(p.compare_at_price!)}</s>}
-                {p.discount_percent > 0 && <span className="rounded-full bg-hot px-2.5 py-1 text-[12px] font-medium text-paper">−{p.discount_percent}%</span>}
+                <span className={cn('font-display text-[clamp(2.6rem,3.6vw,3.4rem)] leading-none tabular-nums text-ink', discounted && 'text-accent')}>{money(price)}</span>
+                {discounted && <s className="text-[15px] text-fog" aria-label={`was ${money(compareAt!)}`}>{money(compareAt!)}</s>}
+                {discountPercent > 0 && <span className="rounded-full bg-hot px-2.5 py-1 text-[12px] font-medium text-paper">−{discountPercent}%</span>}
               </div>
+
+              {p.variants.length > 0 && (
+                <VariantPicker className="mt-7" variants={p.variants} value={version?.key ?? null} onChange={chooseVariant} label={p.variant_label} />
+              )}
 
               {options.length > 0 && (
                 <ColorSwatches className="mt-7" options={options} value={chosen?.id ?? null} onChange={chooseColor} note={colorNote} />
@@ -317,6 +332,7 @@ export default function ProductPage() {
               <p className="truncate font-display text-[16px] text-ink">{p.name}</p>
               <p className="flex items-center gap-2 text-[13px] tabular-nums text-fog">
                 {money(unitPrice)}
+                {version && <span className="truncate">{version.label}</span>}
                 {chosen && <><Swatch filament={chosen} className="size-2.5" /><span className="truncate">{chosen.name}</span></>}
               </p>
             </div>

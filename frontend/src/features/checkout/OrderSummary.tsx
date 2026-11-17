@@ -3,6 +3,7 @@ import { money } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { ColorTag } from '@/components/product/ColorSwatches'
 import { PersonalizationTag } from '@/components/product/Personalization'
+import { VariantTag } from '@/components/product/VariantPicker'
 import { lineKey } from '@/stores/cart'
 import { responsive } from '@/lib/image'
 
@@ -30,6 +31,7 @@ export function OrderSummary({ quote }: { quote: Quote }) {
             </div>
             <span className="flex flex-1 flex-col gap-1">
               <span className="font-medium leading-tight">{l.name}</span>
+              <VariantTag label={l.variant_label} name={l.variant_name} className="text-[13px] text-smoke" />
               {l.filament && <ColorTag filament={l.filament} className="text-[13px] text-smoke" />}
               <PersonalizationTag details={l.personalization_details} className="text-[13px] text-smoke" />
             </span>

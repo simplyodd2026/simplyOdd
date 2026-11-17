@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, qs } from '@/lib/api'
-import type { Page, PersonalizationField, Product, ProductImage, ProductInput } from '@/lib/types'
+import type { Page, PersonalizationField, Product, ProductImage, ProductInput, ProductVariant } from '@/lib/types'
 import { useCategories } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
 import { toast, toastError } from '@/stores/toast'
@@ -21,6 +21,7 @@ const EMPTY: ProductInput = {
   tags: [], materials: [], dimensions: {}, weight_g: null, manufacturing: '', images: [],
   is_featured: false, is_bestseller: false, is_new_arrival: true, is_published: false, frequently_bought_with: [],
   colors: [], default_color: null, personalization: [], personalization_fee: 0,
+  variant_label: '', variants: [], default_variant: null,
 }
 
 const MAX_FIELDS = 5
@@ -44,6 +45,13 @@ function fieldKey(label: string, taken: string[]) {
 const withKeys = (fields: Omit<PersonalizationField, 'key'>[]) =>
   fields.reduce<PersonalizationField[]>((all, f) => [...all, { ...f, key: fieldKey(f.label, all.map((x) => x.key)) }], [])
 
+const MAX_VARIANTS = 6
+// Starting points for pieces sold in versions; labels and prices stay editable.
+const VARIANT_PRESETS: { label: string; name: string; variants: string[] }[] = [
+  { label: 'Frame', name: 'Frame', variants: ['Without frame', 'With frame'] },
+  { label: 'Size', name: 'Size', variants: ['Small', 'Large'] },
+]
+
 const GROUPS = [['essential', 'Essentials'], ['extended', 'Extended'], ['special', 'Special finishes']] as const
 
 const toInput = (p: Product): ProductInput => ({
@@ -53,6 +61,7 @@ const toInput = (p: Product): ProductInput => ({
   is_new_arrival: p.is_new_arrival, is_published: p.is_published, frequently_bought_with: p.frequently_bought_with,
   colors: p.colors, default_color: p.default_color,
   personalization: p.personalization ?? [], personalization_fee: p.personalization_fee ?? 0,
+  variant_label: p.variant_label ?? '', variants: p.variants ?? [], default_variant: p.default_variant ?? null,
 })
 
 const numOrNull = (v: string) => (v.trim() === '' || Number.isNaN(Number(v)) ? null : Number(v))
@@ -105,6 +114,11 @@ export default function ProductEditPage() {
     if (!(form.price > 0)) e.price = 'Set a price above zero'
     if (form.compare_at_price !== null && form.compare_at_price <= form.price) e.compare_at_price = 'Must be higher than the price, or leave empty'
     form.personalization.forEach((f, i) => { if (!f.label.trim()) e[`field_${i}`] = 'Give the field a label' })
+    form.variants.forEach((v, i) => {
+      if (!v.label.trim()) e[`variant_${i}`] = 'Give it a name'
+      if (!(v.price > 0)) e[`variant_price_${i}`] = 'Set a price'
+      else if (v.compare_at_price != null && v.compare_at_price <= v.price) e[`variant_compare_${i}`] = 'Higher than the price, or empty'
+    })
     setErrors(e)
     return !Object.keys(e).length
   }
@@ -179,6 +193,33 @@ export default function ProductEditPage() {
     const [m] = next.splice(i, 1)
     next.splice(to, 0, m)
     setFields(next)
+  }
+
+  // Variants: versions at their own price, like with or without a frame. The headline price mirrors the default.
+  const variants = form.variants
+  const setVariants = (next: ProductVariant[], preferred = form.default_variant) => setForm((f) => {
+    const keys = next.map((v) => v.key)
+    const def = preferred && keys.includes(preferred) ? preferred : keys[0] ?? null
+    const chosen = next.find((v) => v.key === def)
+    return {
+      ...f, variants: next, default_variant: def,
+      ...(chosen ? { price: chosen.price, compare_at_price: chosen.compare_at_price ?? null } : {}),
+      images: f.images.map((img) => (img.variant && !keys.includes(img.variant) ? { ...img, variant: null } : img)),
+    }
+  })
+  const updateVariant = (i: number, patch: Partial<ProductVariant>) => setVariants(variants.map((v, j) => (j === i ? { ...v, ...patch } : v)))
+  const addVariant = () => setVariants([...variants, { key: fieldKey('option', variants.map((v) => v.key)), label: '', price: form.price || 0, compare_at_price: null }])
+  const usePreset = (preset: typeof VARIANT_PRESETS[number]) => {
+    set('variant_label', preset.name)
+    setVariants(preset.variants.reduce<ProductVariant[]>((all, label) =>
+      [...all, { key: fieldKey(label, all.map((v) => v.key)), label, price: form.price || 0, compare_at_price: null }], []))
+  }
+  const moveVariant = (i: number, to: number) => {
+    if (to < 0 || to >= variants.length) return
+    const next = [...variants]
+    const [m] = next.splice(i, 1)
+    next.splice(to, 0, m)
+    setVariants(next)
   }
 
   const remove = async () => {
@@ -309,6 +350,54 @@ export default function ProductEditPage() {
 
           <section className={card}>
             <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className={h2}>Variants</h2>
+              {variants.length > 0 && <Button variant="ghost" size="sm" onClick={() => { set('variant_label', ''); setVariants([]) }}>Turn off</Button>}
+            </div>
+            <p className="text-sm text-fog">
+              For pieces sold in versions at different prices, like a print with or without a frame. Customers pick one on the
+              product page and the price and photos change with it. Tag each version&rsquo;s photos under Images below.
+            </p>
+            {variants.length === 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {VARIANT_PRESETS.map((preset) => (
+                  <Button key={preset.label} variant="outline" size="sm" onClick={() => usePreset(preset)}>{preset.label}</Button>
+                ))}
+                <Button variant="ghost" size="sm" onClick={() => { set('variant_label', form.variant_label || 'Option'); addVariant() }}><Icon name="plus" size={15} /> Custom</Button>
+              </div>
+            ) : (
+              <>
+                <Input label="What the choice is called" className="max-w-xs" value={form.variant_label} maxLength={30}
+                  onChange={(e) => set('variant_label', e.target.value)} placeholder="e.g. Frame" />
+                <ul className="flex flex-col gap-3">
+                  {variants.map((v, i) => (
+                    <li key={v.key} className="grid gap-3 rounded-md border border-rule p-4 sm:grid-cols-[1fr_8rem_9rem]">
+                      <Input label="Name" value={v.label} onChange={(e) => updateVariant(i, { label: e.target.value })} maxLength={40}
+                        placeholder="e.g. With frame" error={errors[`variant_${i}`]} />
+                      <Input label="Price (₹)" inputMode="decimal" value={v.price || ''} error={errors[`variant_price_${i}`]}
+                        onChange={(e) => updateVariant(i, { price: Number(e.target.value) || 0 })} />
+                      <Input label="Compare-at (₹)" inputMode="decimal" value={v.compare_at_price ?? ''} error={errors[`variant_compare_${i}`]}
+                        onChange={(e) => updateVariant(i, { compare_at_price: numOrNull(e.target.value) })} />
+                      <div className="flex items-center justify-between gap-3 sm:col-span-3">
+                        <label className="flex items-center gap-2 text-sm text-smoke">
+                          <input type="radio" name="default_variant" checked={form.default_variant === v.key} onChange={() => setVariants(variants, v.key)} />
+                          Selected by default
+                        </label>
+                        <div className="flex text-smoke">
+                          <button type="button" onClick={() => moveVariant(i, i - 1)} disabled={i === 0} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move up"><Icon name="chevronLeft" size={16} className="rotate-90" /></button>
+                          <button type="button" onClick={() => moveVariant(i, i + 1)} disabled={i === variants.length - 1} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move down"><Icon name="chevronRight" size={16} className="rotate-90" /></button>
+                          <button type="button" onClick={() => setVariants(variants.filter((_, j) => j !== i))} className="p-1 hover:text-accent" aria-label={`Remove ${v.label || 'variant'}`}><Icon name="trash" size={16} /></button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <Button variant="outline" size="sm" className="self-start" disabled={variants.length >= MAX_VARIANTS} onClick={addVariant}><Icon name="plus" size={15} /> Add variant</Button>
+              </>
+            )}
+          </section>
+
+          <section className={card}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Images</h2>
               <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.length) void upload(e.target.files); e.target.value = '' }} />
               <Button variant="outline" size="sm" disabled={isNew} loading={uploading} onClick={() => fileRef.current?.click()}>
@@ -365,6 +454,13 @@ export default function ProductEditPage() {
                           {form.colors.map((c) => <option key={c} value={c}>{filaments.byId.get(c)?.name ?? c} only</option>)}
                         </select>
                       )}
+                      {variants.length > 0 && (
+                        <select value={img.variant ?? ''} onChange={(e) => updateImage(i, { variant: e.target.value || null })}
+                          aria-label={`${form.variant_label || 'Variant'} of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-accent">
+                          <option value="">Every {(form.variant_label || 'variant').toLowerCase()}</option>
+                          {variants.map((v) => <option key={v.key} value={v.key}>{v.label || 'Unnamed'} only</option>)}
+                        </select>
+                      )}
                       <div className="flex items-center justify-between text-smoke">
                         <div className="flex">
                           <button onClick={() => moveImage(i, form.images.indexOf(shown[k - 1]))} disabled={k === 0} className="p-1 hover:text-ink disabled:opacity-30" aria-label="Move earlier"><Icon name="chevronLeft" size={16} /></button>
@@ -404,9 +500,15 @@ export default function ProductEditPage() {
 
           <section className={card}>
             <h2 className={h2}>Price</h2>
+            {variants.length > 0 ? (
+              <p className="text-sm text-fog">
+                Set per variant. Listings show the default, {variants.find((v) => v.key === form.default_variant)?.label || 'the first'}, at {form.price ? `₹${form.price}` : 'its price'}.
+              </p>
+            ) : <>
             <Input label="Price (₹)" inputMode="decimal" value={form.price || ''} onChange={(e) => set('price', Number(e.target.value) || 0)} error={errors.price} />
             <Input label="Compare-at price (₹)" inputMode="decimal" value={form.compare_at_price ?? ''} onChange={(e) => set('compare_at_price', numOrNull(e.target.value))}
               error={errors.compare_at_price} hint={form.compare_at_price && form.compare_at_price > form.price ? `Shows as ${Math.round((1 - form.price / form.compare_at_price) * 100)}% off` : 'Set higher than the price to show a discount'} />
+            </>}
           </section>
 
           <section className={card}>

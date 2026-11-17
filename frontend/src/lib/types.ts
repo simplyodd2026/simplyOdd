@@ -1,5 +1,8 @@
-/** `color` tags a photo as showing a particular filament, so choosing that colour can show it. */
-export interface ProductImage { url: string; path?: string | null; alt: string; color?: string | null }
+/**
+ * `color` tags a photo as showing a particular filament, so choosing that colour can show it; `variant` tags it
+ * as showing one version of the piece (say, the framed one), so choosing that version shows it.
+ */
+export interface ProductImage { url: string; path?: string | null; alt: string; color?: string | null; variant?: string | null }
 
 export type FilamentGroup = 'essential' | 'extended' | 'special'
 /** solid is a flat colour; the others are looks a flat swatch can't show, drawn as textures over `hex`. */
@@ -13,6 +16,8 @@ export interface PersonalizationField { key: string; label: string; placeholder:
 export type Personalization = Record<string, string>
 /** A filled-in field with its label, as recorded on a quote line or order item. */
 export interface PersonalizationValue { key: string; label: string; value: string }
+/** One version of a piece at its own price, like a print "Without frame" or "With frame". */
+export interface ProductVariant { key: string; label: string; price: number; compare_at_price?: number | null }
 export interface Dimensions { width_cm?: number | null; height_cm?: number | null; depth_cm?: number | null }
 export interface RatingSummary { average: number; count: number; distribution: Record<string, number> }
 
@@ -44,6 +49,11 @@ export interface Product {
   personalization: PersonalizationField[]
   /** Added to the price when any field is filled in. */
   personalization_fee: number
+  /** What the choice between variants is called, like "Frame". */
+  variant_label: string
+  /** Versions at their own price; empty means one version at `price`. When set, `price` mirrors the default. */
+  variants: ProductVariant[]
+  default_variant: string | null
   rating: RatingSummary
   sales_count: number
   discount_percent: number
@@ -74,8 +84,8 @@ export interface ProductDetail {
   frequently_bought: Product[]
 }
 
-/** One line per product, colour and personalisation. */
-export interface CartLine { product_id: string; quantity: number; color?: string | null; personalization?: Personalization | null }
+/** One line per product, variant, colour and personalisation. */
+export interface CartLine { product_id: string; quantity: number; variant?: string | null; color?: string | null; personalization?: Personalization | null }
 export interface Cart { items: CartLine[] }
 export type ShippingMethod = 'standard' | 'express'
 
@@ -84,6 +94,14 @@ export interface QuoteLine {
   /** The filament id as sent, so the line can be matched back to the bag. */
   color: string | null
   filament: FilamentChoice | null
+  /** The variant key as sent, so the line can be matched back to the bag. */
+  variant: string | null
+  /** The chosen variant's name, like "With frame", when it's valid. */
+  variant_label: string | null
+  /** What the choice is called, like "Frame". */
+  variant_name: string
+  /** What the piece comes in, for changing the choice from the bag. */
+  variants: ProductVariant[]
   /** As sent, so the line can be matched back to the bag. */
   personalization: Personalization | null
   personalization_details: PersonalizationValue[]
@@ -174,6 +192,8 @@ export interface OrderItem {
   product_id: string
   color?: string | null
   filament?: FilamentChoice | null
+  variant?: string | null
+  variant_label?: string | null
   personalization?: Personalization | null
   personalization_details?: PersonalizationValue[]
   name: string
