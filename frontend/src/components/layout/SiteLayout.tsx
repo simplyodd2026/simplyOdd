@@ -26,7 +26,7 @@ function AnnouncementBar({ threshold }: { threshold: number }) {
     return () => clearInterval(t)
   }, [notes.length])
   return (
-    <div className="relative z-40 h-9 overflow-hidden bg-night text-paper" aria-label="Announcements">
+    <div className="on-dark relative z-40 h-9 overflow-hidden bg-night text-paper" aria-label="Announcements">
       <p className="sr-only">{notes.join('. ')}</p>
       <AnimatePresence mode="wait" initial={false}>
         <motion.p key={i} aria-hidden="true" className="label absolute inset-0 grid place-items-center text-paper/80"

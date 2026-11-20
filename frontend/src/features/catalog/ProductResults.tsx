@@ -47,11 +47,11 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
           <button onClick={() => setFiltersOpen(true)}
             className="flex h-10 items-center gap-2 rounded-full border border-ink/15 px-4 text-[14px] text-ink transition-colors hover:border-ink">
             <Icon name="filter" size={16} /> <span className="hidden sm:inline">Filter</span>
-            {params.activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-hot tabular-nums text-[10px] text-paper">{params.activeCount}</span>}
+            {params.activeCount > 0 && <span className="grid size-5 place-items-center rounded-full bg-tertiary tabular-nums text-[10px] text-paper">{params.activeCount}</span>}
           </button>
           <label className="sr-only" htmlFor="sort">Sort by</label>
           <select id="sort" value={params.sort} onChange={(e) => params.update({ sort: e.target.value })}
-            className="hidden h-10 appearance-none rounded-full border border-ink/15 bg-transparent pl-4 pr-9 text-[14px] text-ink outline-none transition-colors hover:border-ink focus:border-ink sm:block"
+            className="hidden h-10 appearance-none rounded-full border border-ink/15 bg-transparent pl-4 pr-9 text-[14px] text-ink outline-none transition-colors hover:border-ink focus:border-tertiary sm:block"
             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232B201B' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }}>
             {sorts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -88,7 +88,7 @@ export function ProductResults({ params, data, isLoading, isFetching, empty, sho
             <div className="flex flex-wrap gap-2">
               {sorts.map((o) => (
                 <button key={o.value} onClick={() => params.update({ sort: o.value })}
-                  className={cn('rounded-full border px-4 py-2 text-[14px]', params.sort === o.value ? 'border-ink bg-ink text-paper' : 'border-ink/15 text-ink')}>{o.label}</button>
+                  className={cn('rounded-full border px-4 py-2 text-[14px]', params.sort === o.value ? 'border-ink bg-ink text-paper' : 'border-ink/15 text-ink hover:border-ink')}>{o.label}</button>
               ))}
             </div>
           </div>

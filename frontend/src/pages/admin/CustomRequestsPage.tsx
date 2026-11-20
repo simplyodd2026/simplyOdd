@@ -48,14 +48,14 @@ export default function CustomRequestsPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-semibold text-ink">{r.name}</p>
-                <a href={`mailto:${r.email}?subject=${encodeURIComponent('Your Simply Odd custom idea')}`} className="text-sm text-accent underline-offset-4 hover:underline">{r.email}</a>
+                <a href={`mailto:${r.email}?subject=${encodeURIComponent('Your Simply Odd custom idea')}`} className="text-sm text-tertiary underline-offset-4 hover:underline">{r.email}</a>
               </div>
               <StatusPill status={PILL[r.status]} label={STATUS_LABEL[r.status]} />
             </div>
             {r.product_name && (
               <p className="text-sm text-smoke">
                 Customise{' '}
-                {r.product_slug ? <Link to={`/product/${r.product_slug}`} target="_blank" className="text-accent underline-offset-4 hover:underline">{r.product_name}</Link>
+                {r.product_slug ? <Link to={`/product/${r.product_slug}`} target="_blank" className="text-tertiary underline-offset-4 hover:underline">{r.product_name}</Link>
                   : <span className="text-ink">{r.product_name}</span>}
                 {r.changes?.length ? <>: {r.changes.map((c) => CHANGE_LABELS[c] ?? c).join(', ')}</> : null}
               </p>
@@ -67,14 +67,14 @@ export default function CustomRequestsPage() {
               ))}
             </dl>
             {r.reference_url && /^https?:\/\//i.test(r.reference_url) && (
-              <a href={r.reference_url} target="_blank" rel="noreferrer noopener" className="truncate text-sm text-accent underline underline-offset-4">{r.reference_url}</a>
+              <a href={r.reference_url} target="_blank" rel="noreferrer noopener" className="truncate text-sm text-tertiary underline underline-offset-4">{r.reference_url}</a>
             )}
             <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-3 text-sm">
               <span className="text-fog">{dateTime(r.created_at)}</span>
               <div className="flex items-center gap-3">
                 <label className="sr-only" htmlFor={`status-${r.id}`}>Status</label>
                 <select id={`status-${r.id}`} value={r.status} onChange={(e) => setStatus(r.id, e.target.value as Status)}
-                  className="h-9 rounded-lg border border-rule bg-paper px-2 text-sm outline-none focus:border-accent">
+                  className="h-9 rounded-lg border border-rule bg-paper px-2 text-sm outline-none focus:border-tertiary">
                   {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                 </select>
                 <button onClick={() => remove(r.id)} className="text-smoke underline underline-offset-4 hover:text-accent">Delete</button>

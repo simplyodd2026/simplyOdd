@@ -98,7 +98,7 @@ export default function HomepagePage() {
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-paper/95 px-4 py-3 backdrop-blur lg:left-60">
           <div className="flex items-center justify-end gap-3">
             <span className="text-sm text-smoke">You have unsaved changes</span>
-            <Button variant="ghost" size="sm" onClick={() => setDraft(saved.data ?? EMPTY)}>Discard</Button>
+            <Button variant="secondary" size="sm" onClick={() => setDraft(saved.data ?? EMPTY)}>Discard</Button>
             <Button size="sm" loading={busy} onClick={save}>Save changes</Button>
           </div>
         </div>
@@ -116,13 +116,13 @@ function Section({ title, note, auto, onReset, children }: {
         <div>
           <h2 className="flex items-center gap-3 font-display text-2xl text-ink">
             {title}
-            <span className={cn('rounded-full px-2.5 py-0.5 font-sans text-[12px] font-medium', auto ? 'bg-ink/5 text-smoke' : 'bg-accent text-paper')}>
+            <span className={cn('rounded-full px-2.5 py-0.5 font-sans text-[12px] font-medium', auto ? 'bg-ink/5 text-smoke' : 'bg-tertiary text-paper')}>
               {auto ? 'Automatic' : 'Custom'}
             </span>
           </h2>
           <p className="mt-1 text-sm text-smoke">{note}</p>
         </div>
-        {!auto && <Button variant="ghost" size="sm" onClick={onReset}>Use automatic</Button>}
+        {!auto && <Button variant="tertiary" size="sm" onClick={onReset}>Use automatic</Button>}
       </div>
       {children}
     </section>
@@ -213,7 +213,7 @@ function SlotList({ slots, max, products, onChange }: {
       })}
       {slots.length < max && (
         <div>
-          <Button variant="outline" size="sm" disabled={!products.length}
+          <Button variant="secondary" size="sm" disabled={!products.length}
             onClick={() => onChange([...slots, { product_id: (unused ?? products[0]).id, image: null }])}>
             <Icon name="plus" size={16} /> Add a product
           </Button>
@@ -248,12 +248,12 @@ function PhotoPicker({ label, value, photos, onChange, defaultLabel }: {
       <p className="label mb-2 text-smoke">{label}</p>
       <div className="flex gap-2 overflow-x-auto pb-1">
         <button type="button" onClick={() => onChange(null)} aria-pressed={!value}
-          className={cn(tile, 'grid place-items-center bg-paper-2 px-1.5 text-center text-[11px] leading-tight text-smoke', !value ? 'border-ink' : 'border-transparent hover:border-rule')}>
+          className={cn(tile, 'grid place-items-center bg-paper-2 px-1.5 text-center text-[11px] leading-tight text-smoke', !value ? 'border-tertiary' : 'border-transparent hover:border-rule')}>
           {defaultLabel}
         </button>
         {options.map((url) => (
           <button key={url} type="button" onClick={() => onChange(url)} aria-pressed={value === url} aria-label="Use this photo"
-            className={cn(tile, 'bg-ash', value === url ? 'border-ink' : 'border-transparent hover:border-rule')}>
+            className={cn(tile, 'bg-ash', value === url ? 'border-tertiary' : 'border-transparent hover:border-rule')}>
             <img src={url} alt="" loading="lazy" className="size-full object-cover" />
             {value === url && <span className="absolute right-1 top-1 grid size-5 place-items-center rounded-full bg-ink text-paper"><Icon name="check" size={12} /></span>}
           </button>

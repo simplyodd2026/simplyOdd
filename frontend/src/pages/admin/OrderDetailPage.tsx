@@ -83,8 +83,8 @@ export default function AdminOrderDetailPage() {
                 )}
                 <Input label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Visible in the order history" />
                 <div className="flex flex-wrap gap-2">
-                  {NEXT[order.status].map((s) => (
-                    <Button key={s} loading={busy} disabled={s === 'confirmed' && order.payment.status === 'pending'} onClick={() => move(s)}>
+                  {NEXT[order.status].map((s, i) => (
+                    <Button key={s} variant={i === 0 ? 'primary' : 'secondary'} loading={busy} disabled={s === 'confirmed' && order.payment.status === 'pending'} onClick={() => move(s)}>
                       Mark as {ORDER_STATUS_LABEL[s].toLowerCase()}
                     </Button>
                   ))}
@@ -96,14 +96,14 @@ export default function AdminOrderDetailPage() {
             {(canCancel || canRefund) && (
               <div className="flex flex-wrap gap-2 border-t border-rule pt-4">
                 {canCancel && <Button variant="danger" size="sm" onClick={() => setDialog('cancel')}>Cancel order</Button>}
-                {canRefund && <Button variant="outline" size="sm" onClick={() => setDialog('refund')}>Process refund</Button>}
+                {canRefund && <Button variant="secondary" size="sm" onClick={() => setDialog('refund')}>Process refund</Button>}
               </div>
             )}
           </section>
 
           <section className="border border-rule p-5 sm:p-6">
             <h2 className="mb-4 text-lg font-semibold">Customer</h2>
-            <p>{customer ? <Link to={`/admin/customers/${customer.user_id}`} className="hover:text-accent">{customer.name || customer.email}</Link> : a.full_name}</p>
+            <p>{customer ? <Link to={`/admin/customers/${customer.user_id}`} className="hover:text-tertiary">{customer.name || customer.email}</Link> : a.full_name}</p>
             <p className="text-sm text-smoke">{order.email}<br />{a.phone}</p>
             <h3 className="mb-2 mt-5 text-sm text-fog">Ship to</h3>
             <p className="leading-relaxed">{a.full_name}<br />{a.line1}{a.line2 && `, ${a.line2}`}<br />{a.city}, {a.state} {a.postal_code}<br />{a.country}</p>
@@ -133,7 +133,7 @@ export default function AdminOrderDetailPage() {
         <Input className="mt-4" label="Reason (shown in history)" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/cancel`, { body: { status: 'cancelled', note: note || null } }), 'Order cancelled')}>Cancel order</Button>
-          <Button variant="ghost" onClick={() => setDialog(null)}>Keep order</Button>
+          <Button variant="secondary" onClick={() => setDialog(null)}>Keep order</Button>
         </div>
       </Modal>
       <Modal open={dialog === 'refund'} onClose={() => setDialog(null)} title={`Refund ${money(order.payment.amount)}?`}>
@@ -147,7 +147,7 @@ export default function AdminOrderDetailPage() {
             Refund now
           </Button>
           {order.payment.status !== 'refund_pending' && (
-            <Button variant="outline" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/refund`, { body: { status: 'refund_pending', note: note || null } }), 'Marked as refund pending')}>Mark refund pending</Button>
+            <Button variant="secondary" loading={busy} onClick={() => act(() => api<Order>(`/admin/orders/${id}/refund`, { body: { status: 'refund_pending', note: note || null } }), 'Marked as refund pending')}>Mark refund pending</Button>
           )}
         </div>
       </Modal>

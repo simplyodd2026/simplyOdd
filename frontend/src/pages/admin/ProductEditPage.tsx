@@ -246,7 +246,7 @@ export default function ProductEditPage() {
       <AdminHeader title={isNew ? 'New product' : form.name || 'Untitled'}
         sub={product && `${product.sales_count} ${product.sales_count === 1 ? 'piece' : 'pieces'} sold`}
         actions={<>
-          {!isNew && product?.is_published && <Button variant="ghost" onClick={() => window.open(`/product/${product.slug}`, '_blank')}><Icon name="external" size={16} /> View in store</Button>}
+          {!isNew && product?.is_published && <Button variant="tertiary" onClick={() => window.open(`/product/${product.slug}`, '_blank')}><Icon name="external" size={16} /> View in store</Button>}
           <Button loading={busy} onClick={save}>{isNew ? 'Create product' : 'Save changes'}</Button>
         </>} />
 
@@ -264,9 +264,9 @@ export default function ProductEditPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Colours</h2>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => setColors([...groupIds('essential'), ...special(form.colors)])}>Essentials</Button>
-                <Button variant="outline" size="sm" onClick={() => setColors([...groupIds('essential', 'extended'), ...special(form.colors)])}>Essentials + extended</Button>
-                <Button variant="ghost" size="sm" disabled={!form.colors.length} onClick={() => setColors([])}>Clear</Button>
+                <Button variant="secondary" size="sm" onClick={() => setColors([...groupIds('essential'), ...special(form.colors)])}>Essentials</Button>
+                <Button variant="secondary" size="sm" onClick={() => setColors([...groupIds('essential', 'extended'), ...special(form.colors)])}>Essentials + extended</Button>
+                <Button variant="tertiary" size="sm" disabled={!form.colors.length} onClick={() => setColors([])}>Clear</Button>
               </div>
             </div>
             <p className="text-sm text-fog">
@@ -282,7 +282,7 @@ export default function ProductEditPage() {
                     return (
                       <button key={f.id} type="button" aria-pressed={on} onClick={() => toggleColor(f.id)}
                         className={cn('flex h-9 items-center gap-2 rounded-full border pl-1.5 pr-3 text-[13px] transition-colors',
-                          on ? 'border-ink bg-ink/[0.04] text-ink' : 'border-rule text-smoke hover:border-ink/40')}>
+                          on ? 'border-tertiary bg-tertiary/[0.06] text-ink' : 'border-rule text-smoke hover:border-ink/40')}>
                         <Swatch filament={f} className="size-6" />
                         {f.name}
                       </button>
@@ -302,7 +302,7 @@ export default function ProductEditPage() {
           <section className={card}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Personalisation</h2>
-              {fields.length > 0 && <Button variant="ghost" size="sm" onClick={() => setFields([])}>Turn off</Button>}
+              {fields.length > 0 && <Button variant="tertiary" size="sm" onClick={() => setFields([])}>Turn off</Button>}
             </div>
             <p className="text-sm text-fog">
               For pieces made with the customer&rsquo;s own text, like a name on a keychain or a name plate. Customers fill these in on
@@ -311,9 +311,9 @@ export default function ProductEditPage() {
             {fields.length === 0 ? (
               <div className="flex flex-wrap gap-2">
                 {PRESETS.map((preset) => (
-                  <Button key={preset.label} variant="outline" size="sm" onClick={() => setFields(withKeys(preset.fields))}>{preset.label}</Button>
+                  <Button key={preset.label} variant="secondary" size="sm" onClick={() => setFields(withKeys(preset.fields))}>{preset.label}</Button>
                 ))}
-                <Button variant="ghost" size="sm" onClick={addField}><Icon name="plus" size={15} /> Custom field</Button>
+                <Button variant="tertiary" size="sm" onClick={addField}><Icon name="plus" size={15} /> Custom field</Button>
               </div>
             ) : (
               <>
@@ -338,7 +338,7 @@ export default function ProductEditPage() {
                   ))}
                 </ul>
                 <div className="flex flex-wrap items-end justify-between gap-4">
-                  <Button variant="outline" size="sm" disabled={fields.length >= MAX_FIELDS} onClick={addField}><Icon name="plus" size={15} /> Add field</Button>
+                  <Button variant="secondary" size="sm" disabled={fields.length >= MAX_FIELDS} onClick={addField}><Icon name="plus" size={15} /> Add field</Button>
                   <Input label="Extra charge (₹)" inputMode="decimal" className="w-44" value={form.personalization_fee || ''}
                     onChange={(e) => set('personalization_fee', Math.max(0, Number(e.target.value) || 0))}
                     hint={form.personalization_fee ? 'Added when any field is filled in' : 'Leave empty for no charge'} />
@@ -351,7 +351,7 @@ export default function ProductEditPage() {
           <section className={card}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Variants</h2>
-              {variants.length > 0 && <Button variant="ghost" size="sm" onClick={() => { set('variant_label', ''); setVariants([]) }}>Turn off</Button>}
+              {variants.length > 0 && <Button variant="tertiary" size="sm" onClick={() => { set('variant_label', ''); setVariants([]) }}>Turn off</Button>}
             </div>
             <p className="text-sm text-fog">
               For pieces sold in versions at different prices, like a print with or without a frame. Customers pick one on the
@@ -360,9 +360,9 @@ export default function ProductEditPage() {
             {variants.length === 0 ? (
               <div className="flex flex-wrap gap-2">
                 {VARIANT_PRESETS.map((preset) => (
-                  <Button key={preset.label} variant="outline" size="sm" onClick={() => usePreset(preset)}>{preset.label}</Button>
+                  <Button key={preset.label} variant="secondary" size="sm" onClick={() => usePreset(preset)}>{preset.label}</Button>
                 ))}
-                <Button variant="ghost" size="sm" onClick={() => { set('variant_label', form.variant_label || 'Option'); addVariant() }}><Icon name="plus" size={15} /> Custom</Button>
+                <Button variant="tertiary" size="sm" onClick={() => { set('variant_label', form.variant_label || 'Option'); addVariant() }}><Icon name="plus" size={15} /> Custom</Button>
               </div>
             ) : (
               <>
@@ -391,7 +391,7 @@ export default function ProductEditPage() {
                     </li>
                   ))}
                 </ul>
-                <Button variant="outline" size="sm" className="self-start" disabled={variants.length >= MAX_VARIANTS} onClick={addVariant}><Icon name="plus" size={15} /> Add variant</Button>
+                <Button variant="secondary" size="sm" className="self-start" disabled={variants.length >= MAX_VARIANTS} onClick={addVariant}><Icon name="plus" size={15} /> Add variant</Button>
               </>
             )}
           </section>
@@ -400,7 +400,7 @@ export default function ProductEditPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className={h2}>Images</h2>
               <input ref={fileRef} type="file" multiple accept="image/*" className="hidden" onChange={(e) => { if (e.target.files?.length) void upload(e.target.files); e.target.value = '' }} />
-              <Button variant="outline" size="sm" disabled={isNew} loading={uploading} onClick={() => fileRef.current?.click()}>
+              <Button variant="secondary" size="sm" disabled={isNew} loading={uploading} onClick={() => fileRef.current?.click()}>
                 <Icon name="upload" size={16} /> {photoTab ? `Upload ${tabName} photos` : 'Upload'}
               </Button>
             </div>
@@ -442,21 +442,21 @@ export default function ProductEditPage() {
                       className={cn('flex flex-col gap-2', dragIndex === i && 'opacity-40')}>
                       <div className="relative cursor-grab bg-ash">
                         <img src={img.url} alt={img.alt} className="aspect-[4/5] w-full object-cover" />
-                        {i === 0 ? <span className="absolute left-2 top-2 bg-accent px-1.5 py-0.5 text-xs text-paper">Main</span>
+                        {i === 0 ? <span className="absolute left-2 top-2 bg-tertiary px-1.5 py-0.5 text-xs text-paper">Main</span>
                           : k === 0 && photoTab ? <span className="absolute left-2 top-2 bg-ink px-1.5 py-0.5 text-xs text-paper">First for {tabName}</span> : null}
                       </div>
                       <input value={img.alt} onChange={(e) => updateImage(i, { alt: e.target.value })} placeholder="Describe the image"
-                        aria-label={`Alt text for image ${k + 1}`} className="h-8 border border-rule bg-transparent px-2 text-xs outline-none focus:border-accent" />
+                        aria-label={`Alt text for image ${k + 1}`} className="h-8 border border-rule bg-transparent px-2 text-xs outline-none focus:border-tertiary" />
                       {form.colors.length > 0 && (
                         <select value={img.color ?? ''} onChange={(e) => updateImage(i, { color: e.target.value || null })}
-                          aria-label={`Colour of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-accent">
+                          aria-label={`Colour of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-tertiary">
                           <option value="">General (every colour)</option>
                           {form.colors.map((c) => <option key={c} value={c}>{filaments.byId.get(c)?.name ?? c} only</option>)}
                         </select>
                       )}
                       {variants.length > 0 && (
                         <select value={img.variant ?? ''} onChange={(e) => updateImage(i, { variant: e.target.value || null })}
-                          aria-label={`${form.variant_label || 'Variant'} of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-accent">
+                          aria-label={`${form.variant_label || 'Variant'} of image ${k + 1}`} className="h-8 border border-rule bg-transparent px-1.5 text-xs text-ink outline-none focus:border-tertiary">
                           <option value="">Every {(form.variant_label || 'variant').toLowerCase()}</option>
                           {variants.map((v) => <option key={v.key} value={v.key}>{v.label || 'Unnamed'} only</option>)}
                         </select>
@@ -579,7 +579,7 @@ export default function ProductEditPage() {
         <p className="text-smoke">This removes the product and its images permanently. Past orders keep their copy of the details. To hide it temporarily, unpublish it instead.</p>
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={remove}>Delete product</Button>
-          <Button variant="ghost" onClick={() => setConfirmDelete(false)}>Keep it</Button>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>Keep it</Button>
         </div>
       </Modal>
     </div>

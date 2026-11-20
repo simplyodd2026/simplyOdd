@@ -51,7 +51,7 @@ export default function CartPage() {
                 <li key={lineKey(l)} className="grid grid-cols-[6rem_1fr] gap-5 py-8 sm:grid-cols-[9rem_1fr_auto] sm:gap-8">
                   <Link to={`/product/${l.slug}`} className="overflow-hidden bg-ash">{l.image && <img {...responsive(l.image, '160px')} alt="" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" />}</Link>
                   <div className="flex flex-col">
-                    <Link to={`/product/${l.slug}`} className="font-display text-3xl leading-tight text-ink hover:text-accent">{l.name}</Link>
+                    <Link to={`/product/${l.slug}`} className="font-display text-3xl leading-tight text-ink hover:text-tertiary">{l.name}</Link>
                     <span className="mt-2 tabular-nums text-[12px] text-fog">
                       {money(l.unit_price)}{l.compare_at_price && l.compare_at_price > l.unit_price && <s className="ml-2 text-fog">{money(l.compare_at_price)}</s>}
                     </span>

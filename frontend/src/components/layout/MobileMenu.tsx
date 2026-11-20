@@ -37,9 +37,9 @@ export function MobileMenu() {
         <motion.div ref={ref} role="dialog" aria-modal="true" aria-label="Menu" data-lenis-prevent
           initial={{ clipPath: 'inset(0% 0% 100% 0%)' }} animate={{ clipPath: 'inset(0% 0% 0% 0%)' }} exit={{ clipPath: 'inset(0% 0% 100% 0%)' }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="film-grain fixed inset-0 z-50 flex flex-col overflow-y-auto bg-night text-paper">
+          className="on-dark film-grain fixed inset-0 z-50 flex flex-col overflow-y-auto bg-night text-paper">
           <div className="flex h-16 shrink-0 items-center justify-between px-5 sm:px-8">
-            <Link to="/" className="text-[26px]" aria-label="Simply Odd home"><Wordmark /></Link>
+            <Link to="/" className="rounded-lg text-[26px]" aria-label="Simply Odd home"><Wordmark /></Link>
             <button autoFocus onClick={close} className="-mr-2 grid size-10 place-items-center rounded-full" aria-label="Close menu"><Icon name="close" size={22} /></button>
           </div>
 

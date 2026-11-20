@@ -20,7 +20,7 @@ export default function DashboardPage() {
         <Stat label="Revenue" value={money(data.revenue)} />
         <Stat label="Orders" value={data.orders} />
         <Stat label="Average order" value={money(data.average_order_value)} />
-        <Stat label="To fulfil" value={<Link to="/admin/orders?status=confirmed" className="hover:text-accent">{data.to_fulfil}</Link>} note="Confirmed or being made" />
+        <Stat label="To fulfil" value={<Link to="/admin/orders?status=confirmed" className="hover:text-tertiary">{data.to_fulfil}</Link>} note="Confirmed or being made" />
         <Stat label="Customers" value={data.customers} note="All time" />
       </div>
 
@@ -32,7 +32,7 @@ export default function DashboardPage() {
           <Table head={['Order', 'Customer', 'Date', 'Status', 'Total']}>
             {data.recent_orders.map((o) => (
               <tr key={o.id} className="hover:bg-black/[0.02]">
-                <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-accent">{o.number}</Link></td>
+                <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-tertiary">{o.number}</Link></td>
                 <td className={`${td} text-smoke`}>{o.email}</td>
                 <td className={`${td} text-smoke`}>{date(o.created_at, { day: 'numeric', month: 'short' })}</td>
                 <td className={td}><StatusPill status={o.status} label={ORDER_STATUS_LABEL[o.status]} /></td>
@@ -48,7 +48,7 @@ export default function DashboardPage() {
               <Table head={['Product', 'Units', 'Revenue']}>
                 {data.top_products.map((p) => (
                   <tr key={p.product_id}>
-                    <td className={td}><Link to={`/admin/products/${p.product_id}`} className="hover:text-accent">{p.name}</Link></td>
+                    <td className={td}><Link to={`/admin/products/${p.product_id}`} className="hover:text-tertiary">{p.name}</Link></td>
                     <td className={`${td} tabular-nums`}>{p.units}</td>
                     <td className={`${td} tabular-nums`}>{money(p.revenue)}</td>
                   </tr>

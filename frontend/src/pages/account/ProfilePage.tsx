@@ -55,7 +55,7 @@ export default function ProfilePage() {
         </div>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = '' }} />
-        <Button variant="outline-dark" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
+        <Button variant="secondary" size="sm" loading={uploading} onClick={() => fileRef.current?.click()}>
           <Icon name="upload" size={15} /> {image ? 'Change photo' : 'Add a photo'}
         </Button>
       </div>

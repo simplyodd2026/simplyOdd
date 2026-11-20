@@ -60,8 +60,8 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
             <span className={cn('absolute left-5 top-5 rounded-full px-2.5 py-1 text-[12px] font-medium', product.discount_percent > 0 ? 'bg-accent text-paper' : 'bg-paper text-ink')}>{badge}</span>
           )}
           <button onClick={quickAdd}
-            className="absolute bottom-4 right-4 hidden h-10 translate-y-3 items-center gap-2 rounded-full bg-ink pl-4 pr-3 text-[13px] font-medium text-paper opacity-0
-              transition-[transform,opacity,background-color] duration-500 ease-[var(--ease-out-quint)] hover:bg-accent focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
+            className="absolute bottom-4 right-4 hidden h-10 translate-y-3 items-center gap-2 rounded-full bg-action pl-4 pr-3 text-[13px] font-medium text-white opacity-0
+              transition-[transform,opacity,background-color] duration-500 ease-[var(--ease-out-quint)] hover:bg-action-hover active:bg-action-active focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 sm:flex"
             aria-label={personalise ? `Personalise ${product.name}` : `Add ${product.name} to bag`}>
             {quickLabel} <Icon name={personalise ? 'arrowRight' : 'plus'} size={15} />
           </button>
@@ -80,7 +80,7 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
         </div>
         <Price price={product.price} compareAt={product.compare_at_price} className="shrink-0 flex-col items-end gap-0 pt-1 text-right font-display text-[1.2rem] leading-[1.05] text-ink [&_s]:text-[12px] [&_s]:font-sans [&_s]:normal-case" />
       </div>
-      <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink/20 text-[13px] text-ink active:bg-ink active:text-paper sm:hidden"
+      <button onClick={quickAdd} className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full border border-ink text-[13px] font-medium text-ink active:bg-ink/10 sm:hidden"
         aria-label={personalise ? `Personalise ${product.name}` : `Add ${product.name} to bag`}>
         <Icon name={personalise ? 'arrowRight' : 'plus'} size={15} /> {quickLabel}
       </button>

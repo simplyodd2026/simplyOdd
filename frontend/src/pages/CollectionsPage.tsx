@@ -64,7 +64,7 @@ export default function CollectionsPage() {
             <p className="font-script text-[clamp(2.6rem,4vw,3.4rem)] leading-none text-accent">not quite it?</p>
             <h2 className="mt-2 max-w-[18ch] font-display text-[clamp(2.2rem,4vw,3.8rem)] leading-[1.02] text-ink">Tell us the idea, and we’ll build it for you.</h2>
           </div>
-          <ButtonLink to="/customise" variant="terra" size="lg">Customise a piece</ButtonLink>
+          <ButtonLink to="/customise" variant="primary" size="lg">Customise a piece</ButtonLink>
         </div>
       </Container>
     </>
@@ -127,7 +127,7 @@ function Chapter({ category: c, index }: { category: Category; index: number }) 
               {empty ? (
                 <>
                   <p className="max-w-xs text-[15px] leading-relaxed text-smoke">We’re still designing this collection. Want one sooner? We can make it to order.</p>
-                  <ButtonLink to="/customise" variant="outline" size="lg">Customise one</ButtonLink>
+                  <ButtonLink to="/customise" variant="secondary" size="lg">Customise one</ButtonLink>
                 </>
               ) : (
                 <ButtonLink to={`/collections/${c.slug}`} size="lg">Shop {c.name.toLowerCase()}</ButtonLink>

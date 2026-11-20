@@ -33,7 +33,7 @@ export default function ReviewsPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Stars value={r.rating} className="text-accent" />
-                  <Link to={`/admin/products/${r.product_id}`} className="text-sm hover:text-accent">{name(r.product_id)}</Link>
+                  <Link to={`/admin/products/${r.product_id}`} className="text-sm hover:text-tertiary">{name(r.product_id)}</Link>
                   <span className="text-sm text-fog">{r.author_name}, {date(r.created_at)}</span>
                 </div>
                 {r.title && <p className="mt-2 font-semibold">{r.title}</p>}

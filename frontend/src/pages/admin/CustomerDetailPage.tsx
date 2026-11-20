@@ -34,7 +34,7 @@ export default function CustomerDetailPage() {
             <Table head={['Order', 'Date', 'Status', 'Total']}>
               {orders.map((o) => (
                 <tr key={o.id}>
-                  <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-accent">{o.number}</Link></td>
+                  <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-tertiary">{o.number}</Link></td>
                   <td className={`${td} text-smoke`}>{date(o.created_at)}</td>
                   <td className={td}><StatusPill status={o.status} label={ORDER_STATUS_LABEL[o.status]} /></td>
                   <td className={`${td} tabular-nums`}>{money(o.total)}</td>
@@ -48,7 +48,7 @@ export default function CustomerDetailPage() {
           <div className="flex flex-col gap-3">
             {profile.addresses.map((a) => (
               <div key={a.id} className="border border-rule p-4 text-sm leading-relaxed">
-                <p className="font-medium">{a.label}{a.is_default && <span className="ml-2 text-accent">Default</span>}</p>
+                <p className="font-medium">{a.label}{a.is_default && <span className="ml-2 text-tertiary">Default</span>}</p>
                 <p className="text-smoke">{a.full_name}<br />{a.line1}{a.line2 && `, ${a.line2}`}<br />{a.city}, {a.state} {a.postal_code}<br />{a.phone}</p>
               </div>
             ))}

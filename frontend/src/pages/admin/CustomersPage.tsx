@@ -26,8 +26,8 @@ export default function CustomersPage() {
           {data?.map((c) => (
             <tr key={c.user_id} className="hover:bg-black/[0.02]">
               <td className={td}>
-                <Link to={`/admin/customers/${c.user_id}`} className="font-medium hover:text-accent">{c.name || c.email}</Link>
-                {c.is_admin && <span className="ml-2 text-xs text-accent">Admin</span>}
+                <Link to={`/admin/customers/${c.user_id}`} className="font-medium hover:text-tertiary">{c.name || c.email}</Link>
+                {c.is_admin && <span className="ml-2 text-xs text-tertiary">Admin</span>}
                 <div className="text-xs text-fog">{c.email}</div>
               </td>
               <td className={`${td} text-smoke`}>{date(c.created_at)}</td>

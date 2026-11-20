@@ -24,7 +24,7 @@ export default function NewsletterPage() {
   return (
     <div>
       <AdminHeader title="Newsletter" sub={data ? `${data.length} subscribers` : undefined}
-        actions={<Button variant="outline" disabled={!data?.length} onClick={exportCsv}>Export CSV</Button>} />
+        actions={<Button variant="secondary" disabled={!data?.length} onClick={exportCsv}>Export CSV</Button>} />
       <Table head={['Email', 'Subscribed', '']}>
         {data?.map((s) => (
           <tr key={s.id}>

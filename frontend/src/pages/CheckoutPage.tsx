@@ -76,7 +76,7 @@ export default function CheckoutPage() {
   if (!cart.items.length) {
     return (
       <Container className="pt-16">
-        <EmptyState title="Your bag is empty." body="Add something strange before checking out." action={<ButtonLink to="/shop" variant="light">Browse the shop</ButtonLink>} />
+        <EmptyState title="Your bag is empty." body="Add something strange before checking out." action={<ButtonLink to="/shop" variant="primary">Browse the shop</ButtonLink>} />
       </Container>
     )
   }
@@ -151,9 +151,9 @@ export default function CheckoutPage() {
   const receiptNo = 'Draft'
   const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
   const itemCount = cart.items.reduce((n, l) => n + l.quantity, 0)
-  // A choice on the slip: dashed when open, a solid ink outline once chosen.
+  // A choice on the slip: dashed when open, a navy outline and tint once chosen.
   const option = (active: boolean) => cn('w-full border p-4 text-left transition-colors duration-300',
-    active ? 'border-ink bg-paper-2/80' : 'border-dashed border-ink/25 hover:border-ink/60')
+    active ? 'border-tertiary bg-tertiary/[0.08] shadow-[inset_0_0_0_1px_var(--color-tertiary)]' : 'border-dashed border-ink/25 hover:border-ink/60')
   const tick = (active: boolean) => (
     <span className={cn('mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border', active ? 'border-ink bg-ink text-paper' : 'border-ink/30')}>
       {active && <Icon name="check" size={11} />}
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
               <li key={st.id}>
                 <button disabled={i > stepIndex || !!paid} onClick={() => setStep(st.id)} aria-current={st.id === step ? 'step' : undefined}
                   className={cn('flex items-baseline gap-2 pb-1 transition-colors',
-                    st.id === step ? 'border-b border-ink text-ink' : i < stepIndex ? 'text-smoke hover:text-ink' : 'text-fog')}>
+                    st.id === step ? 'border-b-2 border-tertiary text-ink' : i < stepIndex ? 'text-smoke hover:text-ink' : 'text-fog')}>
                   <span className="font-odd text-accent">{['i', 'ii', 'iii'][i]}.</span>
                   {i < stepIndex ? <span className="inline-flex items-center gap-1">{st.label} <Icon name="check" size={13} /></span> : st.label}
                 </button>
@@ -329,7 +329,7 @@ export default function CheckoutPage() {
                   </>
                 )}
                 {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
-                <Button size="lg" variant="terra" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
+                <Button size="lg" variant="primary" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
                   {paid ? 'Finish placing order' : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
                 </Button>
               </section>

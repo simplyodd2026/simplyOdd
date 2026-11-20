@@ -42,7 +42,7 @@ export function Stat({ label, value, note }: { label: string; value: ReactNode; 
 export function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
   return (
     <input type="search" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder}
-      className="h-10 w-full max-w-xs rounded-xl border border-rule bg-transparent px-3 text-sm outline-none placeholder:text-fog focus:border-accent" />
+      className="h-10 w-full max-w-xs rounded-xl border border-rule bg-transparent px-3 text-sm outline-none placeholder:text-fog focus:border-tertiary" />
   )
 }
 
@@ -51,7 +51,7 @@ export function FilterSelect({ value, onChange, options, label }: {
 }) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}
-      className="h-10 appearance-none rounded-xl border border-rule bg-transparent pl-3 pr-9 text-sm outline-none focus:border-accent" style={selectChevron}>
+      className="h-10 appearance-none rounded-xl border border-rule bg-transparent pl-3 pr-9 text-sm outline-none focus:border-tertiary" style={selectChevron}>
       {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   )

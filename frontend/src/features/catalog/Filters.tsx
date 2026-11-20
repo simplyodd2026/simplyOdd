@@ -22,7 +22,7 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
   const heading = 'label mb-4 text-fog'
   const option = (active: boolean) => cn('group flex w-full items-center justify-between py-2 text-left text-[15px] transition-colors',
     active ? 'text-ink' : 'text-smoke hover:text-ink')
-  const dot = (active: boolean) => <span className={cn('mr-3 inline-block size-1.5 rounded-full transition-colors', active ? 'bg-hot' : 'bg-ink/15 group-hover:bg-ink/40')} />
+  const dot = (active: boolean) => <span className={cn('mr-3 inline-block size-1.5 rounded-full transition-colors', active ? 'bg-tertiary' : 'bg-ink/15 group-hover:bg-ink/40')} />
 
   return (
     <div>
@@ -52,11 +52,11 @@ export function Filters({ params, showCategories = true }: { params: Params; sho
         })}
         <form className="mt-4 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); params.update({ min: min || null, max: max || null }) }}>
           <input value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Min ₹" aria-label="Minimum price"
-            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-ink" />
+            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-tertiary" />
           <span className="text-fog">–</span>
           <input value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="Max ₹" aria-label="Maximum price"
-            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-ink" />
-          <button type="submit" className="h-10 shrink-0 rounded-full bg-ink px-4 text-sm text-paper transition-colors hover:bg-hot">Apply</button>
+            className="h-10 w-full rounded-full border border-rule bg-transparent px-4 text-sm outline-none focus:border-tertiary" />
+          <button type="submit" className="h-10 shrink-0 rounded-full bg-action px-4 text-sm font-medium text-white transition-colors hover:bg-action-hover active:bg-action-active">Apply</button>
         </form>
       </div>
 

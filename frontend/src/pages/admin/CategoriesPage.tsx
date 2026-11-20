@@ -96,11 +96,11 @@ export default function CategoriesPage() {
             <div className="flex items-center gap-4">
               <div className="w-20 bg-paper-3">{draft.image && <img src={draft.image} alt="" className="aspect-[4/5] w-full object-cover" />}</div>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadImage(f); e.target.value = '' }} />
-              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} /> {draft.image ? 'Replace image' : 'Upload image'}</Button>
+              <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} /> {draft.image ? 'Replace image' : 'Upload image'}</Button>
             </div>
             <div className="mt-2 flex gap-3">
               <Button loading={busy} onClick={save}>Save category</Button>
-              <Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => setDraft(null)}>Cancel</Button>
             </div>
           </div>
         )}

@@ -16,9 +16,9 @@ export default function RouteError() {
         <p className="mt-6 text-lg text-smoke">
           {chunkFailed ? 'Reload to get the latest version. Your bag is saved.' : 'Reload the page to try again. Your bag and saved pieces are kept. If it keeps happening, email simplyodd2026@gmail.com.'}
         </p>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <button onClick={() => window.location.reload()} className="h-14 rounded-full bg-ink px-8 text-[15px] text-paper transition-colors hover:bg-hot">Reload page</button>
-          <a href="/" className="inline-flex h-14 items-center rounded-full border border-ink/20 px-8 text-[15px] text-ink transition-colors hover:border-ink">Go to the homepage</a>
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <button onClick={() => window.location.reload()} className="h-14 rounded-full bg-action px-8 text-[15px] font-medium text-white transition-colors hover:bg-action-hover active:bg-action-active">Reload page</button>
+          <a href="/" className="inline-flex h-14 items-center justify-center rounded-full border border-ink px-8 text-[15px] font-medium text-ink transition-colors hover:bg-ink hover:text-paper active:bg-night">Go to the homepage</a>
         </div>
       </div>
     </div>

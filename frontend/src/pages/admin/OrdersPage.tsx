@@ -38,7 +38,7 @@ export default function OrdersPage() {
         <Table head={['Order', 'Placed', 'Customer', 'Items', 'Payment', 'Status', 'Total']}>
           {orders.map((o) => (
             <tr key={o.id} className="hover:bg-black/[0.02]">
-              <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-accent">{o.number}</Link></td>
+              <td className={td}><Link to={`/admin/orders/${o.id}`} className="font-medium hover:text-tertiary">{o.number}</Link></td>
               <td className={`${td} whitespace-nowrap text-smoke`}>{dateTime(o.created_at)}</td>
               <td className={td}><div>{o.address.full_name}</div><div className="text-xs text-fog">{o.email}</div></td>
               <td className={`${td} tabular-nums text-smoke`}>{o.items.reduce((n, i) => n + i.quantity, 0)}</td>

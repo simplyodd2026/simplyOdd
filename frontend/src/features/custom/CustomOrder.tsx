@@ -112,7 +112,7 @@ export function CustomOrder() {
                 Lighting for a particular corner, a gift for someone hard to buy for, an object in exactly your colour. Tell us the idea and we’ll design, build and finish it by hand.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-                <a href="#brief" className="inline-flex h-14 items-center rounded-full bg-hot px-8 text-[15px] font-medium text-paper transition-colors duration-500 hover:bg-ink">Start your brief</a>
+                <a href="#brief" className="inline-flex h-14 items-center rounded-full bg-action px-8 text-[15px] font-medium text-white transition-colors duration-300 hover:bg-action-hover active:bg-action-active">Start your brief</a>
                 <span className="text-[14px] text-smoke">Nothing to pay until you approve the design.</span>
               </div>
             </Reveal>
@@ -202,7 +202,7 @@ export function CustomOrder() {
                       {COLOURS.map(([value, name, hex]) => (
                         <button key={value} type="button" onClick={() => toggle(value)} aria-pressed={colours.includes(value)} aria-label={name} title={name}
                           className={cn('plate size-10 ring-offset-2 ring-offset-[#F9F6F1] transition-[box-shadow,transform] duration-300 hover:scale-110',
-                            colours.includes(value) ? 'ring-[1.5px] ring-ink' : 'ring-1 ring-ink/10')}
+                            colours.includes(value) ? 'ring-2 ring-tertiary' : 'ring-1 ring-ink/10')}
                           style={{ background: hex }} />
                       ))}
                     </div>
@@ -213,7 +213,7 @@ export function CustomOrder() {
 
                 <div className="flex flex-wrap items-center justify-between gap-6 border-t border-ink/10 pt-9">
                   <p className="max-w-xs text-[14px] leading-relaxed text-smoke">No payment now. We’ll confirm the details and the price with you first.</p>
-                  <Button type="submit" variant="terra" size="lg" loading={state === 'sending'}>Send my brief</Button>
+                  <Button type="submit" variant="primary" size="lg" loading={state === 'sending'}>Send my brief</Button>
                 </div>
                 {typeof state === 'object' && <p className="mt-4 text-[15px] text-accent" role="alert">{state.error}</p>}
               </motion.form>

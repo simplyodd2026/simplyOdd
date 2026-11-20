@@ -107,7 +107,7 @@ export function Navbar() {
           : 'h-14 max-w-[1520px] bg-transparent px-5 sm:px-8 lg:h-16 lg:px-10')}>
         <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: OUT }} className="shrink-0">
           <Link to="/" aria-label="Simply Odd home"
-            className={cn('block origin-left text-ink transition-[font-size] duration-[900ms] ease-[var(--ease-out-quint)]', compact ? 'text-[16px] lg:text-[17px]' : 'text-[17px] lg:text-[19px]')}>
+            className={cn('block origin-left rounded-lg text-ink transition-[font-size] duration-[900ms] ease-[var(--ease-out-quint)]', compact ? 'text-[16px] lg:text-[17px]' : 'text-[17px] lg:text-[19px]')}>
             <Wordmark light={overPhoto} />
           </Link>
         </motion.div>
@@ -147,7 +147,7 @@ export function Navbar() {
           <button onClick={() => setSearch(true)} className={tool} aria-label="Search"><Icon name="search" size={19} /></button>
           <Link to="/wishlist" className={cn(tool, 'hidden sm:grid')} aria-label={`Saved pieces, ${saved}`}>
             <Icon name="heart" size={19} />
-            {saved > 0 && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent" aria-hidden="true" />}
+            {saved > 0 && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-tertiary" aria-hidden="true" />}
           </Link>
           <Link to={user ? '/account' : '/login'} className={cn(tool, 'hidden lg:grid')} aria-label={user ? 'My account' : 'Sign in'}>
             <Icon name="user" size={19} />
@@ -157,7 +157,7 @@ export function Navbar() {
             <Icon name="bag" size={18} />
             {bag > 0 && (
               <motion.span key={bag} initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }}
-                className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-tan px-1 text-[11px] font-semibold tabular-nums text-ink">{bag}</motion.span>
+                className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-tertiary px-1 text-[11px] font-semibold tabular-nums text-paper">{bag}</motion.span>
             )}
           </button>
           <button onClick={() => setMenu(true)} className={cn(tool, 'lg:hidden')} aria-label="Open menu"><Icon name="menu" size={22} /></button>
@@ -179,7 +179,7 @@ export function Navbar() {
               <div className="col-span-5 flex flex-col gap-1">
                 <p className="mb-3 text-[13px] text-fog">Browse</p>
                 {[['/shop', 'Everything'], ['/new', 'New arrivals'], ['/bestsellers', 'Best sellers'], ['/shop?max=999&sort=price_asc', 'Gifts under ₹999']].map(([to, label]) => (
-                  <Link key={to} to={to} className="group font-display text-[2.1rem] leading-[1.15] text-ink transition-colors hover:text-accent">
+                  <Link key={to} to={to} className="group font-display text-[2.1rem] leading-[1.15] text-ink transition-colors hover:text-tertiary">
                     <span className="inline-block transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 group-hover:italic">{label}</span>
                   </Link>
                 ))}
@@ -190,7 +190,7 @@ export function Navbar() {
                   {categories?.map((c) => (
                     <li key={c.id}>
                       <Link to={`/collections/${c.slug}`} className="group flex items-baseline gap-5 border-b border-rule py-3.5 text-ink">
-                        <span className="flex-1 font-display text-[1.35rem] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 group-hover:text-accent">{c.name}</span>
+                        <span className="flex-1 font-display text-[1.35rem] transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:translate-x-2 group-hover:text-tertiary">{c.name}</span>
                         <span className="text-[13px] tabular-nums text-fog">{!c.product_count && 'Coming soon'}</span>
                       </Link>
                     </li>

@@ -70,7 +70,7 @@ export function CustomiseThis({ product, category, className }: { product: Produ
   return (
     <>
       <button type="button" onClick={start} title="A different size or colour, or a name on it. We’ll quote before you pay."
-        className={cn('inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-ink/15 px-4 text-[14px] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper', className)}>
+        className={cn('inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-action px-4 text-[14px] font-medium text-white transition-colors duration-300 hover:bg-action-hover active:bg-action-active', className)}>
         <Icon name="edit" size={15} /> Customise this piece
       </button>
 
@@ -115,8 +115,8 @@ export function CustomiseThis({ product, category, className }: { product: Produ
                     const full = !on && colours.length >= MAX_COLOURS
                     return (
                       <button key={f.id} type="button" aria-pressed={on} aria-label={f.name} title={f.name} disabled={full} onClick={() => toggleColour(f.name)}
-                        className={cn('grid size-9 place-items-center rounded-full p-[3px] transition-shadow duration-200 disabled:opacity-35',
-                          on ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'hover:shadow-[inset_0_0_0_1px_rgb(42_31_23/0.35)]')}>
+                        className={cn('grid size-9 place-items-center rounded-full p-[4px] transition-shadow duration-200 disabled:opacity-35',
+                          on ? 'shadow-[inset_0_0_0_2px_var(--color-tertiary)]' : 'hover:shadow-[inset_0_0_0_1px_rgb(42_31_23/0.35)]')}>
                         <Swatch filament={f} className="size-full" />
                       </button>
                     )

@@ -6,7 +6,7 @@ type Tone = 'dark' | 'light'
 const control = (tone: Tone, invalid?: boolean) =>
   cn(
     'w-full rounded-md border bg-paper px-3.5 text-[15px] outline-none transition-colors duration-300',
-    'placeholder:text-fog/80 hover:border-ink/40 focus:border-ink focus-visible:outline-none',
+    'placeholder:text-fog/80 hover:border-ink/40 focus:border-tertiary focus-visible:outline-none',
     tone === 'dark' ? 'border-rule text-graphite' : 'border-rule text-ink bg-paper',
     invalid && 'border-accent',
   )
@@ -74,7 +74,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 export function Checkbox({ label, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }) {
   return (
     <label className={cn('cursor-pointer items-center gap-2.5 text-[15px]', !/\bflex\b/.test(className ?? '') && 'inline-flex', className)}>
-      <input type="checkbox" className="size-4 accent-ink" {...rest} />
+      <input type="checkbox" className="size-4 accent-tertiary" {...rest} />
       <span>{label}</span>
     </label>
   )

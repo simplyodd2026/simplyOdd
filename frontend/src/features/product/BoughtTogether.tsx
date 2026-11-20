@@ -33,7 +33,7 @@ export function BoughtTogether({ product, others }: { product: Product; others: 
                 <div className={cn('w-28 transition-opacity sm:w-40', !on && 'opacity-35')}>
                   <Link to={`/product/${p.slug}`} className="block overflow-hidden bg-ash"><img {...responsive(p.images[0]?.url, '160px')} alt={p.name} loading="lazy" decoding="async" className="aspect-[4/5] w-full object-cover transition-transform duration-700 hover:scale-105" /></Link>
                   <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm">
-                    <input type="checkbox" className="mt-0.5 accent-ink" disabled={i === 0} checked={on}
+                    <input type="checkbox" className="mt-0.5 accent-tertiary" disabled={i === 0} checked={on}
                       onChange={() => setSelected((s) => (s.includes(p.id) ? s.filter((x) => x !== p.id) : [...s, p.id]))} />
                     <span><span className="block font-medium leading-tight">{i === 0 ? `This: ${p.name}` : p.name}</span>
                       <span className="tabular-nums text-[12px] text-fog">{money(p.price)}</span></span>

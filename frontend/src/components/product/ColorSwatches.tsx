@@ -73,8 +73,8 @@ export function ColorSwatches({ options, value, onChange, label = 'Colour', size
                     ref={(el) => { if (el) refs.current.set(f.id, el); else refs.current.delete(f.id) }}
                     tabIndex={f.id === focusable ? 0 : -1}
                     onClick={() => onChange(f.id)} onKeyDown={(e) => onKey(e, options.indexOf(f))}
-                    className={cn('group relative grid place-items-center rounded-full p-[3px] transition-shadow duration-200', dot,
-                      on ? 'shadow-[inset_0_0_0_1.5px_var(--color-ink)]' : 'hover:shadow-[inset_0_0_0_1px_rgb(42_31_23/0.35)]')}>
+                    className={cn('group relative grid place-items-center rounded-full p-[4px] transition-shadow duration-200', dot,
+                      on ? 'shadow-[inset_0_0_0_2px_var(--color-tertiary)]' : 'hover:shadow-[inset_0_0_0_1px_rgb(42_31_23/0.35)]')}>
                     <Swatch filament={f} className="size-full" />
                     <span aria-hidden
                       className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-ink px-2.5 py-1 text-[12px] text-paper hidden group-hover:block group-focus-visible:block">

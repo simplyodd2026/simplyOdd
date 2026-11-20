@@ -16,7 +16,7 @@ export function OrderItems({ order, linkProducts = true }: { order: Order; linkP
           <li key={lineKey(it)} className="flex items-center gap-4 py-4">
             <div className="w-16 shrink-0 bg-ash">{it.image && <img {...responsive(it.image, '64px')} alt="" className="aspect-[4/5] w-full object-cover" />}</div>
             <div className="flex-1">
-              {linkProducts ? <Link to={`/product/${it.slug}`} className="font-semibold hover:text-accent">{it.name}</Link> : <span className="font-semibold">{it.name}</span>}
+              {linkProducts ? <Link to={`/product/${it.slug}`} className="font-semibold hover:text-tertiary">{it.name}</Link> : <span className="font-semibold">{it.name}</span>}
               <VariantTag label={it.variant_label} className="mt-0.5 text-[13px] text-smoke" />
               {it.filament && <ColorTag filament={it.filament} className="mt-0.5 text-[13px] text-smoke" />}
               <PersonalizationTag details={it.personalization_details} className="mt-0.5 text-[13px] text-smoke" />

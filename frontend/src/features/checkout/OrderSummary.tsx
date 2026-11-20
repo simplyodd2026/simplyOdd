@@ -27,7 +27,7 @@ export function OrderSummary({ quote }: { quote: Quote }) {
           <li key={lineKey(l)} className="flex items-center gap-4">
             <div className="relative w-16 shrink-0 bg-ash">
               {l.image && <img {...responsive(l.image, '128px')} alt="" className="aspect-[4/5] w-full object-cover" />}
-              <span className="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full bg-accent text-[11px] font-semibold tabular-nums text-paper">{l.quantity}</span>
+              <span className="absolute -right-2 -top-2 grid size-5 place-items-center rounded-full bg-tertiary text-[11px] font-semibold tabular-nums text-paper">{l.quantity}</span>
             </div>
             <span className="flex flex-1 flex-col gap-1">
               <span className="font-medium leading-tight">{l.name}</span>

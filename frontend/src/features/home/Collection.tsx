@@ -77,7 +77,7 @@ function Slider({ pieces }: { pieces: Piece[] }) {
         <div className="mb-8 flex justify-end gap-2">
           {([[-1, 'chevronLeft', 'Previous pieces', edges.start], [1, 'chevronRight', 'Next pieces', edges.end]] as const).map(([dir, icon, label, off]) => (
             <button key={dir} type="button" onClick={() => slide(dir)} disabled={off} aria-label={label}
-              className="grid size-11 place-items-center rounded-full border border-ink/20 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper disabled:pointer-events-none disabled:opacity-30">
+              className="grid size-11 place-items-center rounded-full bg-action text-white transition-colors duration-300 hover:bg-action-hover active:bg-action-active disabled:pointer-events-none disabled:opacity-30">
               <Icon name={icon} size={18} />
             </button>
           ))}
@@ -85,7 +85,7 @@ function Slider({ pieces }: { pieces: Piece[] }) {
       )}
       {/* Padding inside the track keeps the tiles' shadows and hover lift from being clipped by the scroll edge. */}
       <div ref={track} onScroll={measure}
-        className="-mx-5 flex snap-x snap-mandatory scroll-px-5 items-start gap-5 overflow-x-auto px-5 pb-10 pt-2 scrollbar-none sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:gap-8 lg:scroll-px-0 lg:px-0">
+        className="-mx-5 flex snap-x snap-mandatory scroll-px-5 items-start gap-5 overflow-x-auto px-5 pb-4 pt-2 scrollbar-none sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:gap-8 lg:scroll-px-0 lg:px-0">
         {pieces.map((p, i) => (
           <ObjectTile key={p.product.id} piece={p} frame={FRAMES[i % FRAMES.length]} aspect="aspect-[4/5]" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 30vw, 44vw"
             className={cn('w-[44%] shrink-0 snap-start sm:w-[30%] lg:w-[calc((100%-6rem)/4)]', OFFSETS[i % OFFSETS.length])} />
@@ -114,7 +114,7 @@ export function Collection() {
         <div className="mx-auto max-w-[1360px]">
           <div className="mb-16 flex flex-wrap items-end justify-between gap-6 sm:mb-24">
             <p className="text-[14px] text-fog">The collection</p>
-            <ArrowLink to="/shop">See all objects</ArrowLink>
+            <ArrowLink to="/shop" action>See all objects</ArrowLink>
           </div>
 
           <div className="grid gap-20 lg:grid-cols-12 lg:gap-8">
@@ -137,8 +137,8 @@ export function Collection() {
 
           {more.length > 0 && <Slider pieces={more} />}
 
-          <div className="mt-6 flex justify-center sm:mt-8">
-            <ButtonLink to="/shop" variant="terra" size="md">View all products</ButtonLink>
+          <div className="mt-2 flex justify-center">
+            <ButtonLink to="/shop" variant="primary" size="md">View all products</ButtonLink>
           </div>
         </div>
       </Container>

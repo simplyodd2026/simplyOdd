@@ -50,7 +50,7 @@ export function VariantPicker({ variants, value, onChange, label, size = 'md', m
               onClick={() => onChange(v.key)} onKeyDown={(e) => onKey(e, i)}
               className={cn('flex flex-col items-start gap-0.5 rounded-xl border text-left transition-[border-color,box-shadow,background-color] duration-200',
                 size === 'sm' ? 'px-3 py-2' : 'px-4 py-3',
-                on ? 'border-ink bg-ink/[0.03] shadow-[inset_0_0_0_1px_var(--color-ink)]' : 'border-ink/15 hover:border-ink/40')}>
+                on ? 'border-tertiary bg-tertiary/[0.08] shadow-[inset_0_0_0_1px_var(--color-tertiary)]' : 'border-ink/15 hover:border-ink/40')}>
               <span className={cn('font-medium text-ink', size === 'sm' ? 'text-[13px]' : 'text-[15px]')}>{v.label}</span>
               <span className={cn('tabular-nums', size === 'sm' ? 'text-[12px]' : 'text-[13px]', discounted ? 'text-accent' : 'text-fog')}>
                 {money(v.price)}

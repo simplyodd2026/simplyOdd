@@ -60,7 +60,7 @@ export function AboutSheet() {
   const backdrop = piece?.images[0]
 
   return (
-    <section className="relative isolate overflow-hidden bg-night px-4 pb-24 pt-14 sm:px-8 sm:pb-32 sm:pt-20">
+    <section className="on-dark relative isolate overflow-hidden bg-night px-4 pb-24 pt-14 sm:px-8 sm:pb-32 sm:pt-20">
       {/* The table the sheet rests on: the studio's work, out of focus and in black and white. */}
       {backdrop && <img {...responsive(backdrop.url, '(min-width: 1024px) 960px, 480px')} alt="" aria-hidden className="absolute inset-0 -z-10 size-full scale-110 object-cover opacity-45 blur-[6px] grayscale" />}
       <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(46_35_27/0.25),rgb(46_35_27/0.85))]" />

@@ -30,7 +30,7 @@ export function Brand() {
             <p>Simply Odd designs every object in-house and makes it only once someone orders it, so nothing is made to sit on a shelf in a warehouse.</p>
             <p>We work in plant-based PLA and heat-resistant PETG, finish each piece by hand, and pack it in paper pulp, not plastic.</p>
           </div>
-          <ButtonLink to="/about" variant="olive" size="lg" className="mt-10">Read our story</ButtonLink>
+          <ButtonLink to="/about" variant="secondary" size="lg" className="mt-10">Read our story</ButtonLink>
         </div>
       </div>
     </Container>

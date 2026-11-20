@@ -10,7 +10,7 @@ export default function OrdersPage() {
   const { data: orders, isLoading } = useMyOrders()
   if (isLoading) return <div className="flex flex-col gap-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}</div>
   if (!orders?.length) {
-    return <EmptyState title="No orders yet." body="When you order something, you'll be able to track it here." action={<ButtonLink to="/shop" variant="light">Browse the shop</ButtonLink>} />
+    return <EmptyState title="No orders yet." body="When you order something, you'll be able to track it here." action={<ButtonLink to="/shop" variant="primary">Browse the shop</ButtonLink>} />
   }
   return (
     <ul className="divide-y divide-rule border-y border-rule">
@@ -19,7 +19,7 @@ export default function OrdersPage() {
           <Link to={`/account/orders/${o.id}`} className="group grid gap-4 py-6 sm:grid-cols-[1fr_auto] sm:items-center">
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-xl font-bold w-semi group-hover:text-accent">{o.number}</span>
+                <span className="text-xl font-bold w-semi group-hover:text-tertiary">{o.number}</span>
                 <StatusPill status={o.status} label={ORDER_STATUS_LABEL[o.status]} />
               </div>
               <p className="text-sm text-smoke">{date(o.created_at)}, {plural(o.items.reduce((n, i) => n + i.quantity, 0), 'item')}</p>

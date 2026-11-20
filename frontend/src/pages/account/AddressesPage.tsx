@@ -50,17 +50,17 @@ export default function AddressesPage() {
             <div key={a.id} className={`flex flex-col border p-5 ${a.is_default ? 'border-graphite/40' : 'border-rule'}`}>
               <div className="flex items-center justify-between">
                 <span className="text-lg font-semibold">{a.label}</span>
-                {a.is_default && <span className="text-sm text-accent">Default</span>}
+                {a.is_default && <span className="text-sm text-tertiary">Default</span>}
               </div>
               <p className="mt-3 flex-1 leading-relaxed text-smoke">{a.full_name}<br />{a.line1}{a.line2 && `, ${a.line2}`}<br />{a.city}, {a.state} {a.postal_code}<br />{a.phone}</p>
               <div className="mt-5 flex flex-wrap gap-4 text-sm">
-                <button onClick={() => open(a)} className="underline underline-offset-4 hover:text-accent">Edit</button>
+                <button onClick={() => open(a)} className="underline underline-offset-4 hover:text-tertiary">Edit</button>
                 {!a.is_default && <button disabled={busy} onClick={() => run(() => api(`/me/addresses/${a.id}/default`, { method: 'POST' }), 'Default address updated')} className="underline underline-offset-4 hover:text-accent">Make default</button>}
                 <button disabled={busy} onClick={() => run(() => api(`/me/addresses/${a.id}`, { method: 'DELETE' }), 'Address deleted')} className="text-smoke underline underline-offset-4 hover:text-accent">Delete</button>
               </div>
             </div>
           ))}
-          <button onClick={() => open()} className="flex min-h-48 items-center justify-center gap-2 border border-dashed border-rule text-smoke hover:border-accent hover:text-ink">
+          <button onClick={() => open()} className="flex min-h-48 items-center justify-center gap-2 border border-dashed border-rule text-smoke hover:border-tertiary hover:text-ink">
             <Icon name="plus" size={18} /> Add an address
           </button>
         </div>
@@ -72,7 +72,7 @@ export default function AddressesPage() {
             <AddressFields value={editing.value} onChange={(value) => setEditing({ ...editing, value })} errors={errors} showDefault />
             <div className="flex gap-3">
               <Button loading={busy} onClick={save}>Save address</Button>
-              <Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button>
+              <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
             </div>
           </div>
         )}

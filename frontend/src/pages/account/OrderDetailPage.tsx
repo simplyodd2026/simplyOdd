@@ -82,7 +82,7 @@ export default function OrderDetailPage() {
         </p>
         <div className="mt-6 flex gap-3">
           <Button variant="danger" loading={busy} onClick={cancel}>Cancel order</Button>
-          <Button variant="ghost" onClick={() => setConfirming(false)}>Keep order</Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>Keep order</Button>
         </div>
       </Modal>
     </div>

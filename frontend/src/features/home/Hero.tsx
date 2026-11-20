@@ -71,7 +71,7 @@ export function Hero() {
               layer, then finished by hand.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <ButtonLink to="/shop" variant="terra" size="md">Explore the objects</ButtonLink>
+              <ButtonLink to="/shop" variant="primary" size="md">Explore the objects</ButtonLink>
               <Link to="/about#process" className="link-draw text-[14px] font-medium text-ink">See how they’re made</Link>
             </div>
           </motion.div>

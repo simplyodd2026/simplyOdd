@@ -64,7 +64,7 @@ function ReviewForm({ product, existing, onDone }: { product: Product; existing?
         placeholder="How does it look in your space? Anything people should know?" />
       <div className="flex gap-2">
         <Button type="submit" loading={busy}>{existing ? 'Save review' : 'Post review'}</Button>
-        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+        <Button variant="secondary" onClick={onDone}>Cancel</Button>
       </div>
     </form>
   )
@@ -132,7 +132,7 @@ export function Reviews({ product }: { product: Product }) {
                 Bought this? <Link to={`/login?next=${encodeURIComponent(location.pathname + '#reviews')}`} className="link-draw text-ink">Sign in</Link> to review it.
               </p>
             ) : eligibility?.can_review && !mine && !editing ? (
-              <Button variant="outline" onClick={() => setEditing(true)}>Write a review</Button>
+              <Button variant="secondary" onClick={() => setEditing(true)}>Write a review</Button>
             ) : eligibility && !eligibility.can_review ? (
               <p className="text-sm text-smoke">{eligibility.reason}</p>
             ) : null}

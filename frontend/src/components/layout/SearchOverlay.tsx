@@ -86,7 +86,7 @@ function SearchPanel({ close }: { close: () => void }) {
             aria-label="Search products"
             className="w-full bg-transparent font-display text-[clamp(2.5rem,7vw,6.5rem)] leading-none text-ink outline-none placeholder:text-ink/20" />
           {isFetching ? <span className="label shrink-0 text-fog">Searching</span>
-            : q && <button type="submit" className="grid size-14 shrink-0 place-items-center rounded-full bg-ink text-paper transition-colors hover:bg-hot" aria-label="Search"><Icon name="arrowRight" /></button>}
+            : q && <button type="submit" className="grid size-14 shrink-0 place-items-center rounded-full bg-action text-white transition-colors hover:bg-action-hover active:bg-action-active" aria-label="Search"><Icon name="arrowRight" /></button>}
         </motion.form>
 
         {showSuggestions ? (

@@ -109,7 +109,7 @@ export function ReceiptCoupon({ quote }: { quote: Quote }) {
           <label htmlFor="receipt-coupon-amount" className="sr-only">Amount to pay with {couponCode}</label>
           <input id="receipt-coupon-amount" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" autoFocus
             placeholder={`Amount to pay with ${couponCode}`}
-            className="h-10 min-w-0 flex-1 border-b border-dashed border-ink/30 bg-transparent text-[15px] tabular-nums outline-none placeholder:text-fog focus:border-ink" />
+            className="h-10 min-w-0 flex-1 border-b border-dashed border-ink/30 bg-transparent text-[15px] tabular-nums outline-none placeholder:text-fog focus:border-tertiary" />
           <button type="submit" className="link-draw pb-2 text-[14px] font-medium text-ink">Apply</button>
         </form>
         <p className="mt-2 flex justify-between gap-4 text-[13px]">
@@ -132,7 +132,7 @@ export function ReceiptCoupon({ quote }: { quote: Quote }) {
       <form className="flex items-end gap-3" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) setCoupon(draft.trim().toUpperCase()) }}>
         <label htmlFor="receipt-coupon" className="sr-only">Discount code</label>
         <input id="receipt-coupon" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Have a discount code?"
-          className="h-10 flex-1 border-b border-dashed border-ink/30 bg-transparent text-[15px] uppercase tracking-wide outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-fog focus:border-ink" />
+          className="h-10 flex-1 border-b border-dashed border-ink/30 bg-transparent text-[15px] uppercase tracking-wide outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-fog focus:border-tertiary" />
         <button type="submit" className="link-draw pb-2 text-[14px] font-medium text-ink">Apply</button>
       </form>
       {couponCode && !quote.coupon_code && quote.coupon_message && <p className="mt-2 text-[13px] text-accent">{quote.coupon_message}</p>}

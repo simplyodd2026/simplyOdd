@@ -37,7 +37,7 @@ export function CartDrawer() {
           </div>
           <p className="-mt-2 text-[13px] text-fog">Shipping is calculated at checkout.</p>
           <div className="grid grid-cols-2 gap-2">
-            <ButtonLink to="/cart" variant="outline" size="lg" onClick={close}>View bag</ButtonLink>
+            <ButtonLink to="/cart" variant="secondary" size="lg" onClick={close}>View bag</ButtonLink>
             <Button size="lg" disabled={quote.has_issues} onClick={() => { close(); navigate('/checkout') }}>Check out</Button>
           </div>
         </div>
@@ -77,7 +77,7 @@ export function CartDrawer() {
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-3">
-                      <Link to={`/product/${line.slug}`} onClick={close} className="font-display text-xl leading-tight text-ink hover:text-accent">{line.name}</Link>
+                      <Link to={`/product/${line.slug}`} onClick={close} className="font-display text-xl leading-tight text-ink hover:text-tertiary">{line.name}</Link>
                       <span className="tabular-nums text-[13px] text-ink">{money(line.line_total)}</span>
                     </div>
                     <span className="mt-1 tabular-nums text-[12px] text-fog">{money(line.unit_price)} each</span>

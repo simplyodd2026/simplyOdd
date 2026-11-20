@@ -177,7 +177,7 @@ export default function ProductPage() {
                 {gallery.map((img, i) => (
                   <button key={img.url} type="button" role="tab" aria-selected={i === shot} aria-label={`Show image ${i + 1}`} onClick={() => setShot(i)}
                     className={cn('plate size-16 overflow-hidden ring-1 ring-offset-2 ring-offset-paper transition-[box-shadow,opacity] duration-300',
-                      i === shot ? 'ring-ink' : 'opacity-60 ring-transparent hover:opacity-100')}>
+                      i === shot ? 'ring-2 ring-tertiary' : 'opacity-60 ring-transparent hover:opacity-100')}>
                     <img {...responsive(img.url, '64px')} alt="" data-url={img.url} onLoad={measure} loading="lazy" decoding="async" className="size-full object-cover" />
                   </button>
                 ))}
@@ -230,11 +230,11 @@ export default function ProductPage() {
               <div ref={buyBox} className="mt-7">
                 <div className="flex items-center gap-3">
                   <QuantityStepper value={count} onChange={setQty} max={Math.max(1, room)} />
-                  <Button size="lg" className="h-14 flex-1" onClick={addToBag} disabled={room <= 0}>Add to bag</Button>
+                  <Button size="lg" variant="secondary" className="h-14 flex-1" onClick={addToBag} disabled={room <= 0}>Add to bag</Button>
                   <WishlistButton productId={p.id} name={p.name} size={18}
                     className="grid size-14 shrink-0 place-items-center rounded-full border border-ink/15 text-ink hover:border-ink" />
                 </div>
-                <Button size="lg" variant="outline" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(unitPrice * count)}</Button>
+                <Button size="lg" variant="primary" className="mt-3 h-14 w-full" onClick={buyNow}>Buy now, {money(unitPrice * count)}</Button>
                 {room < MAX_PER_PRODUCT && (
                   <p className="mt-3 text-[13px] text-smoke">
                     {room > 0 ? `You can add ${room} more. Orders are limited to ${MAX_PER_PRODUCT} of each piece.` : `Your bag already has the most you can order: ${MAX_PER_PRODUCT} of this piece.`}

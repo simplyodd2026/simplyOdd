@@ -33,7 +33,7 @@ function Newsletter() {
           <input id="ft-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Your email"
             className="h-14 flex-1 bg-transparent text-lg text-paper outline-none placeholder:text-paper/35" />
           <button type="submit" disabled={state === 'loading'} aria-label="Subscribe"
-            className="grid size-11 place-items-center rounded-full text-paper transition-[background-color,color,transform] duration-500 hover:bg-tan hover:text-ink disabled:opacity-40">
+            className="grid size-11 place-items-center rounded-full text-paper transition-[background-color,color,transform] duration-500 hover:bg-paper hover:text-ink disabled:opacity-40">
             <Icon name="arrowRight" />
           </button>
         </form>
@@ -60,7 +60,7 @@ export function Footer() {
   const head = 'label mb-3 text-paper/40'
   const a = 'link-draw transition-colors hover:text-paper'
   return (
-    <footer ref={root} className="relative overflow-hidden bg-night text-paper">
+    <footer ref={root} className="on-dark relative overflow-hidden bg-night text-paper">
       <div className="mx-auto grid max-w-[1520px] gap-16 px-5 pb-10 pt-20 sm:px-8 md:grid-cols-12 lg:px-10 lg:pt-28">
         <div className="md:col-span-6 lg:col-span-5"><Newsletter /></div>
         <nav className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:col-span-6 lg:col-span-6 lg:col-start-7" aria-label="Footer">

@@ -44,9 +44,9 @@ export default function OrderConfirmationPage() {
               <dd className="capitalize">{order.shipping_method}</dd>
             </div>
           </dl>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <ButtonLink to={`/account/orders/${order.id}`} variant="light">View order</ButtonLink>
-            <ButtonLink to="/shop" variant="outline">Keep browsing</ButtonLink>
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <ButtonLink to={`/account/orders/${order.id}`} variant="primary">View order</ButtonLink>
+            <ButtonLink to="/shop" variant="secondary">Keep browsing</ButtonLink>
           </div>
         </div>
         <aside className="lg:col-span-5">

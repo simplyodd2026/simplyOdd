@@ -2,7 +2,23 @@
 
 @theme {
   /* Terra: an ivory room of speckled ceramic, frayed linen and travertine, taken from the studio mood board.
-     Deep wood brown for type, terracotta and clay for warmth, sage and olive for the green notes. */
+     Deep wood brown for type, terracotta and clay for warmth, sage and olive for the green notes.
+
+     Core UI palette: three colours run the interface; everything else below is the extended brand palette.
+       Primary   (~60%)  paper    #F3EDE4  page backgrounds, sections, large surfaces          → bg-paper
+       Secondary (~30%)  ink      #2A1F17  type, nav, footer, structure, outlined buttons      → text-ink, bg-ink
+                                           (on dark surfaces, type is paper-2 #F9F6F1)
+       Tertiary  (~10%)  tertiary #34465A  the conversion colour: primary action buttons       → bg-action
+                                           plus focus rings, selection outlines, cart badges   → *-tertiary
+     One navy button per action group. Navy is never a large surface or a decoration.
+     Buttons: components/ui/Button.tsx (primary = navy fill, secondary = brown outline, tertiary = text).
+     Terracotta stays for errors, sale prices, script flourishes and the brand blocks. */
+  --color-tertiary: #34465A;      /* muted navy: the conversion colour */
+  /* Primary actions. Pinned to the navy so they stay navy inside .on-dark / .over-photo, where tertiary
+     signals lift to caramel. Hover and pressed are darker steps of the same navy. */
+  --color-action: var(--color-tertiary);
+  --color-action-hover: #2B3A4B;
+  --color-action-active: #223041;
   --color-paper: #F3EDE4;         /* warm ivory page */
   --color-paper-2: #F9F6F1;       /* off-white: panels and plates */
   --color-paper-3: #E9E0D4;       /* pressed / hover */
@@ -75,6 +91,14 @@
   --color-ink: #F9F6F1;
   --color-paper: #2A1F17;
   --color-accent: #E8CFA8;
+  /* Navy would vanish over the photograph; its signals turn pale caramel here, as the accent does. */
+  --color-tertiary: var(--color-sun);
+}
+
+/* Dark bands (footer, mobile menu, announcement bar, about and auth panels): navy has no contrast on
+   espresso, so the tertiary signal (focus rings, selection) lifts to pale caramel inside them. */
+.on-dark {
+  --color-tertiary: var(--color-sun);
 }
 
 @layer base {
@@ -89,7 +113,7 @@
   }
   body { min-height: 100dvh; background: var(--color-paper); }
   ::selection { background: var(--color-ink); color: var(--color-paper); }
-  :focus-visible { outline: 1.5px solid var(--color-accent); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--color-tertiary); outline-offset: 3px; }
   button, [role="button"] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   img { user-select: none; }

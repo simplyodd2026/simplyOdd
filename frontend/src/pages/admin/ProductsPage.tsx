@@ -53,7 +53,7 @@ export default function ProductsPage() {
             <tr key={p.id} className="hover:bg-black/[0.02]">
               <td className={`${td} w-14`}><img src={p.images[0]?.url} alt="" className="aspect-[4/5] w-10 bg-ash object-cover" /></td>
               <td className={td}>
-                <Link to={`/admin/products/${p.id}`} className="font-medium hover:text-accent">{p.name}</Link>
+                <Link to={`/admin/products/${p.id}`} className="font-medium hover:text-tertiary">{p.name}</Link>
                 <div className="text-xs text-fog">/{p.slug}</div>
               </td>
               <td className={`${td} text-smoke`}>{p.category_ids.map(catName).join(', ') || catName(null)}</td>
@@ -62,7 +62,7 @@ export default function ProductsPage() {
               <td className={`${td} text-xs text-smoke`}>{[p.is_featured && 'Featured', p.is_bestseller && 'Best seller', p.is_new_arrival && 'New'].filter(Boolean).join(', ') || '—'}</td>
               <td className={td}>
                 <button onClick={() => togglePublish(p)} role="switch" aria-checked={p.is_published} aria-label={`${p.name} visible in store`}
-                  className={cn('relative h-5 w-9 rounded-full transition-colors', p.is_published ? 'bg-accent' : 'bg-rule')}>
+                  className={cn('relative h-5 w-9 rounded-full transition-colors', p.is_published ? 'bg-tertiary' : 'bg-rule')}>
                   <span className={cn('absolute top-0.5 size-4 rounded-full bg-ink transition-all', p.is_published ? 'left-[18px]' : 'left-0.5')} />
                 </button>
               </td>
