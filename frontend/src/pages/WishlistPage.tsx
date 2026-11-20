@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/misc'
 import { ProductCardSkeleton } from '@/components/product/ProductCard'
 import { Price } from '@/components/product/Price'
 import { needsPersonalization } from '@/components/product/Personalization'
+import { trackAddToCart } from '@/lib/analytics'
 
 export default function WishlistPage() {
   const ids = useWishlist((s) => s.ids)
@@ -48,7 +49,7 @@ export default function WishlistPage() {
                   {needsPersonalization(p) ? (
                     <ButtonLink size="sm" to={`/product/${p.slug}`}>Personalise</ButtonLink>
                   ) : <Button size="sm" onClick={() => {
-                    add(p.id, 1, defaultColor(p), null, defaultVariant(p))
+                    if (add(p.id, 1, defaultColor(p), null, defaultVariant(p))) trackAddToCart(p)
                     void remove(p.id)
                     toast(`Moved ${p.name} to your bag`, { action: { label: 'View bag', href: '/cart' } })
                   }}>Move to bag</Button>}

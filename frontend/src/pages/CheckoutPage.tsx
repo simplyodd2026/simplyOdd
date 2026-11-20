@@ -18,6 +18,7 @@ import { Icon } from '@/components/ui/Icon'
 import { Barcode, ReceiptCoupon, ReceiptLines, ReceiptPaper, Tear } from '@/features/checkout/Receipt'
 import { AddressFields, emptyAddress, validateAddress, type AddressErrors } from '@/features/account/AddressForm'
 import { getAdapter, PaymentCancelled } from '@/features/payments'
+import { trackPurchase } from '@/lib/analytics'
 
 type Step = 'address' | 'shipping' | 'payment'
 // Partial payment is paused for now; flip this to offer it again.
@@ -110,6 +111,7 @@ export default function CheckoutPage() {
   }
 
   const done = (order: Order) => {
+    trackPurchase(order)
     cart.clear()
     qc.invalidateQueries({ queryKey: ['my-orders'] })
     qc.invalidateQueries({ queryKey: ['products'] })

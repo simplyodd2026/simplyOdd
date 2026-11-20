@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/cn'
 import { responsive } from '@/lib/image'
+import { trackAddToCart } from '@/lib/analytics'
 
 export function BoughtTogether({ product, others }: { product: Product; others: Product[] }) {
   const [selected, setSelected] = useState<string[]>(others.map((p) => p.id))
@@ -46,7 +47,7 @@ export function BoughtTogether({ product, others }: { product: Product; others: 
           <p className="label text-fog">Total for {all.length === 1 ? 'this piece' : `all ${all.length}`}</p>
           <p className="font-display text-5xl tabular-nums text-ink">{money(total)}</p>
           <Button size="lg" onClick={() => {
-            all.forEach((p) => add(p.id, 1, defaultColor(p), null, defaultVariant(p)))
+            all.forEach((p) => { if (add(p.id, 1, defaultColor(p), null, defaultVariant(p))) trackAddToCart(p) })
             toast(`Added ${all.length} ${all.length === 1 ? 'piece' : 'pieces'} to your bag`, { action: { label: 'View bag', href: '/cart' } })
           }}>
             Add {all.length === 1 ? 'to bag' : `all ${all.length} to bag`}

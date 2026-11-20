@@ -12,6 +12,7 @@ import { Reveal } from '@/components/motion/Reveal'
 import { useHomePieces } from './pieces'
 import { responsive } from '@/lib/image'
 import { needsPersonalization } from '@/components/product/Personalization'
+import { trackAddToCart } from '@/lib/analytics'
 
 /**
  * The object. One piece, very large, in a pebble-shaped frame on a linen band, with its own name set huge
@@ -32,7 +33,7 @@ export function Spotlight() {
   const addToBag = () => {
     if (personalise) { navigate(`/product/${p.slug}`); return }
     const color = defaultColor(p)
-    add(p.id, 1, color, null, defaultVariant(p))
+    if (add(p.id, 1, color, null, defaultVariant(p))) trackAddToCart(p)
     const shade = color && filaments.byId.get(color)
     toast(`${p.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }

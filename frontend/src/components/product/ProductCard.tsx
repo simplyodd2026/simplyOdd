@@ -11,6 +11,7 @@ import { Icon } from '@/components/ui/Icon'
 import { useTilt } from '@/lib/useTilt'
 import { responsive } from '@/lib/image'
 import { needsPersonalization } from '@/components/product/Personalization'
+import { trackAddToCart } from '@/lib/analytics'
 
 export function ProductCard({ product, className, priority, aspect = 'aspect-[4/5]', showTagline = true, sizes = '(min-width: 1024px) 25vw, (min-width: 640px) 42vw, 70vw' }: {
   product: Product; className?: string; priority?: boolean; index?: number; aspect?: string; showTagline?: boolean
@@ -30,7 +31,7 @@ export function ProductCard({ product, className, priority, aspect = 'aspect-[4/
     e.preventDefault()
     if (personalise) { navigate(`/product/${product.slug}`); return }
     const color = defaultColor(product)
-    add(product.id, 1, color, null, defaultVariant(product))
+    if (add(product.id, 1, color, null, defaultVariant(product))) trackAddToCart(product)
     const shade = color && filaments.byId.get(color)
     toast(`${product.name}${shade ? ` in ${shade.name}` : ''} added to your bag`, { action: { label: 'View bag', href: '/cart' } })
   }

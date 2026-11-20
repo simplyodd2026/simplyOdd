@@ -31,6 +31,7 @@ import { filamentLabel, productFilaments, useFilaments } from '@/lib/filaments'
 import NotFoundPage from './NotFoundPage'
 import { MAX_PER_PRODUCT, SHIPPING } from '@/lib/constants'
 import { responsive } from '@/lib/image'
+import { trackAddToCart } from '@/lib/analytics'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 // The gallery frame: a cut slab with three soft corners, the crisp one top right.
@@ -136,8 +137,8 @@ export default function ProductPage() {
     personalBox.current?.querySelector<HTMLInputElement>('input[aria-invalid]')?.focus({ preventScroll: true })
     return false
   }
-  const addToBag = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); setCart(true) }
-  const buyNow = () => { if (!ready()) return; add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); navigate('/checkout') }
+  const addToBag = () => { if (!ready()) return; const added = add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); if (added) trackAddToCart(p, added, unitPrice); setCart(true) }
+  const buyNow = () => { if (!ready()) return; const added = add(p.id, count, chosen?.id ?? null, personal, version?.key ?? null); if (added) trackAddToCart(p, added, unitPrice); navigate('/checkout') }
 
   const details: [string, string][] = [
     ['Material', p.materials.join(', ') || 'Plant-based PLA'],

@@ -20,7 +20,8 @@ interface CartState {
    * `color` is a filament id; `personalization` is what to write on the piece. The same product in two
    * colours, or with two different names on it, is two lines.
    */
-  add: (productId: string, quantity?: number, color?: string | null, personalization?: Personalization | null, variant?: string | null) => void
+  /** Returns how many were actually added: fewer than asked (or 0) when the per-product limit is reached. */
+  add: (productId: string, quantity?: number, color?: string | null, personalization?: Personalization | null, variant?: string | null) => number
   setQuantity: (line: LineRef, quantity: number) => void
   remove: (line: LineRef) => void
   /** Move a line to another colour, folding it into that colour's line if there already is one. */
@@ -85,10 +86,14 @@ export const useCart = create<CartState>()(
           const items = get().items
           const line: CartLine = { product_id: productId, quantity, variant, color, personalization: tidyPersonalization(personalization) }
           const max = lineMax(items, line)
-          if (max <= 0) return
-          commit(items.some((i) => same(i, line))
-            ? items.map((i) => (same(i, line) ? { ...i, quantity: Math.min(max, i.quantity + quantity) } : i))
-            : [...items, { ...line, quantity: Math.min(max, quantity) }])
+          if (max <= 0) return 0
+          const existing = items.find((i) => same(i, line))?.quantity ?? 0
+          const next = Math.min(max, existing + quantity)
+          if (next <= existing) return 0
+          commit(existing
+            ? items.map((i) => (same(i, line) ? { ...i, quantity: next } : i))
+            : [...items, { ...line, quantity: next }])
+          return next - existing
         },
         setQuantity: (line, quantity) =>
           commit(quantity <= 0
