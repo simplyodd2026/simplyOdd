@@ -229,3 +229,18 @@ def test_custom_requests_flow(client):
     assert client.patch("/api/admin/custom-requests/missing", json={"status": "closed"}, headers=ADMIN).status_code == 404
     assert client.delete(f"/api/admin/custom-requests/{rid}", headers=ADMIN).status_code == 204
     assert client.get("/api/admin/custom-requests", headers=ADMIN).json() == []
+
+
+def test_guest_without_email_can_check_out_and_see_only_their_order(client, products):
+    # Guest checkout uses an anonymous Firebase user: a uid with no email or name on the token.
+    guest = {"Authorization": "Bearer dev:anon-guest-1::"}
+    pid = next(iter(products.values()))["id"]
+    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address("buyer@example.com"),
+            "payment_provider": "mock", "payment_plan": "full"}
+    r = pay(client, body, headers=guest)
+    assert r.status_code == 201, r.text
+    order = r.json()
+    assert order["email"] == "buyer@example.com"
+    assert client.get(f"/api/me/orders/{order['id']}", headers=guest).status_code == 200
+    assert client.get(f"/api/me/orders/{order['id']}", headers=OTHER).status_code == 404
+    assert client.get(f"/api/me/orders/{order['id']}").status_code == 401

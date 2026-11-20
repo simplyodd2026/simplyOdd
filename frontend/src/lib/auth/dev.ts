@@ -34,7 +34,7 @@ const uidFor = (email: string) => {
 }
 
 const user = (email: string, name: string | null, provider: SessionUser['provider'] = 'dev'): SessionUser => ({
-  uid: uidFor(email), email, name, photoURL: null, emailVerified: true, provider,
+  uid: uidFor(email), email, name, photoURL: null, emailVerified: true, provider, isAnonymous: false,
 })
 
 const validEmail = (email: string) => {
@@ -49,12 +49,15 @@ export function createDevAuth(): AuthClient {
       queueMicrotask(() => cb(current))
       return () => listeners.delete(cb)
     },
-    getToken: async () => (current ? `dev:${current.uid}:${current.email}:${current.name ?? ''}` : null),
+    getToken: async () => (current ? `dev:${current.uid}:${current.email ?? ''}:${current.name ?? ''}` : null),
     devSignIn: async (email) => {
       validEmail(email)
       write(user(email, email === 'diveshkasyap5@gmail.com' ? 'Studio Admin' : email === 'demo@simplyodd.dev' ? 'Aarav Mehta' : email.split('@')[0]))
     },
     signInWithGoogle: async () => write(user('google.user@simplyodd.dev', 'Google User', 'google')),
+    ensureGuest: async () => {
+      if (!current) write({ uid: `guest-${Math.random().toString(36).slice(2, 10)}`, email: null, name: null, photoURL: null, emailVerified: false, provider: 'dev', isAnonymous: true })
+    },
     signOut: async () => write(null),
   }
 }

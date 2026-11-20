@@ -76,13 +76,14 @@ export const router = createBrowserRouter([
       { path: '/custom', element: <Navigate to="/customise" replace /> },
       { path: '/help/:topic', element: s(<HelpPage />) },
       { path: '/login', element: s(<LoginPage />) },
+      // Open to guests: ad traffic arrives in in-app browsers where Google sign-in is blocked.
+      { path: '/checkout', element: s(<CheckoutPage />) },
+      { path: '/order/:id', element: s(<OrderConfirmationPage />) },
       // Google sign-in creates accounts, so the old email pages all lead to /login.
       ...['/signup', '/forgot-password', '/verify-email', '/auth/action'].map((path) => ({ path, element: <ToLogin /> })),
       {
         element: <RequireAuth />,
         children: [
-          { path: '/checkout', element: s(<CheckoutPage />) },
-          { path: '/order/:id', element: s(<OrderConfirmationPage />) },
           {
             path: '/account',
             element: s(<AccountLayout />),

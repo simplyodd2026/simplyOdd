@@ -1,4 +1,9 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { auth } from '@/lib/auth'
+import { isInAppBrowser } from '@/lib/inAppBrowser'
+import { useSession } from '@/stores/session'
+import { GoogleButton } from '@/features/auth/AuthShell'
 import { useMyOrder } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
 import { PAYMENT_STATUS_LABEL, money } from '@/lib/format'
@@ -12,8 +17,13 @@ import NotFoundPage from './NotFoundPage'
 export default function OrderConfirmationPage() {
   const { id = '' } = useParams()
   const { data: order, isLoading } = useMyOrder(id)
+  const ready = useSession((s) => s.ready)
+  // Checked out without an account (anonymous session): there's no account page to send them to.
+  const guest = useSession((s) => !s.user && !!s.guestUid)
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState<string | null>(null)
   useDocumentTitle(order ? `Order ${order.number}` : 'Order')
-  if (isLoading) return <PageSpinner />
+  if (!ready || isLoading) return <PageSpinner />
   if (!order) return <NotFoundPage />
   const a = order.address
 
@@ -28,7 +38,9 @@ export default function OrderConfirmationPage() {
           <p className="mt-6 max-w-lg text-lg text-smoke">
             {order.status === 'pending'
               ? 'We’ve saved your order but haven’t received payment yet. You can finish paying from your account.'
-              : `We'll start making it shortly. Updates go to ${order.email}, and you can follow the order from your account.`}
+              : guest
+                ? `We'll start making it shortly. Updates go to ${order.email}.`
+                : `We'll start making it shortly. Updates go to ${order.email}, and you can follow the order from your account.`}
           </p>
           <div className="mt-10"><OrderProgress order={order} /></div>
           <dl className="mt-10 grid gap-8 border-t border-rule pt-8 sm:grid-cols-2">
@@ -45,9 +57,20 @@ export default function OrderConfirmationPage() {
             </div>
           </dl>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink to={`/account/orders/${order.id}`} variant="primary">View order</ButtonLink>
+            {!guest && <ButtonLink to={`/account/orders/${order.id}`} variant="primary">View order</ButtonLink>}
             <ButtonLink to="/shop" variant="secondary">Keep browsing</ButtonLink>
           </div>
+          {guest && !isInAppBrowser() && (
+            <div className="mt-10 max-w-md border-t border-rule pt-8">
+              <p className="mb-4 text-smoke">Want to track this order and check out faster next time? Save it to an account.</p>
+              <GoogleButton busy={linking} onClick={async () => {
+                setLinking(true)
+                setLinkError(null)
+                try { await auth.signInWithGoogle() } catch (e) { setLinkError((e as Error).message) } finally { setLinking(false) }
+              }} />
+              {linkError && <p className="mt-3 text-sm text-accent" role="alert">{linkError}</p>}
+            </div>
+          )}
         </div>
         <aside className="lg:col-span-5">
           <div className="border border-rule bg-paper-2 p-6">

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ApiError } from '@/lib/api'
+import { auth } from '@/lib/auth'
+import { isInAppBrowser } from '@/lib/inAppBrowser'
 import { refreshProfile, useConfig, useQuote } from '@/lib/queries'
 import type { AddressInput, CheckoutResponse, Order, PaymentPlan, ShippingAddress } from '@/lib/types'
 import { useCart } from '@/stores/cart'
@@ -86,7 +88,7 @@ export default function CheckoutPage() {
       : /^\S+@\S+\.\S+$/.test(email) ? {} : { email: 'Enter an email for order updates' }
     setErrors(errs)
     if (Object.keys(errs).length) return
-    if (addressId === 'new' && saveAddress) {
+    if (user && addressId === 'new' && saveAddress) {
       try {
         const list = await api<{ id: string }[]>('/me/addresses', { body: { ...draft, is_default: saved.length === 0 } })
         await refreshProfile()
@@ -128,6 +130,8 @@ export default function CheckoutPage() {
         items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode, coupon_amount: cart.couponAmount,
         payment_provider: provider, payment_plan: plan, notes: null,
       }
+      // No account needed: guests get an anonymous session to attach the order to.
+      if (!user) await auth.ensureGuest()
       const { payment } = await api<CheckoutResponse>('/checkout', { body: checkout })
       const adapter = getAdapter(payment.provider)
       if (!adapter) throw new Error('This payment method isn’t available in this version of the site. Refresh and try again.')
@@ -211,6 +215,9 @@ export default function CheckoutPage() {
                 <div>
                   <h2 className="mb-4 font-display text-[1.6rem] text-ink">Contact</h2>
                   <Input label="Email for order updates" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
+                  {!user && !isInAppBrowser() && (
+                    <p className="mt-3 text-[14px] text-smoke">Checking out as a guest. <Link to="/login?next=/checkout" className="link-draw text-ink">Sign in</Link> to use saved addresses.</p>
+                  )}
                 </div>
                 <div>
                   <h2 className="mb-4 font-display text-[1.6rem] text-ink">Deliver to</h2>
@@ -233,8 +240,8 @@ export default function CheckoutPage() {
                   )}
                   {addressId === 'new' && (
                     <div className="flex flex-col gap-5">
-                      <AddressFields value={draft} onChange={setDraft} errors={errors} showLabel={saveAddress} />
-                      <Checkbox label="Save this address to my account" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />
+                      <AddressFields value={draft} onChange={setDraft} errors={errors} showLabel={!!user && saveAddress} />
+                      {user && <Checkbox label="Save this address to my account" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} />}
                     </div>
                   )}
                 </div>

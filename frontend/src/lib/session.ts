@@ -9,11 +9,13 @@ import type { QueryClient } from '@tanstack/react-query'
  *  bag/wishlist into the account on sign-in. */
 export function startSession(queryClient: QueryClient) {
   let lastUid: string | null | undefined
-  return auth.onChange(async (user) => {
+  return auth.onChange(async (raw) => {
     const { set } = useSession.getState()
+    // A guest (anonymous) session can place and view its orders, but everywhere else it counts as signed out.
+    const user = raw && !raw.isAnonymous ? raw : null
     const uid = user?.uid ?? null
     const changed = uid !== lastUid
-    set({ user })
+    set({ user, guestUid: raw?.isAnonymous ? raw.uid : null })
     if (!user) {
       if (lastUid) {
         // Signed out: don't leave the account's bag/wishlist on a shared device.

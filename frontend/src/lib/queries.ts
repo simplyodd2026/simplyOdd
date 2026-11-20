@@ -90,7 +90,7 @@ export const useMyOrders = () => {
 }
 
 export const useMyOrder = (id: string) => {
-  const uid = useSession((s) => s.user?.uid)
+  const uid = useSession((s) => s.user?.uid ?? s.guestUid)
   return useQuery({ queryKey: ['my-order', id], queryFn: () => api<Order>(`/me/orders/${id}`), enabled: !!uid })
 }
 
