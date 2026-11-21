@@ -7,6 +7,7 @@ import { CartDrawer } from './CartDrawer'
 import { SearchOverlay } from './SearchOverlay'
 import { MobileMenu } from './MobileMenu'
 import { Toaster } from '@/components/ui/Toaster'
+import { ChatWidget } from '@/features/chat/ChatWidget'
 import { useConfig } from '@/lib/queries'
 import { money } from '@/lib/format'
 import { refreshScroll } from '@/lib/motion'
@@ -99,6 +100,7 @@ export function SiteLayout() {
       <CartDrawer />
       <SearchOverlay />
       <MobileMenu />
+      <ChatWidget />
       <Toaster />
     </div>
   )

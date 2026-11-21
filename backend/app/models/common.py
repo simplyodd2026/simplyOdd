@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict
@@ -16,8 +15,3 @@ class Page(Schema, Generic[T]):
     page: int
     page_size: int
     pages: int
-
-
-class Timestamped(Schema):
-    created_at: datetime
-    updated_at: datetime

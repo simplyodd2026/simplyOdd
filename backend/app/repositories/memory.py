@@ -63,9 +63,6 @@ class MemoryStore:
         if self._path and self._path.exists():
             self._data = json.loads(self._path.read_text(), object_hook=_decode)
 
-    def is_empty(self) -> bool:
-        return not any(self._data.values())
-
     def _flush(self) -> None:
         if not self._path:
             return
@@ -134,4 +131,12 @@ class MemoryStore:
         async with self._lock:
             doc = self._col(collection).setdefault(doc_id, {})
             doc[field] = doc.get(field, 0) + delta
+            self._flush()
+
+    async def increment_fields(self, collection, doc_id, deltas, fields=None):
+        async with self._lock:
+            doc = self._col(collection).setdefault(doc_id, {})
+            for k, d in deltas.items():
+                doc[k] = doc.get(k, 0) + d
+            doc.update(copy.deepcopy(fields or {}))
             self._flush()

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { AddressInput } from '@/lib/types'
 import { Input, Select, Checkbox } from '@/components/ui/Field'
 
@@ -62,10 +61,4 @@ export function AddressFields({ value, onChange, errors = {}, tone = 'dark', sho
       )}
     </div>
   )
-}
-
-export function useAddressState(initial: AddressInput) {
-  const [value, setValue] = useState(initial)
-  const [errors, setErrors] = useState<AddressErrors>({})
-  return { value, setValue, errors, setErrors }
 }

@@ -51,3 +51,5 @@ class AuthUser(Schema):
     picture: str | None = None
     email_verified: bool = False
     is_admin: bool = False
+    # A Firebase anonymous session (guest checkout). Never set from client input.
+    is_anonymous: bool = False

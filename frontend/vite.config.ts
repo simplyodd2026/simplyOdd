@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -12,6 +13,13 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react(), tailwindcss()],
     resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+    test: {
+      environment: 'jsdom',
+      include: ['src/**/*.test.{ts,tsx}'],
+      setupFiles: ['src/test/setup.ts'],
+      // Tests never use real credentials; keep .env values (Firebase, GA) out.
+      env: { VITE_FIREBASE_API_KEY: '', VITE_API_URL: '' },
+    },
     server: {
       port: 5173,
       proxy: {

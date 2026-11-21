@@ -34,13 +34,14 @@ In dev sign-in mode **any password works**:
 | `admin@simplyodd.dev` | Admin dashboard at `/admin` |
 | anything else | A fresh customer account |
 
-At checkout, the **Test card** method has a "Simulate a declined card" switch. **Cash on delivery** confirms immediately.
+At checkout, the **Test card** method has a "Simulate a declined card" switch.
 Coupons `ODDONE` (10% off) and `FREESHIP` are seeded.
 
 Data persists to `backend/.data/store.json`. Delete `backend/.data` to reseed.
 
 ```bash
 cd backend && .venv/bin/python -m pytest      # API tests
+cd frontend && npm test                       # widget tests (Vitest)
 cd frontend && npm run build                  # typecheck + production build
 ```
 
@@ -122,6 +123,82 @@ The service scales to zero when idle, so the first request after a quiet period 
 Build command `npm run build`, output `dist`. `vercel.json` already includes SPA rewrites and security headers.
 
 Nothing is provider-specific: the API is a plain ASGI app (there's also a `Dockerfile`), and the frontend is static files plus one env var.
+
+## Oddly Assistant (AI shopping chat)
+
+A chat widget on every storefront page (hidden on checkout) that finds products, filters by budget, compares pieces,
+answers policy questions, takes custom-creation briefs and shows a signed-in customer their own orders.
+
+**How it works.** `POST /api/chat/message` → `ChatService` (`backend/app/services/chat/`) sends the message, a compact
+JSON session context (last search, budget, recently shown products) and the last few turns to Groq with seven tools.
+The model can only *call* tools; `tools.py` validates every argument with Pydantic and runs it against the existing
+services: published products only, the caller's own orders only, and a brief is sent only after the customer
+explicitly confirms (the **Send brief** button, or a "yes" to a summary they've seen). Product cards, prices, images
+and links in a reply are copied from the catalogue by the server, never from model text.
+
+**Three layers.** Groq answers first (free tier). If Groq is rate limited, over its call budget, slow, down or returns a
+broken tool call, the **Claude API** (`ANTHROPIC_API_KEY`, `claude-opus-5-5` at effort `low` by default) takes that
+call with the same tools and rules. If both fail, or neither key is set, the same tools answer directly (`parsing.py`
+reads the budget, intent and search words). Shopping never depends on either model.
+
+Claude is paid per token (Opus 5.5: $4 / $20 per million input/output tokens; a chat turn is roughly 2–3 calls of a few
+thousand input tokens, most of them served from the prompt cache). `ANTHROPIC_MAX_CALLS_PER_MINUTE` (10) caps how fast
+it can spend, and the analytics report `llm_backup_rescues` and `llm_calls_by_provider` so you can see how often it
+runs. Requests opt into server-side refusal fallbacks (`fallbacks: "default"`), so a policy decline is retried on
+another model inside the same call. To spend less, set `ANTHROPIC_MODEL=claude-sonnet-5-5` or `claude-haiku-5-5`.
+
+| File | What |
+|---|---|
+| `services/chat/knowledge.py` | FAQ/policy answers, copied from the Help, Customise and product pages. Edit both together. |
+| `services/chat/tools.py` | `search_products`, `get_product_details`, `compare_products`, `search_faq`, `create_custom_enquiry`, `get_order_status`, `get_business_information` |
+| `services/chat/llm.py` | Groq then Claude (`ChainLLM`). Each: one SDK retry, pause after a 429 (honours `Retry-After`), per-minute call budget. Groq also falls through retired models |
+| `services/chat/service.py` | Sessions, context, the tool loop (max 3 rounds), fallback, persistence, analytics |
+| `frontend/src/features/chat/` | Widget (the panel is lazy-loaded on first open) |
+
+**Endpoints** (all JSON; each request after session creation sends the `X-Chat-Token` returned at creation):
+
+| | |
+|---|---|
+| `POST /api/chat/sessions` | `{visitor_id?}` → `{session_id, token, expires_at, greeting, suggestions}` |
+| `POST /api/chat/message` | `{session_id, message}` → `{type, message, products, comparison, faq, enquiry, orders, suggestions, fallback}` |
+| `GET /api/chat/history/{session_id}` | The conversation. A signed-in conversation also needs that account's bearer token. |
+| `POST /api/chat/enquiries` | Sends a custom brief to the existing `custom_requests` (admin → Custom requests, marked "Oddly Assistant") |
+| `POST /api/chat/feedback` | `{session_id, message_id, rating: up\|down}` |
+| `GET /api/admin/chat/analytics?days=30` | Conversations, messages, intents, failed queries, Groq failures/429s, tokens, latency, top recommended products |
+| `POST /api/admin/chat/cleanup` | Deletes expired conversations |
+
+**Storage** (Firestore, through `DocumentStore` like everything else): `chat_sessions`, `chat_messages` (both carry
+`expires_at`), `chat_stats` (one doc per day), `chat_product_stats`. Deploy the new index with
+`firebase deploy --only firestore:indexes`. To expire old chats automatically, add TTL policies:
+```bash
+gcloud firestore fields ttls update expires_at --collection-group=chat_sessions --enable-ttl --project simply-odd
+gcloud firestore fields ttls update expires_at --collection-group=chat_messages --enable-ttl --project simply-odd
+```
+
+**Limits.** Per IP (`main.py`): 20 messages/min and 300/hour. Per visitor or customer: `CHAT_MESSAGES_PER_MINUTE` (12) and
+`CHAT_MESSAGES_PER_DAY` (200). Messages are capped at `CHAT_MAX_MESSAGE_CHARS` (600) and chat bodies at 16 KB.
+Groq calls are capped at `GROQ_MAX_CALLS_PER_MINUTE` (25) for the whole process; past that, replies use the fallback.
+A message costs 2–3 Groq calls (one per tool round). Groq's free tier has per-model request and token limits, is not
+guaranteed for production use, and can change. Check your limits at console.groq.com/settings/limits.
+
+**Set up Groq**
+1. Create a key at https://console.groq.com/keys.
+2. Pick a production model from https://console.groq.com/docs/models (all Groq models support tool calling).
+   The default is `openai/gpt-oss-20b`, then `openai/gpt-oss-120b`. Free-tier limits are per model (8,000 tokens a
+   minute each on the key tested), and a 429 moves to the next model, so add every tool-capable model your key
+   lists to `GROQ_FALLBACK_MODELS` (e.g. `qwen/qwen3.8-27b`). A chat message uses roughly 2,500 tokens per call.
+3. Locally: set `GROQ_API_KEY` in `backend/.env` (see `.env.example` for every `GROQ_*`/`CHAT_*` setting).
+4. Cloud Run: keep the key in Secret Manager rather than a plain env var:
+   ```bash
+   printf %s "$KEY" | gcloud secrets create groq-api-key --data-file=- --project simply-odd
+   gcloud secrets add-iam-policy-binding groq-api-key --project simply-odd \
+     --member serviceAccount:simplyodd-api@simply-odd.iam.gserviceaccount.com --role roles/secretmanager.secretAccessor
+   gcloud run services update simplyodd-api --region asia-south1 \
+     --update-secrets GROQ_API_KEY=groq-api-key:latest --update-env-vars GROQ_MODEL=openai/gpt-oss-20b
+   ```
+   Like the other env vars, it carries over to every new revision the deploy workflow creates.
+5. Optional backup: create a Claude API key at https://platform.claude.com/settings/keys and add it the same way
+   (`groq-api-key` → `anthropic-api-key`, `GROQ_API_KEY` → `ANTHROPIC_API_KEY`).
 
 ## Not included yet
 

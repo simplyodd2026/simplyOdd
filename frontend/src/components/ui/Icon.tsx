@@ -30,6 +30,11 @@ const paths = {
   shield: <><path d="M12 3.5 19 6v5.5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-2.5Z" /><path d="m9 12 2.2 2.2L15.5 10" /></>,
   layers: <><path d="m12 4 8.5 4.5L12 13 3.5 8.5 12 4Z" /><path d="m3.5 12.5 8.5 4.5 8.5-4.5" /><path d="m3.5 16.5 8.5 4.5 8.5-4.5" /></>,
   external: <><path d="M13 5h6v6" /><path d="M19 5 10 14" /><path d="M17 13.5V19H5V7h5.5" /></>,
+  chat: <><path d="M5 6.5h14v9.5H10l-4 3.5V16H5V6.5Z" /><path d="M9 11.2h.01" /><path d="M12 11.2h.01" /><path d="M15 11.2h.01" /></>,
+  send: <><path d="M12 19V5.5" /><path d="m6.5 11 5.5-5.5 5.5 5.5" /></>,
+  refresh: <><path d="M19 12a7 7 0 1 1-2.05-4.95" /><path d="M19 4.5V8h-3.5" /></>,
+  thumbUp: <><path d="M8 10.5V19H5v-8.5h3Z" /><path d="M8 10.5 11.5 4c1.4 0 2.3 1 2 2.4l-.6 3h4.6a1.6 1.6 0 0 1 1.6 1.9l-1.2 6A1.9 1.9 0 0 1 16 19H8" /></>,
+  thumbDown: <><path d="M8 13.5V5H5v8.5h3Z" /><path d="M8 13.5 11.5 20c1.4 0 2.3-1 2-2.4l-.6-3h4.6a1.6 1.6 0 0 0 1.6-1.9l-1.2-6A1.9 1.9 0 0 0 16 5H8" /></>,
 } as const
 
 export type IconName = keyof typeof paths

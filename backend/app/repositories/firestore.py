@@ -83,3 +83,8 @@ class FirestoreStore:
 
     async def increment(self, collection, doc_id, field, delta):
         await self.db.collection(collection).document(doc_id).set({field: firestore.Increment(delta)}, merge=True)
+
+    async def increment_fields(self, collection, doc_id, deltas, fields=None):
+        data = {k: firestore.Increment(d) for k, d in deltas.items()}
+        data.update(fields or {})
+        await self.db.collection(collection).document(doc_id).set(data, merge=True)

@@ -41,28 +41,12 @@
   --color-clay: #C98774;          /* dusty terracotta */
   --color-sage: #9AA38F;
   --color-olive: #5E6647;
-  --color-brass: #D4A574;
-  --color-brass-light: #E8CFA8;
-  /* Legacy names kept so older panels still resolve; all mapped into the earthy palette. */
-  --color-pink: #EBD5C8;
-  --color-pink-2: #DDB9A8;
+  /* Older names still used by a few panels, mapped into the earthy palette. */
   --color-butter: #EFE0C4;
-  --color-lilac: #E9E0D4;
-  --color-mint: #DCE0D2;
-  --color-sky: #E4E2DA;
-  --color-peach: #EBCDB5;
   --color-plum: #6B3A26;
-  --color-kraft: #C9A27A;
-  --color-kraft-line: #A88F6A;
-  --color-terracotta: #B85C3C;
-  --color-denim: #5E6647;
-  --color-mustard: #D4A574;
 
   --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Playfair Display", "Didot", Georgia, serif;
   --font-display: "Playfair Display", "Didot", Georgia, serif;
-  --font-condensed: "Playfair Display", "Didot", Georgia, serif;
-  --font-mono: "Jost", ui-sans-serif, system-ui, sans-serif;
   --font-script: "Monsieur La Doulaise", "Snell Roundhand", cursive;
 
   --text-display: clamp(3.5rem, 11vw, 11rem);
@@ -140,11 +124,8 @@
     font-optical-sizing: auto;
     letter-spacing: -0.01em;
   }
-  .font-serif { font-family: var(--font-serif); font-optical-sizing: auto; }
   /* The signature: a flowing script laid over the serif, used sparingly, like a hand-signed card. */
   .font-script { font-family: var(--font-script); font-weight: 400; font-style: normal; letter-spacing: 0; line-height: 1; }
-  /* Product names and prices share the display face, a touch tighter. */
-  .font-condensed { font-family: var(--font-condensed); font-weight: 400; font-optical-sizing: auto; letter-spacing: -0.02em; }
   /* Organic frames: pebbles, plates and leaves rather than rectangles. Each is a fixed, deliberate shape. */
   .pebble { border-radius: 58% 42% 47% 53% / 46% 54% 46% 54%; }
   .pebble-2 { border-radius: 44% 56% 62% 38% / 55% 41% 59% 45%; }
@@ -166,15 +147,6 @@
       repeating-linear-gradient(0deg, rgb(42 31 23 / 0.025) 0 1px, transparent 1px 3px),
       repeating-linear-gradient(90deg, rgb(42 31 23 / 0.02) 0 1px, transparent 1px 4px);
   }
-  /* Speckled ceramic glaze. */
-  .speckled {
-    background-image:
-      radial-gradient(rgb(94 80 68 / 0.28) 0.8px, transparent 1.1px),
-      radial-gradient(rgb(94 80 68 / 0.18) 0.6px, transparent 0.9px);
-    background-size: 19px 23px, 13px 11px;
-    background-position: 0 0, 7px 5px;
-  }
-  /* Small technical labels. */
   /* Small labels read like a museum caption: sentence case, medium weight. */
   .label {
     font-family: var(--font-sans);
@@ -184,9 +156,7 @@
     letter-spacing: 0.005em;
   }
   .w-semi { font-weight: 500; letter-spacing: -0.01em; }
-  .w-wide { font-weight: 600; letter-spacing: -0.02em; }
   .w-cond { font-weight: 600; letter-spacing: -0.02em; }
-  .w-norm { font-weight: 400; }
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
   .scrollbar-none { scrollbar-width: none; }
@@ -197,9 +167,6 @@
     transition: background-size 0.5s var(--ease-out-quint);
   }
   .link-draw:hover, .link-draw:focus-visible, .link-draw[aria-current="page"] { background-size: 100% 1px; }
-  /* Masks used by text reveals so lines rise from behind a baseline. */
-  /* GSAP's SplitText line masks: leave room so descenders and italic swashes aren't clipped. */
-  .split-line-mask { padding-bottom: 0.16em; margin-bottom: -0.16em; }
   .mask-line { display: block; overflow: clip; padding-bottom: 0.16em; margin-bottom: -0.16em; }
   /* A fine light grain over dark bands. */
   .film-grain {
@@ -207,80 +174,9 @@
   }
   /* Paper grain layered over whatever background colour the element has. */
   .grain { background-image: var(--grain); }
-  /* Kraft paper with a brown grid, like the back of a cutting mat. */
-  .kraft-grid {
-    background-color: var(--paper, var(--color-kraft));
-    background-image:
-      var(--grain),
-      linear-gradient(to right, var(--line, rgb(120 96 78 / 0.55)) 3px, transparent 3px),
-      linear-gradient(to bottom, var(--line, rgb(120 96 78 / 0.55)) 3px, transparent 3px);
-    background-size: 240px 240px, 88px 88px, 88px 88px;
-  }
-  /* The same cutting mat in strawberry-milk pink. */
-  .pink-grid { --paper: var(--color-pink); --line: rgb(155 44 44 / 0.12); }
-  /* Speckled blush paper for the bottom of a torn section. */
-  .speckle {
-    background-color: #F1DFC6;
-    background-image:
-      radial-gradient(rgb(160 90 50 / 0.5) 1.4px, transparent 1.6px),
-      radial-gradient(rgb(160 90 50 / 0.3) 1px, transparent 1.2px),
-      linear-gradient(to right, rgb(160 90 50 / 0.1) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(160 90 50 / 0.1) 1px, transparent 1px);
-    background-size: 37px 41px, 23px 19px, 64px 64px, 64px 64px;
-    background-position: 0 0, 11px 7px, 0 0, 0 0;
-  }
-  /* Notebook paper: a pink margin line and pale blue rules. */
-  .lined-paper {
-    background-color: #FFFDF7;
-    background-image:
-      linear-gradient(to right, transparent 52px, rgb(155 44 44 / 0.35) 52px 54px, transparent 54px),
-      repeating-linear-gradient(to bottom, transparent 0 33px, rgb(160 90 50 / 0.2) 33px 34px);
-  }
-  /* Dot-grid journal paper. */
-  .dot-paper {
-    background-color: var(--color-paper-2);
-    background-image: radial-gradient(rgb(67 48 42 / 0.2) 1.2px, transparent 1.5px);
-    background-size: 22px 22px;
-  }
-  /* Cork pinboard. */
-  .cork {
-    background-color: #D2A878;
-    background-image:
-      var(--grain),
-      radial-gradient(rgb(120 80 40 / 0.4) 1px, transparent 1.6px),
-      radial-gradient(rgb(255 240 210 / 0.35) 1px, transparent 1.6px);
-    background-size: 240px 240px, 9px 11px, 13px 7px;
-    background-position: 0 0, 0 0, 4px 5px;
-  }
-  /* A strip of embossed label-maker tape. */
-  .label-tape {
-    background: var(--color-ink); color: var(--color-cream);
-    text-shadow: 0 1px 0 rgb(255 255 255 / 0.25), 0 -1px 0 rgb(0 0 0 / 0.6);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 6px 14px -6px rgb(67 48 42 / 0.5);
-  }
   /* A highlighter swipe behind a word. */
   .highlight {
     background: linear-gradient(100deg, transparent 2%, var(--hl, var(--color-butter)) 4% 96%, transparent 98%) 0 72% / 100% 42% no-repeat;
-  }
-  /* A square sticky note whose bottom corner lifts off the page. */
-  .note-lift { box-shadow: 0 1px 1px rgb(67 48 42 / 0.08), 8px 16px 18px -10px rgb(67 48 42 / 0.4); }
-  /* The striped border of an airmail envelope, in pastel. */
-  .airmail {
-    background: repeating-linear-gradient(-45deg, #F0B9A0 0 16px, #FBF7F0 16px 26px, #F6E4E1 26px 42px, #FBF7F0 42px 52px);
-  }
-  /* Pale blue airmail writing paper, dotted. */
-  .airmail-paper {
-    background-color: #F1EADF;
-    background-image: radial-gradient(rgb(67 48 42 / 0.14) 1.2px, transparent 1.5px);
-    background-size: 22px 22px;
-  }
-  /* Pale butter graph paper, like a maker's sketchbook. */
-  .graph-paper {
-    background-color: #F7EFE3;
-    background-image:
-      linear-gradient(to right, rgb(67 48 42 / 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(67 48 42 / 0.08) 1px, transparent 1px);
-    background-size: 24px 24px;
   }
   /* A soft shadow that follows a cut-out's real outline. */
   .cutout { filter: drop-shadow(0 10px 14px rgb(67 48 42 / 0.28)); }
@@ -298,7 +194,8 @@
   .dots {
     background-image: radial-gradient(rgb(67 48 42 / 0.12) 1.2px, transparent 1.2px);
     background-size: 18px 18px;
-  }  .layer-lines {
+  }
+  .layer-lines {
     background-image: repeating-linear-gradient(to bottom, transparent 0 5px, rgb(0 0 0 / 0.045) 5px 6px);
   }
 }
@@ -307,23 +204,6 @@
   0% { border-radius: 58% 42% 47% 53% / 46% 54% 46% 54%; transform: rotate(0deg); }
   100% { border-radius: 45% 55% 58% 42% / 56% 44% 56% 44%; transform: rotate(6deg); }
 }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-@keyframes bob { 0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translateY(-8px) rotate(calc(var(--r, 0deg) + 4deg)); } }
-@keyframes swing { 0%, 100% { transform: rotate(calc(var(--r, 0deg) - 2deg)); } 50% { transform: rotate(calc(var(--r, 0deg) + 2deg)); } }
-@keyframes sway { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
-@keyframes wiggle { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(4deg); } }
-@keyframes reveal-up { from { transform: translateY(105%); } to { transform: translateY(0); } }
-
-.animate-fade { animation: fade-in 0.4s var(--ease-out-quint) both; }
-.animate-marquee { animation: marquee 40s linear infinite; }
-.animate-pulse-dot { animation: pulse-dot 1.8s ease-in-out infinite; }
-.animate-reveal { animation: reveal-up 1.1s var(--ease-out-quint) both; }
-.animate-bob { animation: bob 5s ease-in-out infinite; }
-.animate-swing { animation: swing 4s ease-in-out infinite; transform-origin: 50% 0; }
-.animate-sway { animation: sway 3.6s ease-in-out infinite; }
-.animate-wiggle { animation: wiggle 2.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }

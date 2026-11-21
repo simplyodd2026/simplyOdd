@@ -10,6 +10,10 @@ from app.core.config import Settings
 from app.repositories.store import DocumentStore
 from app.services.accounts import AccountService
 from app.services.catalog import CatalogService
+from app.services.chat.knowledge import get_knowledge
+from app.services.chat.llm import LLM, build_llm
+from app.services.chat.service import ChatService
+from app.services.chat.tools import ChatTools
 from app.services.coupons import CouponService
 from app.services.homepage import HomepageService
 from app.services.insights import InsightsService
@@ -36,6 +40,7 @@ class Services:
     reviews: ReviewService
     insights: InsightsService
     homepage: HomepageService
+    chat: ChatService
 
 
 def build_media(settings: Settings) -> MediaStorage:
@@ -48,7 +53,7 @@ def build_media(settings: Settings) -> MediaStorage:
     return LocalMediaStorage(str(LOCAL_MEDIA_ROOT), settings.public_base_url)
 
 
-def build_services(settings: Settings, store: DocumentStore | None = None) -> Services:
+def build_services(settings: Settings, store: DocumentStore | None = None, llm: LLM | None = None) -> Services:
     if store is None:
         if settings.data_backend == "firestore":
             from app.repositories.firestore import FirestoreStore
@@ -67,8 +72,11 @@ def build_services(settings: Settings, store: DocumentStore | None = None) -> Se
     reviews = ReviewService(store, catalog, orders)
     insights = InsightsService(store, catalog, orders, accounts)
     homepage = HomepageService(store, catalog)
+    knowledge = get_knowledge(tuple(p["label"] for p in payments.public()))
+    chat = ChatService(store, settings, catalog, ChatTools(catalog, orders, insights, knowledge), knowledge,
+                       llm or build_llm(settings))
     return Services(settings, store, media, catalog, coupons, pricing, payments, orders, accounts, reviews, insights,
-                    homepage)
+                    homepage, chat)
 
 
 def services(request: Request) -> Services:

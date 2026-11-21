@@ -97,9 +97,11 @@ class InsightsService:
         await self.store.delete(NEWSLETTER, sid)
 
     # ------------------------------------------------------- custom requests
-    async def request_custom(self, data: CustomRequestIn) -> CustomRequest:
+    async def request_custom(self, data: CustomRequestIn, *, source: str = "form", chat_session_id: str | None = None,
+                             user_id: str | None = None) -> CustomRequest:
         ts = now()
         body = data.model_dump()
+        body.update(source=source, chat_session_id=chat_session_id, user_id=user_id)
         body["email"] = body["email"].strip().lower()
         body["colours"] = [c.strip()[:20] for c in body["colours"] if c.strip()]
         body["changes"] = list(dict.fromkeys(body["changes"]))

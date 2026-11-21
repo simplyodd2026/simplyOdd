@@ -23,10 +23,10 @@ function detailToMessage(detail: unknown): string {
   return 'Something went wrong. Try again.'
 }
 
-type Opts = { method?: string; body?: unknown; form?: FormData; auth?: boolean; signal?: AbortSignal }
+type Opts = { method?: string; body?: unknown; form?: FormData; auth?: boolean; signal?: AbortSignal; headers?: Record<string, string> }
 
 export async function api<T>(path: string, opts: Opts = {}): Promise<T> {
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = { ...opts.headers }
   if (opts.auth !== false) {
     const token = await auth.getToken()
     if (token) headers.Authorization = `Bearer ${token}`

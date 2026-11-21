@@ -77,6 +77,13 @@ class CustomRequestIn(Schema):
     reference_url: str | None = Field(default=None, max_length=500)
     product_id: str | None = Field(default=None, max_length=60)  # set when customising an existing piece
     changes: list[CustomChange] = Field(default_factory=list, max_length=4)
+    # Optional details the chat assistant collects; the website form leaves them empty.
+    dimensions: str | None = Field(default=None, max_length=120)
+    quantity: int | None = Field(default=None, ge=1, le=500)
+    notes: str | None = Field(default=None, max_length=1000)
+
+
+CustomSource = Literal["form", "chat"]
 
 
 class CustomRequestUpdate(Schema):
@@ -88,6 +95,9 @@ class CustomRequest(CustomRequestIn):
     # Copied from the catalogue when the request is made, so it reads correctly if the product changes later.
     product_name: str | None = None
     product_slug: str | None = None
+    source: CustomSource = "form"
+    chat_session_id: str | None = None
+    user_id: str | None = None
     status: CustomStatus = "new"
     created_at: datetime
     updated_at: datetime

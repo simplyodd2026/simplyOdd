@@ -169,3 +169,19 @@ class RateLimitMiddleware:
             return await _send_json(send, 429, "Too many requests. Wait a moment and try again.",
                                     {"Retry-After": str(retry_after)})
         await self.app(scope, receive, send)
+
+
+class ChatBodyLimit:
+    """A tighter body limit for /api/chat/*, where requests are a line of text."""
+
+    _NEVER = re.compile(r"(?!)")
+
+    def __init__(self, app: ASGIApp, limit: int, prefix: str = "/api/chat/"):
+        self.app = app
+        self.prefix = prefix
+        self.limited = BodySizeLimitMiddleware(app, default=limit, uploads=limit, upload_paths=self._NEVER)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope["path"].startswith(self.prefix):
+            return await self.limited(scope, receive, send)
+        await self.app(scope, receive, send)

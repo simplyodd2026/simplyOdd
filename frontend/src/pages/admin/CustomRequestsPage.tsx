@@ -12,6 +12,8 @@ interface CustomRequest {
   id: string; name: string; email: string; idea: string; kind: string; size: string; colours: string[]
   budget: string; reference_url: string | null; status: Status; created_at: string
   product_name?: string | null; product_slug?: string | null; changes?: string[]
+  // Filled in when the request came through Oddly Assistant (the chat).
+  source?: 'form' | 'chat'; dimensions?: string | null; quantity?: number | null; notes?: string | null
 }
 
 const LABELS: Record<string, string> = {
@@ -61,8 +63,11 @@ export default function CustomRequestsPage() {
               </p>
             )}
             <p className="whitespace-pre-line text-graphite">{r.idea}</p>
+            {r.notes && <p className="whitespace-pre-line text-sm text-smoke">{r.notes}</p>}
             <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              {[['Type', LABELS[r.kind]], ['Size', LABELS[r.size]], ['Budget', LABELS[r.budget]], ['Colours', r.colours.join(', ') || '—']].map(([k, v]) => (
+              {[['Type', LABELS[r.kind]], ['Size', LABELS[r.size]], ['Budget', LABELS[r.budget]], ['Colours', r.colours.join(', ') || '—'],
+                ...(r.dimensions ? [['Dimensions', r.dimensions]] : []), ...(r.quantity ? [['Quantity', String(r.quantity)]] : []),
+                ...(r.source === 'chat' ? [['From', 'Oddly Assistant']] : [])].map(([k, v]) => (
                 <div key={k} className="flex gap-1.5"><dt className="text-fog">{k}</dt><dd className="text-ink">{v ?? '—'}</dd></div>
               ))}
             </dl>

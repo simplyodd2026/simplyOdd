@@ -76,11 +76,6 @@ export function initAnalytics(router: AppRouter) {
   router.subscribe((state) => sendPageView(state.location))
 }
 
-/** Send a custom GA event, e.g. trackEvent('add_to_cart', { ... }). No-op when GA is off. */
-export function trackEvent(name: string, params?: Record<string, unknown>) {
-  if (GA_ID && typeof window !== 'undefined' && window.gtag) window.gtag('event', name, params)
-}
-
 // ---- Meta Pixel standard events ----------------------------------------------------------
 
 type PixelProduct = Pick<Product, 'id' | 'name' | 'price' | 'variants' | 'default_variant'>

@@ -29,7 +29,9 @@ async def _verify(token: str, settings: Settings) -> AuthUser:
             raise Unauthorized("Malformed dev token")
         uid, email = parts[1], parts[2]
         name = parts[3] if len(parts) > 3 else email.split("@")[0]
-        return AuthUser(uid=uid, email=email, name=name, email_verified=True)
+        # The dev sign-in's guest checkout issues `dev:guest-…:` tokens with no email.
+        anonymous = uid.startswith("guest-") and not email
+        return AuthUser(uid=uid, email=email, name=name, email_verified=True, is_anonymous=anonymous)
 
     from firebase_admin import auth as fb_auth
 
@@ -43,6 +45,7 @@ async def _verify(token: str, settings: Settings) -> AuthUser:
     return AuthUser(
         uid=claims["uid"], email=email, name=claims.get("name"), picture=claims.get("picture"),
         email_verified=bool(claims.get("email_verified")),
+        is_anonymous=(claims.get("firebase") or {}).get("sign_in_provider") == "anonymous",
     )
 
 
