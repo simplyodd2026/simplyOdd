@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { Icon } from '@/components/ui/Icon'
 import { cn } from '@/lib/cn'
+import { viewingProduct } from './api'
 import { useChat } from './store'
 
 // The conversation UI loads on first open, so the launcher adds almost nothing to page weight.
@@ -16,6 +17,8 @@ export function ChatWidget() {
   const { pathname } = useLocation()
   const open = useChat((s) => s.open)
   const setOpen = useChat((s) => s.setOpen)
+  // Tell the assistant which product page is open, so "this one" means the piece on screen.
+  useEffect(() => { useChat.setState({ viewing: viewingProduct(pathname) }) }, [pathname])
   if (HIDDEN.test(pathname)) return null
   // The product page has a sticky buy bar on small screens; sit above it.
   const raised = pathname.startsWith('/product/')

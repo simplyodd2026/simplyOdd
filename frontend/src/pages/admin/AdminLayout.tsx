@@ -17,6 +17,7 @@ const NAV = [
   { to: '/admin/coupons', label: 'Coupons' },
   { to: '/admin/reviews', label: 'Reviews' },
   { to: '/admin/custom-requests', label: 'Custom requests' },
+  { to: '/admin/chat-searches', label: 'Chat searches' },
   { to: '/admin/newsletter', label: 'Newsletter' },
 ]
 

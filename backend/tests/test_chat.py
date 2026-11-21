@@ -103,29 +103,43 @@ def test_intents_and_words():
 
 
 # --------------------------------------------------------------- sessions
-def test_session_and_history_need_the_token(chat):
+def _msg(c, sid, h, text="hi"):
+    return c.post("/api/chat/message", json={"session_id": sid, "message": text}, headers=h)
+
+
+def test_session_needs_the_token(chat):
     sid, h = start(chat)
     assert sid.startswith("cs_")
+    assert _msg(chat, sid, {}).status_code == 404
+    assert _msg(chat, sid, {"X-Chat-Token": "wrong"}).status_code == 404
+    assert _msg(chat, sid, h).status_code == 200
+
+
+def test_chats_are_not_stored(chat):
+    """One-off conversations: no message is saved and there is no history to fetch."""
+    sid, h = start(chat)
     say(chat, sid, h, "Show decorative lamps")
-    assert chat.get(f"/api/chat/history/{sid}").status_code == 404
-    assert chat.get(f"/api/chat/history/{sid}", headers={"X-Chat-Token": "wrong"}).status_code == 404
-    msgs = chat.get(f"/api/chat/history/{sid}", headers=h).json()["messages"]
-    assert [m["role"] for m in msgs] == ["user", "assistant"]
-    assert msgs[1]["type"] == "product_recommendations" and msgs[1]["payload"]["products"]
+    say(chat, sid, h, "What does shipping cost?")
+    store = chat.app.state.services.store
+    assert asyncio.run(store.list("chat_messages")) == []
+    assert asyncio.run(store.list("chat_stats")) == []
+    assert chat.get(f"/api/chat/history/{sid}", headers=h).status_code == 404
+    session = asyncio.run(store.get("chat_sessions", sid))
+    assert session["expires_at"] - now() <= timedelta(hours=2)
 
 
 def test_signed_in_session_belongs_to_that_account(chat):
     sid, h = start(chat, CUSTOMER)
     token = {"X-Chat-Token": h["X-Chat-Token"]}
-    assert chat.get(f"/api/chat/history/{sid}", headers=token).status_code == 403
-    assert chat.get(f"/api/chat/history/{sid}", headers={**token, **OTHER}).status_code == 403
-    assert chat.get(f"/api/chat/history/{sid}", headers=h).status_code == 200
+    assert _msg(chat, sid, token).status_code == 403
+    assert _msg(chat, sid, {**token, **OTHER}).status_code == 403
+    assert _msg(chat, sid, h).status_code == 200
 
 
 def test_guest_session_is_claimed_on_sign_in(chat):
     sid, h = start(chat)
     say(chat, sid, {**h, **CUSTOMER}, "hi")
-    assert chat.get(f"/api/chat/history/{sid}", headers=h).status_code == 403  # signed out again
+    assert _msg(chat, sid, h).status_code == 403  # signed out again
 
 
 def test_expired_session(chat):
@@ -140,7 +154,7 @@ def test_cleanup_removes_expired_conversations(chat):
     say(chat, sid, h, "hi")
     store = chat.app.state.services.store
     asyncio.run(store.update("chat_sessions", sid, {"expires_at": now() - timedelta(minutes=1)}))
-    assert chat.post("/api/admin/chat/cleanup", headers=ADMIN).json() == {"sessions": 1, "messages": 2}
+    assert chat.post("/api/admin/chat/cleanup", headers=ADMIN).json() == {"sessions": 1}
     assert chat.post("/api/admin/chat/cleanup", headers=CUSTOMER).status_code == 403
 
 
@@ -227,6 +241,43 @@ def test_product_details_from_the_catalogue(chat):
     r = say(chat, sid, h, "What are the dimensions of the Melt Vase?")
     assert r["products"][0]["id"] == melt["id"]
     assert f"{melt['dimensions']['width_cm']:g} × {melt['dimensions']['height_cm']:g}" in r["message"]
+
+
+def test_product_page_answers_about_the_piece_on_screen(chat):
+    """On a product page, "this one" is the piece on screen: the assistant never asks which one."""
+    cat = catalogue(chat)
+    melt = next(p for p in cat.values() if p["name"] == "Melt Vase")
+    sid, h = start(chat)
+    say(chat, sid, h, "Show decorative lamps")  # other pieces were shown first
+    for text in ("Tell me about this piece", "i am asking about the one i opened", "What is it made of?"):
+        r = chat.post("/api/chat/message", json={"session_id": sid, "message": text, "viewing": melt["slug"]},
+                      headers=h).json()
+        assert r["products"][0]["id"] == melt["id"], text
+        assert "Melt Vase" in r["message"]
+
+
+def test_viewing_is_looked_up_not_trusted(chat):
+    sid, h = start(chat)
+    r = chat.post("/api/chat/message", json={"session_id": sid, "message": "Tell me about this piece",
+                                             "viewing": "no-such-piece"}, headers=h)
+    assert r.status_code == 200
+    bad = chat.post("/api/chat/message", json={"session_id": sid, "message": "hi", "viewing": "<script>"}, headers=h)
+    assert bad.status_code == 422
+
+
+def test_model_is_told_which_product_page_is_open():
+    llm = FakeLLM(Completion(content="It's a lovely piece."))
+    with make_client(llm) as c:
+        melt = next(p for p in catalogue(c).values() if p["name"] == "Melt Vase")
+        sid, h = start(c)
+        c.post("/api/chat/message", json={"session_id": sid, "message": "is this good for a gift?",
+                                          "viewing": melt["slug"]}, headers=h)
+        note = llm.calls[0][1]["content"]
+        assert f"viewing the product page for: {melt['id']} Melt Vase" in note
+        # Leaving the product page forgets it.
+        llm.steps.append(Completion(content="Sure."))
+        say(c, sid, h, "hello")
+        assert "viewing the product page" not in llm.calls[1][1]["content"]
 
 
 def test_compare_recent_products(chat):
@@ -467,21 +518,26 @@ async def test_groq_timeout():
     assert e.value.kind == "timeout"
 
 
-# --------------------------------------------------- feedback & analytics
-def test_feedback_and_analytics(chat):
+# ---------------------------------------------------------- search insights
+def test_search_insights_show_what_is_searched(chat):
+    cat = catalogue(chat)
+    melt = next(p for p in cat.values() if p["name"] == "Melt Vase")
     sid, h = start(chat)
-    r = say(chat, sid, h, "Show decorative lamps")
-    ok = chat.post("/api/chat/feedback", json={"session_id": sid, "message_id": r["message_id"], "rating": "up"},
-                   headers=h)
-    assert ok.status_code == 200
-    other_sid, other_h = start(chat)
-    assert chat.post("/api/chat/feedback", json={"session_id": other_sid, "message_id": r["message_id"],
-                                                 "rating": "up"}, headers=other_h).status_code == 404
-    stats = chat.get("/api/admin/chat/analytics", headers=ADMIN).json()
-    assert stats["conversations"] == 2 and stats["messages"] == 1 and stats["feedback"]["up"] == 1
-    assert stats["intents"] == {"product_search": 1} and stats["products_recommended"] == len(r["products"])
-    assert stats["top_products"][0]["product_id"] in {p["id"] for p in r["products"]}
-    assert chat.get("/api/admin/chat/analytics", headers=CUSTOMER).status_code == 403
+    shown = say(chat, sid, h, "Show decorative lamps")["products"]
+    say(chat, sid, h, "Show me lamps")
+    say(chat, sid, h, "Do you have a unicorn?")
+    say(chat, sid, h, "What are the dimensions of the Melt Vase?")
+    say(chat, sid, h, "What does shipping cost?")  # not a search: not counted
+    r = chat.get("/api/admin/chat/searches", headers=ADMIN).json()
+    terms = {k["term"]: k for k in r["keywords"]}
+    assert "unicorn" in terms and terms["unicorn"]["no_results"] == 1
+    assert [u["term"] for u in r["unmatched"]] == ["unicorn"]
+    assert r["categories"][0]["count"] >= 2 and r["categories"][0]["no_results"] == 0
+    assert r["products_shown"][0]["product_id"] in {p["id"] for p in shown}
+    assert r["products_asked"] == [{"product_id": melt["id"], "name": "Melt Vase", "shown": 0, "asked": 1}]
+    assert not any("shipping" in (k["term"] or "") for k in r["keywords"])
+    assert chat.get("/api/admin/chat/searches", headers=CUSTOMER).status_code == 403
+    assert chat.get("/api/admin/chat/analytics", headers=ADMIN).status_code == 404
 
 
 # ------------------------------------------------------- Claude API backup
@@ -621,8 +677,6 @@ def test_claude_takes_over_when_groq_is_rate_limited():
         second = claude_client.requests[1]["messages"]
         assert second[-2]["content"][0].type == "thinking"  # Claude's turn replayed unchanged
         assert second[-1]["content"][0]["type"] == "tool_result"
-        stats = c.get("/api/admin/chat/analytics", headers=ADMIN).json()
-        assert stats["llm_calls_by_provider"] == {"groq": 0, "anthropic": 2} and stats["llm_backup_rescues"] == 1
 
 
 def test_both_models_down_uses_the_builtin_fallback():

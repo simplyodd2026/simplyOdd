@@ -15,7 +15,6 @@ from app.models.common import Schema
 ReplyType = Literal[
     "text", "product_recommendations", "product_comparison", "faq", "custom_enquiry", "order_status", "error",
 ]
-Role = Literal["user", "assistant"]
 
 VisitorId = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{8,64}$")]
 SessionId = Annotated[str, Field(pattern=r"^cs_[a-f0-9]{16}$")]
@@ -87,7 +86,6 @@ class OrderSummary(Schema):
 
 class ChatReply(Schema):
     session_id: str
-    message_id: str | None = None
     type: ReplyType = "text"
     message: str
     products: list[ChatProduct] = Field(default_factory=list, max_length=12)
@@ -118,20 +116,9 @@ class MessageIn(Schema):
     session_id: SessionId
     # The configured limit (CHAT_MAX_MESSAGE_CHARS) is enforced in the service; this is the hard cap.
     message: str = Field(min_length=1, max_length=2000)
-
-
-class HistoryMessage(Schema):
-    id: str
-    role: Role
-    content: str
-    type: ReplyType = "text"
-    payload: dict = {}
-    created_at: datetime
-
-
-class HistoryOut(Schema):
-    session_id: str
-    messages: list[HistoryMessage]
+    # Slug of the product page the shopper has open, so "this one" means that piece. Only the slug is
+    # trusted from the browser: the server looks the product up in the catalogue itself.
+    viewing: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,140}$")
 
 
 class EnquiryIn(Schema):
@@ -150,10 +137,3 @@ class EnquiryOut(Schema):
     ok: bool = True
     id: str
     message: str
-
-
-class FeedbackIn(Schema):
-    session_id: SessionId
-    message_id: str = Field(pattern=r"^cm_[a-f0-9]{16}$")
-    rating: Literal["up", "down"]
-    comment: str | None = Field(default=None, max_length=500)

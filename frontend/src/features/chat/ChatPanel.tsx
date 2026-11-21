@@ -13,7 +13,7 @@ const MOBILE = '(max-width: 639px)'
 const isMobile = () => typeof window !== 'undefined' && window.matchMedia?.(MOBILE).matches
 
 function AssistantMessage({ m, onNavigate, latestEnquiry }: { m: ChatMessage; onNavigate: () => void; latestEnquiry: boolean }) {
-  const { rate, enquirySent, session } = useChat()
+  const { enquirySent, session } = useChat()
   const p = m.payload
   return (
     <div className="space-y-3">
@@ -30,24 +30,17 @@ function AssistantMessage({ m, onNavigate, latestEnquiry }: { m: ChatMessage; on
           enquirySent(m.id, { ...p.enquiry!, ...d, request_id: out.id }, out.message)
         }} />
       )}
-      {m.messageId && (
-        <div className="flex items-center gap-1 text-fog">
-          {(['up', 'down'] as const).map((r) => (
-            <button key={r} onClick={() => rate(m.id, r)} aria-pressed={m.feedback === r}
-              aria-label={r === 'up' ? 'Helpful' : 'Not helpful'}
-              className={cn('grid size-7 place-items-center rounded-full transition-colors hover:bg-ink/5 hover:text-ink', m.feedback === r && 'text-ink')}>
-              <Icon name={r === 'up' ? 'thumbUp' : 'thumbDown'} size={14} />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
 
+const THIS_PIECE = 'Tell me about this piece'
+
 export default function ChatPanel() {
-  const { messages, suggestions, sending, booting, error, send, retry, setOpen, newConversation } = useChat()
+  const { messages, suggestions, sending, booting, error, viewing, send, retry, setOpen, newConversation, clear } = useChat()
   const uid = useSession((s) => s.user?.uid ?? null)
+  // On a product page, offer to talk about the piece on screen first.
+  const chips = viewing && !suggestions.includes(THIS_PIECE) ? [THIS_PIECE, ...suggestions].slice(0, 4) : suggestions
   const [text, setText] = useState('')
   const body = useRef<HTMLDivElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
@@ -107,8 +100,9 @@ export default function ChatPanel() {
           </p>
         </div>
         <div className="-mr-2 flex items-center">
-          <button onClick={() => void newConversation()} disabled={booting} aria-label="New conversation" title="New conversation"
-            className="grid size-10 place-items-center rounded-full text-ink transition-colors hover:bg-ink/5 disabled:opacity-40"><Icon name="refresh" size={18} /></button>
+          <button onClick={() => { clear(); setText(''); input.current?.focus() }} disabled={messages.length <= 1}
+            aria-label="Clear chat" title="Clear chat"
+            className="grid size-10 place-items-center rounded-full text-ink transition-colors hover:bg-ink/5 disabled:opacity-40"><Icon name="trash" size={18} /></button>
           <button onClick={close} aria-label="Close assistant"
             className="grid size-10 place-items-center rounded-full text-ink transition-colors hover:bg-ink/5"><Icon name="close" size={18} /></button>
         </div>
@@ -137,9 +131,9 @@ export default function ChatPanel() {
       </div>
 
       <div className="shrink-0 border-t border-rule bg-paper px-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-3">
-        {suggestions.length > 0 && !sending && (
+        {chips.length > 0 && !sending && (
           <div className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 scrollbar-none" data-lenis-prevent aria-label="Suggested questions">
-            {suggestions.map((s) => (
+            {chips.map((s) => (
               <button key={s} onClick={() => submit(s)}
                 className="shrink-0 rounded-full border border-rule px-3.5 py-1.5 text-[13px] text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-paper">
                 {s}

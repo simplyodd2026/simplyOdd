@@ -143,7 +143,7 @@ reads the budget, intent and search words). Shopping never depends on either mod
 
 Claude is paid per token (Opus 5.5: $4 / $20 per million input/output tokens; a chat turn is roughly 2–3 calls of a few
 thousand input tokens, most of them served from the prompt cache). `ANTHROPIC_MAX_CALLS_PER_MINUTE` (10) caps how fast
-it can spend, and the analytics report `llm_backup_rescues` and `llm_calls_by_provider` so you can see how often it
+it can spend, and each chat turn logs a `chat turn` line (providers, tokens, latency) so you can see how often it
 runs. Requests opt into server-side refusal fallbacks (`fallbacks: "default"`), so a policy decline is retried on
 another model inside the same call. To spend less, set `ANTHROPIC_MODEL=claude-sonnet-5-5` or `claude-haiku-5-5`.
 
@@ -152,7 +152,7 @@ another model inside the same call. To spend less, set `ANTHROPIC_MODEL=claude-s
 | `services/chat/knowledge.py` | FAQ/policy answers, copied from the Help, Customise and product pages. Edit both together. |
 | `services/chat/tools.py` | `search_products`, `get_product_details`, `compare_products`, `search_faq`, `create_custom_enquiry`, `get_order_status`, `get_business_information` |
 | `services/chat/llm.py` | Groq then Claude (`ChainLLM`). Each: one SDK retry, pause after a 429 (honours `Retry-After`), per-minute call budget. Groq also falls through retired models |
-| `services/chat/service.py` | Sessions, context, the tool loop (max 3 rounds), fallback, persistence, analytics |
+| `services/chat/service.py` | Sessions, context, the tool loop (max 3 rounds), fallback, search insights |
 | `frontend/src/features/chat/` | Widget (the panel is lazy-loaded on first open) |
 
 **Endpoints** (all JSON; each request after session creation sends the `X-Chat-Token` returned at creation):
@@ -160,20 +160,16 @@ another model inside the same call. To spend less, set `ANTHROPIC_MODEL=claude-s
 | | |
 |---|---|
 | `POST /api/chat/sessions` | `{visitor_id?}` → `{session_id, token, expires_at, greeting, suggestions}` |
-| `POST /api/chat/message` | `{session_id, message}` → `{type, message, products, comparison, faq, enquiry, orders, suggestions, fallback}` |
-| `GET /api/chat/history/{session_id}` | The conversation. A signed-in conversation also needs that account's bearer token. |
+| `POST /api/chat/message` | `{session_id, message, viewing?}` (`viewing`: slug of the open product page) → `{type, message, products, comparison, faq, enquiry, orders, suggestions, fallback}` |
 | `POST /api/chat/enquiries` | Sends a custom brief to the existing `custom_requests` (admin → Custom requests, marked "Oddly Assistant") |
-| `POST /api/chat/feedback` | `{session_id, message_id, rating: up\|down}` |
-| `GET /api/admin/chat/analytics?days=30` | Conversations, messages, intents, failed queries, Groq failures/429s, tokens, latency, top recommended products |
-| `POST /api/admin/chat/cleanup` | Deletes expired conversations |
+| `GET /api/admin/chat/searches?limit=25` | Top searched keywords and categories, searches with no match, pieces shown and asked about most (admin → Chat searches) |
+| `POST /api/admin/chat/cleanup` | Deletes expired conversations (backup for the TTL policy) |
 
-**Storage** (Firestore, through `DocumentStore` like everything else): `chat_sessions`, `chat_messages` (both carry
-`expires_at`), `chat_stats` (one doc per day), `chat_product_stats`. Deploy the new index with
-`firebase deploy --only firestore:indexes`. To expire old chats automatically, add TTL policies:
-```bash
-gcloud firestore fields ttls update expires_at --collection-group=chat_sessions --enable-ttl --project simply-odd
-gcloud firestore fields ttls update expires_at --collection-group=chat_messages --enable-ttl --project simply-odd
-```
+**Storage.** Chats are one-off: messages are never saved, and a reload starts a new conversation. Firestore keeps
+`chat_sessions` (only the live conversation's working memory, deleted after `CHAT_SESSION_TTL_HOURS` (2) idle by the
+TTL policy on `expires_at` in `firestore.indexes.json`), `chat_search_stats` (one counter per searched keyword or
+category, with how often nothing matched) and `chat_product_stats` (per piece: times shown, times asked about).
+Deploy the TTL policy with `firebase deploy --only firestore:indexes`.
 
 **Limits.** Per IP (`main.py`): 20 messages/min and 300/hour. Per visitor or customer: `CHAT_MESSAGES_PER_MINUTE` (12) and
 `CHAT_MESSAGES_PER_DAY` (200). Messages are capped at `CHAT_MAX_MESSAGE_CHARS` (600) and chat bodies at 16 KB.

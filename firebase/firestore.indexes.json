@@ -41,21 +41,23 @@
           "order": "DESCENDING"
         }
       ]
-    },
+    }
+  ],
+  "fieldOverrides": [
     {
-      "collectionGroup": "chat_messages",
-      "queryScope": "COLLECTION",
-      "fields": [
+      "collectionGroup": "chat_sessions",
+      "fieldPath": "expires_at",
+      "ttl": true,
+      "indexes": [
         {
-          "fieldPath": "session_id",
-          "order": "ASCENDING"
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION"
         },
         {
-          "fieldPath": "created_at",
-          "order": "ASCENDING"
+          "order": "DESCENDING",
+          "queryScope": "COLLECTION"
         }
       ]
     }
-  ],
-  "fieldOverrides": []
+  ]
 }

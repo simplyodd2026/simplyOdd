@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     anthropic_timeout_seconds: float = 30.0
     anthropic_max_calls_per_minute: int = 10
     chat_history_limit: int = 6          # past turns sent to the model
-    chat_session_ttl_hours: int = 72     # idle sessions expire after this
+    chat_session_ttl_hours: int = 2      # a conversation's working memory is deleted after this long idle
     chat_max_message_chars: int = 600
     # Per visitor or signed-in customer, on top of the per-IP limits in main.py.
     chat_messages_per_minute: int = 12

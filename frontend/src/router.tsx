@@ -38,6 +38,7 @@ const AdminCoupons = lazy(() => import('@/pages/admin/CouponsPage'))
 const AdminReviews = lazy(() => import('@/pages/admin/ReviewsPage'))
 const AdminNewsletter = lazy(() => import('@/pages/admin/NewsletterPage'))
 const AdminCustomRequests = lazy(() => import('@/pages/admin/CustomRequestsPage'))
+const AdminChatSearches = lazy(() => import('@/pages/admin/ChatSearchesPage'))
 
 const s = (el: ReactNode) => <Suspense fallback={<PageSpinner />}>{el}</Suspense>
 
@@ -122,6 +123,7 @@ export const router = createBrowserRouter([
           { path: 'reviews', element: s(<AdminReviews />) },
           { path: 'newsletter', element: s(<AdminNewsletter />) },
           { path: 'custom-requests', element: s(<AdminCustomRequests />) },
+          { path: 'chat-searches', element: s(<AdminChatSearches />) },
         ],
       },
     ],

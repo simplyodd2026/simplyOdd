@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { ApiError } from '@/lib/api'
-import { chatApi, saveSession, storedSession, type StoredSession } from './api'
+import { chatApi, type StoredSession } from './api'
 import type { ChatMessage, ChatReply, EnquiryDraft } from './types'
 
 const GREETING = "Hello, I'm Oddly, your personal shopping assistant. I can help you find a piece, compare a few, " +
@@ -8,11 +8,13 @@ const GREETING = "Hello, I'm Oddly, your personal shopping assistant. I can help
 const FALLBACK_SUGGESTIONS = ['Explore home decor', 'Find a gift', 'Show me sculptures', 'Explore custom creations']
 
 let seq = 0
+/** Bumped by clear(), so a reply or error still in flight lands nowhere. */
+let generation = 0
 const localId = () => `local-${Date.now()}-${seq++}`
 const greeting = (text = GREETING): ChatMessage => ({ id: 'greeting', role: 'assistant', content: text, type: 'text', payload: {} })
 
 const fromReply = (r: ChatReply): ChatMessage => ({
-  id: r.message_id ?? localId(), messageId: r.message_id, role: 'assistant', content: r.message, type: r.type,
+  id: localId(), role: 'assistant', content: r.message, type: r.type,
   payload: { products: r.products, comparison: r.comparison, faq: r.faq, enquiry: r.enquiry, orders: r.orders, fallback: r.fallback },
 })
 
@@ -27,56 +29,37 @@ interface ChatState {
   booting: boolean
   sending: boolean
   error: string | null
+  /** Slug of the product page the shopper has open, if any. */
+  viewing: string | null
   setOpen: (open: boolean) => void
-  boot: () => Promise<void>
   newConversation: () => Promise<void>
+  /** Wipe the conversation on screen at once; the next message starts a fresh one on the server. */
+  clear: () => void
   send: (text: string) => Promise<void>
   retry: (id: string) => Promise<void>
   enquirySent: (messageId: string, draft: EnquiryDraft, reply: string) => void
-  rate: (id: string, rating: 'up' | 'down') => Promise<void>
 }
 
 export const useChat = create<ChatState>((set, get) => ({
   open: false,
-  session: storedSession(),
+  session: null,
   messages: [],
   suggestions: FALLBACK_SUGGESTIONS,
   booting: false,
   sending: false,
   error: null,
+  viewing: null,
 
   setOpen: (open) => {
     set({ open })
-    if (open && !get().messages.length) void get().boot()
-  },
-
-  boot: async () => {
-    if (get().booting) return
-    const session = get().session
-    if (!session) return get().newConversation()
-    set({ booting: true, error: null })
-    try {
-      const { messages } = await chatApi.history(session)
-      const restored: ChatMessage[] = messages.map((m) => ({
-        id: m.id, messageId: m.role === 'assistant' ? m.id : null, role: m.role, content: m.content, type: m.type, payload: m.payload,
-      }))
-      const last = [...messages].reverse().find((m) => m.role === 'assistant')
-      set({ messages: [greeting(), ...restored], suggestions: last?.payload.suggestions?.length ? last.payload.suggestions : FALLBACK_SUGGESTIONS })
-    } catch (e) {
-      if (isLost(e)) { set({ booting: false }); return get().newConversation() }
-      set({ messages: [greeting()], error: (e as Error).message })
-    } finally {
-      set({ booting: false })
-    }
+    if (open && !get().messages.length && !get().booting) void get().newConversation()
   },
 
   newConversation: async () => {
-    saveSession(null)
     set({ session: null, messages: [greeting()], booting: true, error: null, sending: false })
     try {
       const s = await chatApi.createSession()
       const session = { id: s.session_id, token: s.token, expiresAt: s.expires_at }
-      saveSession(session)
       set({ session, messages: [greeting(s.greeting)], suggestions: s.suggestions.length ? s.suggestions : FALLBACK_SUGGESTIONS })
     } catch (e) {
       set({ error: (e as Error).message })
@@ -85,10 +68,16 @@ export const useChat = create<ChatState>((set, get) => ({
     }
   },
 
+  clear: () => {
+    generation++
+    set({ session: null, messages: [greeting()], suggestions: FALLBACK_SUGGESTIONS, booting: false, sending: false, error: null })
+  },
+
   send: async (raw) => {
     const text = raw.trim()
     if (!text || get().sending) return
     const userMsg: ChatMessage = { id: localId(), role: 'user', content: text, type: 'text', payload: {} }
+    const gen = generation
     set((s) => ({ messages: [...s.messages, userMsg], sending: true, error: null, suggestions: [] }))
     const attempt = async (retried: boolean): Promise<void> => {
       let session = get().session
@@ -99,7 +88,8 @@ export const useChat = create<ChatState>((set, get) => ({
         set((s) => ({ messages: [...s.messages, userMsg] }))
       }
       try {
-        const reply = await chatApi.send(session, text)
+        const reply = await chatApi.send(session, text, get().viewing)
+        if (gen !== generation) return  // cleared while waiting: drop the late reply
         set((s) => ({ messages: [...s.messages, fromReply(reply)], suggestions: reply.suggestions ?? [] }))
       } catch (e) {
         if (isLost(e) && !retried) {
@@ -114,12 +104,13 @@ export const useChat = create<ChatState>((set, get) => ({
     try {
       await attempt(false)
     } catch (e) {
+      if (gen !== generation) return
       set((s) => ({
         messages: s.messages.map((m) => (m.id === userMsg.id ? { ...m, failed: true } : m)),
         error: (e as Error).message || 'Something went wrong. Try again.',
       }))
     } finally {
-      set({ sending: false })
+      if (gen === generation) set({ sending: false })
     }
   },
 
@@ -137,12 +128,4 @@ export const useChat = create<ChatState>((set, get) => ({
     ],
     suggestions: ['Explore home decor', 'Find a gift'],
   })),
-
-  rate: async (id, rating) => {
-    const { session, messages } = get()
-    const msg = messages.find((m) => m.id === id)
-    if (!session || !msg?.messageId) return
-    set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, feedback: rating } : m)) }))
-    try { await chatApi.feedback(session, msg.messageId, rating) } catch { /* feedback is best-effort */ }
-  },
 }))

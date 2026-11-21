@@ -14,7 +14,7 @@ const SESSION = { session_id: 'cs_0123456789abcdef', token: 'tok-1', expires_at:
   greeting: 'Hello from the studio.', suggestions: ['Explore lighting', 'Find a gift'] }
 
 const reply = (over: Partial<ChatReply> = {}): ChatReply => ({
-  session_id: SESSION.session_id, message_id: 'cm_0123456789abcdef', type: 'text', message: 'Hi there.',
+  session_id: SESSION.session_id, type: 'text', message: 'Hi there.',
   products: [], comparison: null, faq: [], enquiry: null, orders: [], suggestions: [], fallback: false, ...over,
 })
 
@@ -32,7 +32,6 @@ function routes(message: (body: { message: string }) => Response | Promise<Respo
     if (url.endsWith('/api/chat/sessions')) return json(SESSION, 201)
     if (url.endsWith('/api/chat/message')) return message(JSON.parse(String(init.body)))
     if (url.endsWith('/api/chat/enquiries')) return json({ ok: true, id: 'cr_1', message: 'Your brief is with the studio.' }, 201)
-    if (url.endsWith('/api/chat/feedback')) return json({ ok: true })
     return json({ detail: 'not found' }, 404)
   }
 }
@@ -57,7 +56,7 @@ beforeEach(() => {
   fetchMock.mockClear()
   scroll.lockScroll.mockClear()
   vi.stubGlobal('fetch', fetchMock)
-  useChat.setState({ open: false, session: null, messages: [], suggestions: [], booting: false, sending: false, error: null })
+  useChat.setState({ open: false, session: null, messages: [], suggestions: [], booting: false, sending: false, error: null, viewing: null })
   handler = routes(() => json(reply()))
 })
 
@@ -98,10 +97,54 @@ describe('ChatWidget', () => {
     expect((screen.getByRole('button', { name: 'Send message' }) as HTMLButtonElement).disabled).toBe(true)
     const [, init] = fetchMock.mock.calls.find(([u]) => String(u).endsWith('/api/chat/message'))!
     expect((init!.headers as Record<string, string>)['X-Chat-Token']).toBe('tok-1')
-    expect(JSON.parse(String(init!.body))).toEqual({ session_id: SESSION.session_id, message: 'Show decorative lamps' })
+    expect(JSON.parse(String(init!.body))).toEqual({ session_id: SESSION.session_id, message: 'Show decorative lamps', viewing: null })
     await act(async () => release())
     expect(await screen.findByText('Lamps coming up.')).toBeTruthy()
     expect(screen.queryByRole('status', { name: 'Oddly is typing' })).toBeNull()
+  })
+
+  it('on a product page, offers the piece on screen and sends its slug with each message', async () => {
+    renderAt('/product/radha-krishna-frame')
+    await openWidget()
+    fireEvent.click(await screen.findByRole('button', { name: 'Tell me about this piece' }))
+    await screen.findByText('Hi there.')
+    const [, init] = fetchMock.mock.calls.find(([u]) => String(u).endsWith('/api/chat/message'))!
+    expect(JSON.parse(String(init!.body))).toEqual({
+      session_id: SESSION.session_id, message: 'Tell me about this piece', viewing: 'radha-krishna-frame' })
+  })
+
+  it('clears the chat instantly, drops a reply still in flight, and starts afresh on the next message', async () => {
+    let release!: () => void
+    handler = routes(() => new Promise((res) => { release = () => res(json(reply({ message: 'Late reply.' }))) }))
+    renderAt()
+    await openWidget()
+    const clearBtn = screen.getByRole('button', { name: 'Clear chat' }) as HTMLButtonElement
+    await screen.findByText('Hello from the studio.')
+    expect(clearBtn.disabled).toBe(true)  // nothing to clear yet
+    await sendMessage('Show decorative lamps')
+    await screen.findByText('Show decorative lamps')
+    const sessionsBefore = fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/api/chat/sessions')).length
+    fireEvent.click(clearBtn)
+    // Instant: no request needed, the old messages are gone and the input is usable.
+    expect(screen.queryByText('Show decorative lamps')).toBeNull()
+    expect(screen.queryByRole('status', { name: 'Oddly is typing' })).toBeNull()
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/api/chat/sessions')).length).toBe(sessionsBefore)
+    await act(async () => release())
+    expect(screen.queryByText('Late reply.')).toBeNull()
+    handler = routes(() => json(reply({ message: 'Fresh start.' })))
+    await sendMessage('Find a gift')
+    expect(await screen.findByText('Fresh start.')).toBeTruthy()
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/api/chat/sessions')).length).toBe(sessionsBefore + 1)
+  })
+
+  it('is a one-off chat: nothing is saved in the browser, no history is fetched, no rating buttons', async () => {
+    renderAt()
+    await openWidget()
+    await sendMessage('Show decorative lamps')
+    await screen.findByText('Hi there.')
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/api/chat/history'))).toBe(false)
+    expect(localStorage.getItem('so-chat-session')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Helpful' })).toBeNull()
   })
 
   it('sends a suggestion when tapped', async () => {

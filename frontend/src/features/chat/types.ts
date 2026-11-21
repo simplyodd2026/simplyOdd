@@ -49,7 +49,7 @@ export interface OrderSummary {
   url: string
 }
 
-/** The structured part of a reply; also what history returns as `payload`. */
+/** The structured part of a reply. */
 export interface ReplyPayload {
   type?: ReplyType
   products?: ChatProduct[]
@@ -63,7 +63,6 @@ export interface ReplyPayload {
 
 export interface ChatReply extends ReplyPayload {
   session_id: string
-  message_id: string | null
   type: ReplyType
   message: string
 }
@@ -76,15 +75,6 @@ export interface SessionOut {
   suggestions: string[]
 }
 
-export interface HistoryMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  type: ReplyType
-  payload: ReplyPayload
-  created_at: string
-}
-
 /** One bubble in the conversation as the widget holds it. */
 export interface ChatMessage {
   id: string
@@ -92,9 +82,6 @@ export interface ChatMessage {
   content: string
   type: ReplyType
   payload: ReplyPayload
-  /** Server id of an assistant message, for feedback. */
-  messageId?: string | null
-  feedback?: 'up' | 'down'
   /** A user message that didn't go through; offered for retry. */
   failed?: boolean
 }
