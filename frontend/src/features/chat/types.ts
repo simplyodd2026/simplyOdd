@@ -15,6 +15,13 @@ export interface ChatProduct {
   summary: string
 }
 
+/** The shop page listing everything a chat search matched, with the same filters. */
+export interface ExploreLink {
+  url: string
+  label: string
+  total: number
+}
+
 export interface Comparison {
   products: ChatProduct[]
   rows: { label: string; values: string[] }[]
@@ -53,6 +60,7 @@ export interface OrderSummary {
 export interface ReplyPayload {
   type?: ReplyType
   products?: ChatProduct[]
+  explore?: ExploreLink | null
   comparison?: Comparison | null
   faq?: { question: string; answer: string }[]
   enquiry?: EnquiryDraft | null

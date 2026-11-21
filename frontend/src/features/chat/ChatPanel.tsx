@@ -19,7 +19,7 @@ function AssistantMessage({ m, onNavigate, latestEnquiry }: { m: ChatMessage; on
     <div className="space-y-3">
       <div className="text-[14.5px] leading-relaxed text-graphite"><RichText text={m.content} /></div>
       {p.comparison ? <ComparisonTable comparison={p.comparison} onNavigate={onNavigate} />
-        : p.products && p.products.length > 0 && <ProductRail products={p.products} onNavigate={onNavigate} />}
+        : p.products && p.products.length > 0 && <ProductRail products={p.products} explore={p.explore} onNavigate={onNavigate} />}
       {p.orders && p.orders.length > 0 && <OrderList orders={p.orders} onNavigate={onNavigate} />}
       {p.faq && p.faq.length > 1 && <MoreAnswers items={p.faq.slice(1)} />}
       {/* A brief collected over several turns: only the latest draft is a live form. */}

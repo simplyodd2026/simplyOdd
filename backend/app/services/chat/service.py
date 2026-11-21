@@ -490,7 +490,10 @@ class ChatService:
             primary = order_gate
         rtype = primary.type if primary else "text"
         products = []
+        explore = None
         if primary and primary.products and not primary.comparison:
+            # The newest search links to the full listing with the same filters.
+            explore = next((r.explore for r in reversed(shown) if r.explore), None)
             # Several searches in one turn: show each piece once, newest search first.
             seen = set()
             for r in reversed(shown):
@@ -500,7 +503,7 @@ class ChatService:
                         products.append(prod)
         message = _clean(message) or self._default_text(primary)
         reply = ChatReply(
-            session_id=session_id, type=rtype, message=message[:1500], products=products,
+            session_id=session_id, type=rtype, message=message[:1500], products=products, explore=explore,
             comparison=primary.comparison if primary else None, faq=(primary.faq if primary else [])[:3],
             enquiry=primary.enquiry if primary else None, orders=primary.orders if primary else [],
             fallback=fallback,

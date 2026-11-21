@@ -6,7 +6,7 @@ import { Input, Textarea } from '@/components/ui/Field'
 import { responsive } from '@/lib/image'
 import { date, money } from '@/lib/format'
 import { cn } from '@/lib/cn'
-import type { ChatProduct, Comparison, EnquiryDraft, OrderSummary } from './types'
+import type { ChatProduct, Comparison, ExploreLink, EnquiryDraft, OrderSummary } from './types'
 
 // ------------------------------------------------------------------ text
 const EMAIL = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g
@@ -68,12 +68,22 @@ function ProductTile({ p, onNavigate }: { p: ChatProduct; onNavigate?: () => voi
   )
 }
 
-export function ProductRail({ products, onNavigate }: { products: ChatProduct[]; onNavigate?: () => void }) {
+export function ProductRail({ products, explore, onNavigate }: {
+  products: ChatProduct[]; explore?: ExploreLink | null; onNavigate?: () => void
+}) {
   return (
-    <div className="-mx-5 overflow-x-auto px-5 pb-1 scrollbar-none" role="list" aria-label="Recommended products" data-lenis-prevent>
-      <div className="flex snap-x gap-3.5">
-        {products.map((p) => <div role="listitem" key={p.id}><ProductTile p={p} onNavigate={onNavigate} /></div>)}
+    <div className="space-y-3">
+      <div className="-mx-5 overflow-x-auto px-5 pb-1 scrollbar-none" role="list" aria-label="Recommended products" data-lenis-prevent>
+        <div className="flex snap-x gap-3.5">
+          {products.map((p) => <div role="listitem" key={p.id}><ProductTile p={p} onNavigate={onNavigate} /></div>)}
+        </div>
       </div>
+      {explore && (
+        <Link to={explore.url} onClick={onNavigate}
+          className="inline-flex items-center gap-1.5 rounded-full border border-rule px-4 py-2 text-[13px] font-medium text-ink transition-colors hover:bg-ash">
+          {explore.label}<Icon name="arrowRight" size={14} />
+        </Link>
+      )}
     </div>
   )
 }

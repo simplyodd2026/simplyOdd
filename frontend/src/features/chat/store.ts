@@ -15,7 +15,7 @@ const greeting = (text = GREETING): ChatMessage => ({ id: 'greeting', role: 'ass
 
 const fromReply = (r: ChatReply): ChatMessage => ({
   id: localId(), role: 'assistant', content: r.message, type: r.type,
-  payload: { products: r.products, comparison: r.comparison, faq: r.faq, enquiry: r.enquiry, orders: r.orders, fallback: r.fallback },
+  payload: { products: r.products, explore: r.explore, comparison: r.comparison, faq: r.faq, enquiry: r.enquiry, orders: r.orders, fallback: r.fallback },
 })
 
 /** The conversation is gone or isn't ours any more (signed out, expired): start a fresh one. */

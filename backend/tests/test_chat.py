@@ -192,6 +192,19 @@ def test_search_by_category(chat):
     p = r["products"][0]
     assert p["url"] == f"/product/{cat[p['id']]['slug']}" and p["price"] == cat[p["id"]]["price"]
     assert p["image"] == cat[p["id"]]["images"][0]["url"]
+    # "Explore more" opens the lighting collection, filtered the same way.
+    assert r["explore"]["url"].startswith("/collections/lighting")
+
+
+def test_explore_link_carries_the_filters(chat):
+    sid, h = start(chat)
+    first = say(chat, sid, h, "Show me sculptures")
+    assert first["explore"]["url"].startswith("/collections/sculptures")
+    r = say(chat, sid, h, "Show me something under ₹3,000")
+    assert r["explore"]["url"].startswith("/collections/sculptures?") and "max=3000" in r["explore"]["url"]
+    sid, h = start(chat)
+    r = say(chat, sid, h, "Find products under ₹1,500")
+    assert r["explore"]["url"].startswith("/shop?") and "max=1500" in r["explore"]["url"]
 
 
 @pytest.mark.parametrize("text,lo,hi", [("Find products under ₹1,500", 0, 1500),
@@ -367,6 +380,7 @@ def test_tool_calls_drive_the_reply():
         assert r["products"] and all(cat[p["id"]]["price"] <= 5000 for p in r["products"])
         tool_msg = next(m for m in llm.calls[1] if m["role"] == "tool")
         assert json.loads(tool_msg["content"])["filters"]["max_price"] == 5000
+        assert r["explore"]["url"] == "/collections/lighting?max=5000&sort=popular"
 
 
 def test_context_is_sent_to_the_model():

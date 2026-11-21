@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from urllib.parse import urlencode
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -19,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, TypeAdapter, Valida
 from app.core.errors import NotFound
 from app.models.catalog import Category, Product
 from app.models.chat import (
-    ChatProduct, Comparison, ComparisonRow, EnquiryDraft, FaqItem, OrderLine, OrderSummary, ReplyType,
+    ChatProduct, Comparison, ComparisonRow, EnquiryDraft, ExploreLink, FaqItem, OrderLine, OrderSummary, ReplyType,
 )
 from app.models.filament import FILAMENTS_BY_ID
 from app.models.marketing import CustomRequestIn
@@ -165,6 +166,7 @@ class ToolResult:
     faq: list[FaqItem] = field(default_factory=list)
     enquiry: EnquiryDraft | None = None
     orders: list[OrderSummary] = field(default_factory=list)
+    explore: ExploreLink | None = None
     ok: bool = True
 
     def for_model(self) -> str:
@@ -179,6 +181,31 @@ def card(p: Product) -> ChatProduct:
         price_varies=len(prices) > 1, image=p.images[0].url if p.images else None,
         url=f"/product/{p.slug}", summary=summary[:160],
     )
+
+
+def explore_link(q: str | None, category: Category | None, lo: float | None, hi: float | None,
+                 sort: str, total: int) -> ExploreLink:
+    """The storefront page listing what a chat search found, with its filters in the URL (see useCatalogParams)."""
+    params: dict[str, Any] = {}
+    if q:
+        path, default_sort = "/search", "relevance"
+        params["q"] = q
+        if category:
+            params["category"] = category.slug
+    elif category:
+        path, default_sort = f"/collections/{category.slug}", "newest"
+    else:
+        path, default_sort = "/shop", "newest"
+    if lo is not None:
+        params["min"] = f"{lo:g}"
+    if hi is not None:
+        params["max"] = f"{hi:g}"
+    if sort != default_sort:
+        params["sort"] = sort
+    label = f"Explore all {total}" if total > MAX_RESULTS else "Explore more"
+    if category and not q:
+        label += f" in {category.name.lower()}"
+    return ExploreLink(url=path + ("?" + urlencode(params) if params else ""), label=label, total=total)
 
 
 def _brief(p: Product, cats: dict[str, str]) -> dict:
@@ -283,12 +310,14 @@ class ChatTools:
 
         page = await find(q)
         exact = page.total > 0
+        used_q = q  # the query behind the products shown (dropped when showing alternatives)
         note = None
         if not exact and q:
             # Nothing matches every word. Offer the nearest pieces under the same filters, and say so.
             fallback = await find(None) if (category or lo is not None or hi is not None) else None
             if fallback and fallback.items:
                 page = fallback
+                used_q = None
                 note = (f"No product matches '{q}'. These are other pieces"
                         f"{' in ' + category.name if category else ''}{' in the price range' if lo or hi else ''}; "
                         "present them as alternatives, not matches, and mention custom creations.")
@@ -310,8 +339,10 @@ class ChatTools:
             data["category_note"] = f"No category called {a.category!r}; searched everything."
         if note:
             data["note"] = note
+        effective_sort = sort if used_q or sort != "relevance" else "popular"
+        explore = explore_link(used_q, category, lo, hi, effective_sort, page.total) if page.items else None
         return ToolResult(data=data, type="product_recommendations" if page.items else "text",
-                          products=[card(p) for p in page.items])
+                          products=[card(p) for p in page.items], explore=explore)
 
     async def _find_product(self, ref: str) -> Product | None:
         try:

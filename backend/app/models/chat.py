@@ -34,6 +34,13 @@ class ChatProduct(Schema):
     summary: str = ""
 
 
+class ExploreLink(Schema):
+    """The shop page showing everything the chat search matched, with the same filters applied."""
+    url: str
+    label: str
+    total: int = 0
+
+
 class ComparisonRow(Schema):
     label: str
     values: list[str]
@@ -89,6 +96,7 @@ class ChatReply(Schema):
     type: ReplyType = "text"
     message: str
     products: list[ChatProduct] = Field(default_factory=list, max_length=12)
+    explore: ExploreLink | None = None
     comparison: Comparison | None = None
     faq: list[FaqItem] = Field(default_factory=list, max_length=6)
     enquiry: EnquiryDraft | None = None
