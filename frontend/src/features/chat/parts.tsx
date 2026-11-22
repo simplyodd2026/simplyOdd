@@ -6,7 +6,7 @@ import { Input, Textarea } from '@/components/ui/Field'
 import { responsive } from '@/lib/image'
 import { date, money } from '@/lib/format'
 import { cn } from '@/lib/cn'
-import type { ChatProduct, Comparison, ExploreLink, EnquiryDraft, OrderSummary } from './types'
+import type { ChatProduct, Comparison, ContactLink, ExploreLink, EnquiryDraft, OrderSummary } from './types'
 
 // ------------------------------------------------------------------ text
 const EMAIL = /([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g
@@ -84,6 +84,18 @@ export function ProductRail({ products, explore, onNavigate }: {
           {explore.label}<Icon name="arrowRight" size={14} />
         </Link>
       )}
+    </div>
+  )
+}
+
+/** Customise page, Instagram and WhatsApp, offered with custom-creation replies. Site links stay in the tab. */
+export function ContactLinks({ links, onNavigate }: { links: ContactLink[]; onNavigate?: () => void }) {
+  const cls = 'inline-flex items-center gap-1.5 rounded-full border border-rule px-4 py-2 text-[13px] font-medium text-ink transition-colors hover:bg-ash'
+  return (
+    <div className="flex flex-wrap gap-2" aria-label="Other ways to reach the studio">
+      {links.map((l) => l.url.startsWith('/')
+        ? <Link key={l.kind} to={l.url} onClick={onNavigate} className={cls}>{l.label}<Icon name="arrowRight" size={14} /></Link>
+        : <a key={l.kind} href={l.url} target="_blank" rel="noreferrer" className={cls}>{l.label}<Icon name="arrowUpRight" size={14} /></a>)}
     </div>
   )
 }

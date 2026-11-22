@@ -99,6 +99,12 @@ def test_intents_and_words():
     assert parse("Where is my order OM-1001?").intent == "order_status"
     assert parse("Compare these").intent == "compare"
     assert parse("I want a custom piece").intent == "custom_enquiry"
+    for msg in ("can i tell my own idea?", "I have an idea for a lamp", "can you make me a planter shaped like my cat",
+                "make it for me in blue", "can you put my name on it", "I want something customised",
+                "personalise a keychain", "idea", "my idea?"):
+        assert parse(msg).intent == "custom_enquiry", msg
+    for msg in ("lamps under 2000", "what does shipping cost?", "show me vases", "gift ideas for my mom"):
+        assert parse(msg).intent != "custom_enquiry", msg
     assert parse("Suggest something for gifting").gift
 
 
@@ -363,11 +369,42 @@ def test_enquiry_endpoint_validates_and_saves(chat):
     assert saved["quantity"] == 2 and saved["dimensions"] == "20 cm tall"
 
 
-def test_custom_intent_opens_a_brief(chat):
+def test_custom_intent_offers_links_not_a_form(chat):
     sid, h = start(chat, CUSTOMER)
     r = say(chat, sid, h, "I'd like a custom piece made")
-    assert r["type"] == "custom_enquiry"
-    assert r["enquiry"]["email"] == "test@example.com" and "idea" in r["enquiry"]["missing"]
+    assert r["type"] == "custom_enquiry" and r["enquiry"] is None and not r["products"]
+    assert [l["kind"] for l in r["links"]] == ["customise", "instagram", "whatsapp"]
+
+
+def test_buttons_come_with_any_reply_that_mentions_them():
+    llm = FakeLLM(Completion(content="We'd love to help. Please share the details through our Customise page, "
+                                     "Instagram, or WhatsApp."))
+    with make_client(llm) as c:
+        sid, h = start(c)
+        r = say(c, sid, h, "idea")
+        assert [l["kind"] for l in r["links"]] == ["customise", "instagram", "whatsapp"]
+
+
+def test_model_is_not_used_for_custom_requests():
+    llm = FakeLLM(call("create_custom_enquiry", requirements={"idea": "a lamp"}), Completion(content="Tell me more."))
+    with make_client(llm) as c:
+        sid, h = start(c)
+        r = say(c, sid, h, "can i tell my own idea?")
+        assert r["enquiry"] is None and len(r["links"]) == 3 and "Customise page" in r["message"]
+    assert all(t["function"]["name"] != "create_custom_enquiry" for t in TOOL_SCHEMAS)
+
+
+def test_custom_replies_offer_the_customise_page_instagram_and_whatsapp(chat):
+    sid, h = start(chat)
+    r = say(chat, sid, h, "Can you customise a lamp for me?")
+    assert [(l["kind"], l["url"]) for l in r["links"]] == [
+        ("customise", "/customise"),
+        ("instagram", "https://www.instagram.com/simply__odd/"),
+        ("whatsapp", "https://wa.me/918004158359?text=Hi%20Simply%20Odd%2C%20I%27d%20like%20a%20custom%20piece."),
+    ]
+    assert say(chat, sid, h, "What does shipping cost?")["links"] == []
+    r = say(chat, sid, h, "can i tell my own idea?")
+    assert r["type"] == "custom_enquiry" and not r["products"] and len(r["links"]) == 3
 
 
 # ------------------------------------------------------------------- Groq

@@ -22,6 +22,13 @@ export interface ExploreLink {
   total: number
 }
 
+/** A way to reach the studio about a custom piece. */
+export interface ContactLink {
+  kind: 'customise' | 'instagram' | 'whatsapp'
+  label: string
+  url: string
+}
+
 export interface Comparison {
   products: ChatProduct[]
   rows: { label: string; values: string[] }[]
@@ -65,6 +72,7 @@ export interface ReplyPayload {
   faq?: { question: string; answer: string }[]
   enquiry?: EnquiryDraft | null
   orders?: OrderSummary[]
+  links?: ContactLink[]
   suggestions?: string[]
   fallback?: boolean
 }

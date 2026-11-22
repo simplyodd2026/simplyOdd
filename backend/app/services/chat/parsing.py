@@ -51,7 +51,13 @@ def parse_budget(text: str) -> Budget | None:
 
 _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("order_status", re.compile(r"\b(my orders?|order status|track(ing)?|where is my|om-\d+|order (no|number|#))\b", re.I)),
-    ("custom_enquiry", re.compile(r"\b(custom|customi[sz]e|bespoke|commission|made for me|one[- ]off|my own design|personali[sz]ed? (piece|creation))\b", re.I)),
+    ("custom_enquiry", re.compile(
+        r"\b(custom\w*|customi[sz]\w*|bespoke|commission\w*|made for me|one[- ]off|personali[sz]\w*|"
+        r"(my|our) (own )?(idea|design|concept|sketch|drawing)s?|own (idea|design|concept)s?|i have an? (idea|design)|"
+        r"(make|made|design|create|print) (it |one |something |this )?(for me|to my|from my|as per my|according to my)|"
+        r"can (you|u) (make|design|create|print) (me |something|a |an |my )|"
+        r"(with|put) (my|a|our|their) (name|photo|logo|text|initials) on)\b"
+        r"|^\s*(an? |my )?(own )?ideas?\s*[?.!]*\s*$", re.I)),
     ("compare", re.compile(r"\b(compare|comparison|versus|vs\.?|difference between|which is better)\b", re.I)),
     ("faq", re.compile(r"\b(ship(ping)?|deliver(y|ed)?|return|refund|cancel|payment|pay|cod|cash on|partial|upi|"
                         r"care|clean|contact|email|phone|international|abroad|packag|watertight|damaged|broken)\b", re.I)),

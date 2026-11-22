@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { ApiError } from '@/lib/api'
 import { chatApi, type StoredSession } from './api'
 import type { ChatMessage, ChatReply, EnquiryDraft } from './types'
+import { customReply, isCustomRequest } from './custom'
 
 const GREETING = "Hello, I'm Oddly, your personal shopping assistant. I can help you find a piece, compare a few, " +
   'answer questions about shipping and returns, or start a custom creation.'
@@ -15,7 +16,7 @@ const greeting = (text = GREETING): ChatMessage => ({ id: 'greeting', role: 'ass
 
 const fromReply = (r: ChatReply): ChatMessage => ({
   id: localId(), role: 'assistant', content: r.message, type: r.type,
-  payload: { products: r.products, explore: r.explore, comparison: r.comparison, faq: r.faq, enquiry: r.enquiry, orders: r.orders, fallback: r.fallback },
+  payload: { products: r.products, explore: r.explore, comparison: r.comparison, faq: r.faq, enquiry: r.enquiry, orders: r.orders, links: r.links, fallback: r.fallback },
 })
 
 /** The conversation is gone or isn't ours any more (signed out, expired): start a fresh one. */
@@ -77,6 +78,11 @@ export const useChat = create<ChatState>((set, get) => ({
     const text = raw.trim()
     if (!text || get().sending) return
     const userMsg: ChatMessage = { id: localId(), role: 'user', content: text, type: 'text', payload: {} }
+    if (isCustomRequest(text)) {
+      // Custom requests are answered here with the Customise page, Instagram and WhatsApp links: no API call.
+      set((s) => ({ messages: [...s.messages, userMsg, customReply(localId())], error: null, suggestions: FALLBACK_SUGGESTIONS }))
+      return
+    }
     const gen = generation
     set((s) => ({ messages: [...s.messages, userMsg], sending: true, error: null, suggestions: [] }))
     const attempt = async (retried: boolean): Promise<void> => {

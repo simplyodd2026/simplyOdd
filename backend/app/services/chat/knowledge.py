@@ -22,6 +22,9 @@ from app.core.constants import FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
 from app.core.constants import COD_FEE, PARTIAL_SHARE
 
 CONTACT_EMAIL = "simplyodd2026@gmail.com"
+INSTAGRAM_URL = "https://www.instagram.com/simply__odd/"
+WHATSAPP_NUMBER = "918004158359"  # +91 80041 58359
+WHATSAPP_URL = f"https://wa.me/{WHATSAPP_NUMBER}?text=" + "Hi%20Simply%20Odd%2C%20I%27d%20like%20a%20custom%20piece."
 
 TOPICS = ("about", "shipping", "delivery", "payments", "returns", "refunds", "cancellation", "custom_orders",
           "care", "materials", "international", "contact", "tracking")
@@ -120,8 +123,8 @@ def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
         Entry("custom", "custom_orders", "Can you make something custom?",
               "Yes. Send us a brief with what you have in mind: a description, a reference, the space it is for. "
               "Within three working days we reply with questions, a first sketch and a fixed price. There's no "
-              "payment until you've approved the details and the price. I can take your brief here, or you can use "
-              "the Customise page.",
+              "payment until you've approved the details and the price. Send it through the Customise page, on "
+              "Instagram or on WhatsApp.",
               ("custom", "customise", "customize", "bespoke", "personalised", "personalized", "commission", "design")),
         Entry("custom-price", "custom_orders", "How much does a custom piece cost, and how long does it take?",
               "It depends on the design, so the studio confirms a fixed price after reviewing your brief, within "

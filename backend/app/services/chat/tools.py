@@ -146,6 +146,9 @@ TOOL_SCHEMAS: list[dict] = [
     _fn("get_business_information", "About Simply Odd on one topic.",
         {"topic": {"type": "string", "enum": list(TOPICS)}}, ["topic"]),
 ]
+# Custom requests are answered with the Customise page, Instagram and WhatsApp links, not a brief collected in
+# chat, so the model isn't offered the brief tool. It still runs for briefs already open in a conversation.
+TOOL_SCHEMAS = [t for t in TOOL_SCHEMAS if t["function"]["name"] != "create_custom_enquiry"]
 
 
 # --------------------------------------------------------------- results

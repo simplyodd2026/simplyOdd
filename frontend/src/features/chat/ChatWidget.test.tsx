@@ -218,13 +218,36 @@ describe('ChatWidget', () => {
     handler = routes(() => json(reply({ type: 'custom_enquiry', message: 'Here is your brief.', enquiry })))
     renderAt()
     await openWidget()
-    await sendMessage('custom piece please')
+    await sendMessage('A Krishna sculpture please')
     const form = await screen.findByRole('form', { name: 'Custom creation brief' })
     expect(fetchMock.mock.calls.some(([u]) => String(u).endsWith('/api/chat/enquiries'))).toBe(false)
     fireEvent.click(within(form).getByRole('button', { name: 'Send brief to the studio' }))
     expect(await screen.findByText('Brief sent to the studio')).toBeTruthy()
     const [, init] = fetchMock.mock.calls.find(([u]) => String(u).endsWith('/api/chat/enquiries'))!
     expect(JSON.parse(String(init!.body))).toMatchObject({ session_id: SESSION.session_id, name: 'Asha', email: 'asha@example.com' })
+  })
+
+  it.each(['i want something customised', 'idea', 'can i tell my own idea?', 'Explore custom creations'])(
+    'answers "%s" at once with the three links, without calling the API', async (text) => {
+      renderAt()
+      await openWidget()
+      await screen.findByText('Hello from the studio.')
+      const before = fetchMock.mock.calls.length
+      await sendMessage(text)
+      const links = await screen.findByLabelText('Other ways to reach the studio')
+      expect(within(links).getByRole('link', { name: /Customise page/ }).getAttribute('href')).toBe('/customise')
+      expect(within(links).getByRole('link', { name: /Instagram/ }).getAttribute('href')).toBe('https://www.instagram.com/simply__odd/')
+      expect(within(links).getByRole('link', { name: /WhatsApp/ }).getAttribute('href')).toContain('https://wa.me/918004158359')
+      expect(fetchMock.mock.calls.length).toBe(before)
+    })
+
+  it('shows the links when an API reply carries them', async () => {
+    const links = [{ kind: 'whatsapp', label: 'Chat on WhatsApp', url: 'https://wa.me/918004158359' }] as const
+    handler = routes(() => json(reply({ message: 'Reach the studio on WhatsApp.', links: [...links] })))
+    renderAt()
+    await openWidget()
+    await sendMessage('hello there studio')
+    expect(await screen.findByRole('link', { name: /Chat on WhatsApp/ })).toBeTruthy()
   })
 
   it('goes full screen and locks page scroll on phones', async () => {

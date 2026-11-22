@@ -41,6 +41,13 @@ class ExploreLink(Schema):
     total: int = 0
 
 
+class ContactLink(Schema):
+    """A way to reach the studio about a custom piece: the Customise page, Instagram or WhatsApp."""
+    kind: Literal["customise", "instagram", "whatsapp"]
+    label: str
+    url: str
+
+
 class ComparisonRow(Schema):
     label: str
     values: list[str]
@@ -101,6 +108,8 @@ class ChatReply(Schema):
     faq: list[FaqItem] = Field(default_factory=list, max_length=6)
     enquiry: EnquiryDraft | None = None
     orders: list[OrderSummary] = Field(default_factory=list, max_length=10)
+    # Shown with custom-creation replies so the shopper can also reach the studio directly.
+    links: list[ContactLink] = Field(default_factory=list, max_length=4)
     suggestions: list[Annotated[str, Field(max_length=80)]] = Field(default_factory=list, max_length=4)
     # True when the reply came from the built-in fallback rather than the language model.
     fallback: bool = False

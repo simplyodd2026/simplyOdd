@@ -6,7 +6,7 @@ import { lockScroll, unlockScroll } from '@/lib/scroll'
 import { useSession } from '@/stores/session'
 import { chatApi } from './api'
 import { useChat } from './store'
-import { ComparisonTable, EnquiryCard, MoreAnswers, OrderList, ProductRail, RichText, Typing } from './parts'
+import { ComparisonTable, ContactLinks, EnquiryCard, MoreAnswers, OrderList, ProductRail, RichText, Typing } from './parts'
 import { MAX_CHARS, type ChatMessage } from './types'
 
 const MOBILE = '(max-width: 639px)'
@@ -30,6 +30,7 @@ function AssistantMessage({ m, onNavigate, latestEnquiry }: { m: ChatMessage; on
           enquirySent(m.id, { ...p.enquiry!, ...d, request_id: out.id }, out.message)
         }} />
       )}
+      {p.links && p.links.length > 0 && <ContactLinks links={p.links} onNavigate={onNavigate} />}
     </div>
   )
 }
