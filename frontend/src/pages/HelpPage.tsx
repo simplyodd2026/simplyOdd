@@ -18,7 +18,7 @@ const topics = (rates: Rates): Record<string, { title: string; intro: string; se
     sections: [
       ['When will my order ship?', 'Every piece is made to order, so how long it takes depends on the piece and what else is on the printers. Your order page shows when it goes into production and when it ships.'],
       ['How long does delivery take?', 'It depends on where you are and the courier, so we can’t promise a date. Once your order ships, its tracking number on your order page shows where it is.'],
-      ['What does shipping cost?', `Standard shipping is ${money(rates.standardFee)}, and free on orders over ${money(rates.freeOver)}. Express shipping is ${money(rates.expressFee)}.`],
+      ['What does shipping cost?', `Standard shipping is ${money(rates.standardFee)}, and free on orders over ${money(rates.freeOver)}. We don't offer express delivery.`],
       ['How is it packed?', 'Every piece is wrapped in recycled paper pulp and boxed with enough space that nothing touches the walls. No plastic fillers.'],
       ['Can I track my order?', 'Yes. When your order ships we add a tracking number to your order page in your account.'],
     ],

@@ -2,7 +2,7 @@
 it renders the quote returned from here, and checkout recomputes it."""
 from __future__ import annotations
 
-from app.core.constants import (COD_FEE, CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
+from app.core.constants import (COD_FEE, CURRENCY, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
                                 PARTIAL_SHARE, STANDARD_SHIPPING_FEE)
 from app.core.utils import money
 from app.models.cart import (CartLine, PaymentPlan, Personalization, PersonalizationValue, Quote, QuoteLine, QuoteRequest,
@@ -24,8 +24,6 @@ class PricingService:
         return [
             ShippingOption(method="standard", label="Standard", eta="Regular courier",
                            fee=0 if free or subtotal == 0 else STANDARD_SHIPPING_FEE),
-            ShippingOption(method="express", label="Express", eta="Priority courier",
-                           fee=EXPRESS_SHIPPING_FEE if subtotal else 0),
         ]
 
     async def quote(self, req: QuoteRequest, paid: bool = False) -> tuple[Quote, Coupon | None]:
@@ -90,7 +88,9 @@ class PricingService:
 
         subtotal = money(sum(line.line_total for line in lines if line.available))
         options = self.shipping_options(subtotal)
-        shipping = next(o.fee for o in options if o.method == req.shipping_method)
+        # Standard is the only method; anything else (an old bag still set to express) is priced as standard.
+        method = next((o for o in options if o.method == req.shipping_method), options[0])
+        shipping = method.fee
 
         discount, coupon, message, needs_amount = 0.0, None, None, False
         if req.coupon_code and req.coupon_code.strip():
@@ -106,8 +106,8 @@ class PricingService:
             lines=lines, subtotal=subtotal, discount=discount,
             coupon_code=coupon.code if coupon else None, coupon_message=message, coupon_needs_amount=needs_amount,
             coupon_amount=total if coupon and coupon.kind == "custom_total" else None,
-            shipping_method=req.shipping_method, shipping=shipping, shipping_options=options,
-            total=total, deposit=money(total * PARTIAL_SHARE), payment_plans=payment_plans(lines), cod_fee=COD_FEE, currency=CURRENCY,
+            shipping_method=method.method, shipping=shipping, shipping_options=options,
+            total=total, deposit=money(total * PARTIAL_SHARE), payment_plans=payment_plans(lines), cod_fee=COD_FEE if shipping == 0 else 0.0, currency=CURRENCY,
             item_count=sum(line.quantity for line in lines if line.available),
             has_issues=any(not line.available for line in lines),
         )

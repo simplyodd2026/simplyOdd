@@ -12,7 +12,11 @@ export function OrderProgress({ order }: { order: Order }) {
       {HAPPY_PATH.map((s, i) => (
         <li key={s} className="flex flex-col gap-2">
           <span className={cn('h-1', i <= current ? 'bg-tertiary' : 'bg-rule')} />
-          <span className={cn('text-xs leading-tight sm:text-sm', i <= current ? 'text-ink' : 'text-fog')}>{ORDER_STATUS_LABEL[s]}</span>
+          <span className={cn('text-xs leading-tight sm:text-sm', i <= current ? 'text-ink' : 'text-fog')}>
+            {ORDER_STATUS_LABEL[s]}
+            {/* How long making a piece usually takes, so the wait before shipping isn't a mystery. */}
+            {s === 'processing' && <span className="block text-[11px] text-fog sm:text-xs">2–3 days</span>}
+          </span>
         </li>
       ))}
     </ol>

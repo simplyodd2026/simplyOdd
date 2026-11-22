@@ -139,7 +139,7 @@ def test_admin_status_flow_and_reviews(client, products):
             "payment_plan": "cod"}
     order = pay(client, body).json()
     assert order["payment"]["amount"] == 0 and order["payment"]["balance"] == order["total"]
-    assert order["cod_fee"] == 149 and order["total"] == order["subtotal"] + order["shipping"] + 149
+    assert order["total"] == order["subtotal"] + order["shipping"] + order["cod_fee"]
     assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
 
     # Non-admins are refused
@@ -253,7 +253,7 @@ def test_payment_plans_follow_personalisation(client, products):
     plain_line = {"product_id": plain, "quantity": 1}
     custom_line = {"product_id": cup["id"], "quantity": 1, "personalization": {"name": "Aanya"}}
     quote = lambda items: client.post("/api/cart/quote", json={"items": items}).json()
-    assert quote([plain_line])["payment_plans"] == ["full", "cod"] and quote([plain_line])["cod_fee"] == 149
+    assert quote([plain_line])["payment_plans"] == ["full", "cod"]
     # One personalised piece puts the whole bag on the 50% advance.
     assert quote([plain_line, custom_line])["payment_plans"] == ["partial"]
 
@@ -278,7 +278,36 @@ def test_payment_plans_follow_personalisation(client, products):
     order = order.json()
     assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
     assert order["payment"]["provider"] == "cod" and order["payment"]["paid_at"] is None
-    online = pay(client, {"items": [plain_line], "address": address(), "payment_provider": "mock"}).json()
-    assert online["cod_fee"] == 0 and online["total"] == order["total"] - 149
     c = client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER).json()
     assert c["status"] == "cancelled" and c["payment"]["status"] == "void"
+
+
+def test_cod_fee_only_when_shipping_is_free(client, products):
+    price = products["vortex-pen-cup"]["price"]  # 1290: below the free-shipping threshold
+    pid = products["vortex-pen-cup"]["id"]
+    quote = lambda qty, method="standard": client.post("/api/cart/quote", json={
+        "items": [{"product_id": pid, "quantity": qty}], "shipping_method": method}).json()
+
+    # Paying for shipping already: cash on delivery adds nothing.
+    q = quote(1)
+    assert q["shipping"] == 199 and q["cod_fee"] == 0
+    # Express is withdrawn: a bag still asking for it is priced as standard.
+    old = quote(1, "express")
+    assert old["shipping_method"] == "standard" and old["shipping"] == 199
+    assert [o["method"] for o in old["shipping_options"]] == ["standard"]
+    # Free shipping (over ₹1,499): cash on delivery adds ₹99.
+    q = quote(2)
+    assert q["subtotal"] == price * 2 and q["shipping"] == 0 and q["cod_fee"] == 99
+
+    def order(qty, plan, provider):
+        r = pay(client, {"items": [{"product_id": pid, "quantity": qty}], "address": address(),
+                         "payment_provider": provider, "payment_plan": plan})
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    cod = order(2, "cod", "cod")
+    assert cod["cod_fee"] == 99 and cod["total"] == price * 2 + 99 and cod["payment"]["balance"] == cod["total"]
+    online = order(2, "full", "mock")
+    assert online["cod_fee"] == 0 and online["total"] == price * 2
+    cheap = order(1, "cod", "cod")
+    assert cheap["cod_fee"] == 0 and cheap["total"] == price + 199

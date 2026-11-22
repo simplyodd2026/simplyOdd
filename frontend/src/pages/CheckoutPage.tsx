@@ -306,7 +306,7 @@ export default function CheckoutPage() {
                     {([
                       ['full', 'Pay online', 'Pay the whole amount now.', quote.total],
                       ['partial', 'Pay 50% now', `Then ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
-                      ['cod', 'Cash on delivery', `Pay in cash or UPI when your order arrives. Includes a ${money(quote.cod_fee)} COD fee.`, quote.total + quote.cod_fee],
+                      ['cod', 'Cash on delivery', `Pay in cash or UPI when your order arrives.${quote.cod_fee > 0 ? ` Includes a ${money(quote.cod_fee)} COD fee.` : ''}`, quote.total + quote.cod_fee],
                     ] as const).filter(([id]) => quote.payment_plans.includes(id)).map(([id, label, note, amount]) => {
                       const active = plan === id
                       return (

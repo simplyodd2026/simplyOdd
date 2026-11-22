@@ -3,7 +3,7 @@ from urllib.parse import urlsplit
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
-from app.core.constants import CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
+from app.core.constants import CURRENCY, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
 from app.core.container import Services, services
 from app.core.errors import BadRequest
 from app.models.catalog import Category, Product, SortKey
@@ -21,7 +21,6 @@ async def storefront_config(svc: Services = Depends(services)):
         "currency": CURRENCY,
         "free_shipping_threshold": FREE_SHIPPING_THRESHOLD,
         "standard_shipping_fee": STANDARD_SHIPPING_FEE,
-        "express_shipping_fee": EXPRESS_SHIPPING_FEE,
         "payment_providers": svc.payments.public(),
         "filaments": FILAMENTS,
     }

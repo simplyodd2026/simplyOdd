@@ -6,6 +6,8 @@ from app.models.catalog import PersonalizationField, ProductVariant
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
+# Only "standard" is offered. "express" was withdrawn; it stays here so past orders still load,
+# and a request still asking for it is priced as standard.
 ShippingMethod = Literal["standard", "express"]
 
 
@@ -125,7 +127,7 @@ class Quote(Schema):
     # How this bag may be paid. A personalised piece can't be resold, so a bag with one takes the
     # 50% advance only; everything else is paid in full online or cash on delivery.
     payment_plans: list[PaymentPlan]
-    cod_fee: float  # added to the total if the bag is paid cash on delivery
+    cod_fee: float  # added to the total if the bag is paid cash on delivery; 0 when shipping is charged
     currency: str
     item_count: int
     has_issues: bool

@@ -8,5 +8,4 @@ export const MAX_PER_PRODUCT = 10
 export const SHIPPING = {
   freeOver: 1499,
   standardFee: 199,
-  expressFee: 249,
 }

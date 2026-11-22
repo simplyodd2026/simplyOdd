@@ -87,6 +87,7 @@ export interface ProductDetail {
 /** One line per product, variant, colour and personalisation. */
 export interface CartLine { product_id: string; quantity: number; variant?: string | null; color?: string | null; personalization?: Personalization | null }
 export interface Cart { items: CartLine[] }
+/** Only 'standard' is offered; 'express' remains for orders placed before it was withdrawn. */
 export type ShippingMethod = 'standard' | 'express'
 
 export interface QuoteLine {
@@ -268,7 +269,6 @@ export interface StorefrontConfig {
   currency: string
   free_shipping_threshold: number
   standard_shipping_fee: number
-  express_shipping_fee: number
   payment_providers: PaymentProviderInfo[]
   filaments: Filament[]
 }

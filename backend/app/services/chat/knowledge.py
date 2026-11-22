@@ -18,7 +18,7 @@ import re
 from dataclasses import dataclass, field
 from functools import lru_cache
 
-from app.core.constants import EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
+from app.core.constants import FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
 from app.core.constants import COD_FEE, PARTIAL_SHARE
 
 CONTACT_EMAIL = "simplyodd2026@gmail.com"
@@ -61,7 +61,7 @@ def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
               ("delivery", "deliver", "long", "days", "arrive", "timeline", "eta")),
         Entry("ship-cost", "shipping", "What does shipping cost?",
               f"Standard shipping is {_rupees(STANDARD_SHIPPING_FEE)}, and free on orders over "
-              f"{_rupees(FREE_SHIPPING_THRESHOLD)}. Express shipping is {_rupees(EXPRESS_SHIPPING_FEE)}.",
+              f"{_rupees(FREE_SHIPPING_THRESHOLD)}. We don't offer express delivery.",
               ("shipping", "cost", "charge", "fee", "free", "express", "standard")),
         Entry("packing", "shipping", "How is it packed?",
               "Every piece is wrapped in recycled paper pulp and boxed with enough space that nothing touches the "
@@ -75,12 +75,14 @@ def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
               "Not yet. We're working on it.",
               ("international", "abroad", "outside", "overseas", "country", "countries", "worldwide")),
         Entry("payment-methods", "payments", "How can I pay?",
-              f"You can pay in full online ({methods}) or by cash on delivery (an extra {_rupees(COD_FEE)}). "
+              f"You can pay in full online ({methods}) or by cash on delivery ({_rupees(COD_FEE)} extra on orders "
+              "with free shipping). "
               "Orders with a personalised piece "
               f"are paid {share} online at checkout and the rest on delivery.",
               ("pay", "payment", "methods", "upi", "card", "netbanking", "razorpay")),
         Entry("cod", "payments", "Do you offer cash on delivery?",
-              f"Yes, you can pay in cash or UPI when your order arrives, for an extra {_rupees(COD_FEE)}. "
+              "Yes, you can pay in cash or UPI when your order arrives. It's free when you're paying for shipping; "
+              f"on orders with free shipping it adds {_rupees(COD_FEE)}. "
               "It isn't available for orders with a "
               f"personalised piece: those are paid {share} online at checkout and the rest on delivery.",
               ("cod", "cash")),

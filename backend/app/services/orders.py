@@ -113,7 +113,7 @@ class OrderService:
                              personalization_details=line.personalization_details, name=line.name, slug=line.slug, image=line.image,
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
-            address=req.address, shipping_method=req.shipping_method, subtotal=quote.subtotal,
+            address=req.address, shipping_method=quote.shipping_method, subtotal=quote.subtotal,
             discount=quote.discount, coupon_code=quote.coupon_code, shipping=quote.shipping, cod_fee=cod_fee,
             total=total, currency=quote.currency, notes=req.notes,
             payment=PaymentInfo(provider=provider.id, plan=req.payment_plan, amount=due_now,

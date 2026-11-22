@@ -142,9 +142,12 @@ export const useCart = create<CartState>()(
       // Loaded by main.tsx (rehydrateStores), after hydration on prerendered pages, so the first render matches the HTML.
       skipHydration: true,
       // v1 bags predate colours: every line becomes the product with no colour chosen.
+      // v2 bags may be set to express delivery, which was withdrawn: they go back to standard.
       migrate: (state, version) => {
-        const s = state as CartState
-        return version < 2 ? { ...s, items: (s.items ?? []).map((i) => ({ ...i, color: i.color ?? null })) } : s
+        let s = state as CartState
+        if (version < 2) s = { ...s, items: (s.items ?? []).map((i) => ({ ...i, color: i.color ?? null })) }
+        if (version < 3) s = { ...s, shippingMethod: 'standard' }
+        return s
       },
     },
   ),

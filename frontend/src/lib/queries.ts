@@ -56,7 +56,6 @@ export const useShippingRates = () => {
   return {
     freeOver: config?.free_shipping_threshold ?? SHIPPING.freeOver,
     standardFee: config?.standard_shipping_fee ?? SHIPPING.standardFee,
-    expressFee: config?.express_shipping_fee ?? SHIPPING.expressFee,
   }
 }
 
