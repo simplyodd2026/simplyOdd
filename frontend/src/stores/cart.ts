@@ -139,6 +139,8 @@ export const useCart = create<CartState>()(
     },
     {
       name: 'om.cart', storage: createJSONStorage(() => localStorage), version: 2,
+      // Loaded by main.tsx (rehydrateStores), after hydration on prerendered pages, so the first render matches the HTML.
+      skipHydration: true,
       // v1 bags predate colours: every line becomes the product with no colour chosen.
       migrate: (state, version) => {
         const s = state as CartState

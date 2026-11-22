@@ -1,13 +1,15 @@
 // Search metadata built from real catalogue data. Shared by the React app (lib/useSeo.ts sets these
-// tags in the browser) and the Vercel edge middleware (middleware.ts writes them into the HTML that
-// crawlers receive), so both always say the same thing. Keep it free of browser APIs and `@/` imports:
-// the middleware bundles it on its own.
+// tags in the browser) and the build-time prerender (scripts/prerender.mjs writes them into each
+// product page's HTML), so both always say the same thing. Keep it free of browser APIs: it also runs in Node.
 import type { Category, Product } from './types'
 
 export const SITE_URL = 'https://simplyodd.in'
 export const SITE_NAME = 'Simply Odd'
 export const BRAND = 'Simply Odd'
 export const CURRENCY = 'INR'
+/** index.html's site-wide description and preview image; pages without their own go back to these. */
+export const SITE_DESCRIPTION = 'Simply Odd — strange, beautiful objects for the home and desk, designed in-house and made in small batches.'
+export const SITE_IMAGE = `${SITE_URL}/logo.png`
 
 export const productUrl = (slug: string) => `${SITE_URL}/product/${encodeURIComponent(slug)}`
 export const collectionUrl = (slug: string) => `${SITE_URL}/collections/${encodeURIComponent(slug)}`
@@ -109,7 +111,10 @@ export function productJsonLd(p: Product, category: Category | null) {
   const offers = p.variants?.length
     ? p.variants.map((v) => offer(v.price, v.label))
     : offer(p.price)
-  const description = squash([p.tagline, p.description].filter(Boolean).join('. ')) || p.name
+  // "Tagline. Description", without doubling the tagline's own full stop.
+  const tagline = squash(p.tagline || '')
+  const description = [tagline && /[.!?…]$/.test(tagline) ? tagline : tagline && `${tagline}.`, squash(p.description || '')]
+    .filter(Boolean).join(' ') || p.name
   const product: Record<string, unknown> = {
     '@type': 'Product',
     '@id': `${url}#product`,

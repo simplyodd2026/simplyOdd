@@ -13,6 +13,18 @@ from app.services.media import validate_upload
 
 router = APIRouter()
 
+# Fields that never show on the storefront's prerendered pages, so changing only these doesn't rebuild it.
+_NOT_ON_PAGE = {"updated_at", "sales_count", "rating"}
+
+
+def _changed_on_page(before: Product | None, after: Product | None) -> bool:
+    """Whether the storefront's published pages differ after this change."""
+    if not (before and before.is_published) and not (after and after.is_published):
+        return False  # a draft before and after: nothing public changed
+    if before is None or after is None:
+        return True
+    return before.model_dump(exclude=_NOT_ON_PAGE) != after.model_dump(exclude=_NOT_ON_PAGE)
+
 
 async def _drop_replaced_image(svc: Services, before: Category, after: Category) -> None:
     old = svc.media.path_from_url(before.image)
@@ -41,7 +53,10 @@ async def list_products(
 
 @router.post("/products", response_model=Product, status_code=201)
 async def create_product(body: ProductCreate, svc: Services = Depends(services)):
-    return await svc.catalog.create_product(body)
+    product = await svc.catalog.create_product(body)
+    if _changed_on_page(None, product):
+        await svc.rebuild.request(f"published {product.slug}")
+    return product
 
 
 @router.get("/products/{pid}", response_model=Product)
@@ -58,6 +73,8 @@ async def update_product(pid: str, body: ProductUpdate, svc: Services = Depends(
         for img in before.images:
             if img.path and img.path not in kept:
                 await svc.media.delete(img.path)
+    if _changed_on_page(before, product):
+        await svc.rebuild.request(f"updated {product.slug}")
     return product
 
 
@@ -67,6 +84,8 @@ async def delete_product(pid: str, svc: Services = Depends(services)):
     for img in product.images:
         if img.path:
             await svc.media.delete(img.path)
+    if _changed_on_page(product, None):
+        await svc.rebuild.request(f"deleted {product.slug}")
 
 
 @router.post("/products/{pid}/images", response_model=Product)
@@ -79,7 +98,10 @@ async def upload_product_images(pid: str, files: list[UploadFile] = File(...), s
         # Filed under the product's slug so the bucket reads by item name.
         url, path = await svc.media.upload(f"products/{product.slug or pid}", f.filename or "image", data, ct)
         images.append(ProductImage(url=url, path=path, alt=product.name))
-    return await svc.catalog.update_product(pid, ProductUpdate(images=images))
+    updated = await svc.catalog.update_product(pid, ProductUpdate(images=images))
+    if _changed_on_page(product, updated):
+        await svc.rebuild.request(f"new photos for {updated.slug}")
+    return updated
 
 
 class UploadOut(Schema):
@@ -99,7 +121,9 @@ async def upload(file: UploadFile = File(...), folder: Literal["categories", "ho
 # ------------------------------------------------------------------ categories
 @router.post("/categories", response_model=Category, status_code=201)
 async def create_category(body: CategoryCreate, svc: Services = Depends(services)):
-    return await svc.catalog.create_category(body)
+    category = await svc.catalog.create_category(body)
+    await svc.rebuild.request(f"new collection {category.slug}")
+    return category
 
 
 @router.patch("/categories/{cid}", response_model=Category)
@@ -107,6 +131,8 @@ async def update_category(cid: str, body: CategoryUpdate, svc: Services = Depend
     before = await svc.catalog.get_category(cid)
     category = await svc.catalog.update_category(cid, body)
     await _drop_replaced_image(svc, before, category)
+    if before.model_dump(exclude={"updated_at"}) != category.model_dump(exclude={"updated_at"}):
+        await svc.rebuild.request(f"updated collection {category.slug}")
     return category
 
 
@@ -116,6 +142,7 @@ async def delete_category(cid: str, svc: Services = Depends(services)):
     await svc.catalog.delete_category(cid)
     if path := svc.media.path_from_url(category.image):
         await svc.media.delete(path)
+    await svc.rebuild.request(f"deleted collection {category.slug}")
 
 
 class Reorder(Schema):
@@ -124,7 +151,9 @@ class Reorder(Schema):
 
 @router.put("/categories/order", response_model=list[Category])
 async def reorder_categories(body: Reorder, svc: Services = Depends(services)):
-    return await svc.catalog.reorder_categories(body.ids)
+    categories = await svc.catalog.reorder_categories(body.ids)
+    await svc.rebuild.request("reordered collections")
+    return categories
 
 
 # ------------------------------------------------------------------ home page

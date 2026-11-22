@@ -41,7 +41,7 @@ export const useWishlist = create<WishlistState>()(
       },
       replace: (ids) => set({ ids }),
     }),
-    { name: 'om.wishlist', storage: createJSONStorage(() => localStorage) },
+    { name: 'om.wishlist', storage: createJSONStorage(() => localStorage), skipHydration: true },
   ),
 )
 

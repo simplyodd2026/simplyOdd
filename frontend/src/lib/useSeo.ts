@@ -1,16 +1,15 @@
 import { useEffect } from 'react'
-import { ldJson, type PageMeta } from './seo'
+import { ldJson, SITE_DESCRIPTION, SITE_IMAGE, SITE_NAME, type PageMeta } from './seo'
 
-// index.html's site-wide description and Open Graph tags, put back when a page with its own leaves.
-const defaults = new Map<string, string | null>()
-const remember = (el: Element | null, key: string) => {
-  if (!defaults.has(key)) defaults.set(key, el?.getAttribute('content') ?? null)
+// What a page without its own tags shows: index.html's site-wide values. Fixed rather than read from the
+// page, because a prerendered product page loads with that product's tags already in place.
+const DEFAULTS: Record<string, string | null> = {
+  description: SITE_DESCRIPTION, 'og:title': SITE_NAME, 'og:description': SITE_DESCRIPTION, 'og:image': SITE_IMAGE,
 }
 
 function meta(attr: 'name' | 'property', key: string, value: string | undefined) {
-  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
-  remember(el, key)
   if (value === undefined) return
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
   if (!el) {
     el = document.createElement('meta')
     el.setAttribute(attr, key)
@@ -21,17 +20,20 @@ function meta(attr: 'name' | 'property', key: string, value: string | undefined)
 
 function restore(attr: 'name' | 'property', key: string) {
   const el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`)
-  const original = defaults.get(key)
+  const original = DEFAULTS[key]
   if (!el) return
   if (original == null) el.remove()
   else el.content = original
 }
 
+// Product-only tags a prerendered page arrives with, dropped when moving on to another page.
+const PAGE_ONLY = ['og:image:width', 'og:image:height', 'product:price:amount', 'product:price:currency']
+
 const OG = ['og:title', 'og:description', 'og:url', 'og:type', 'og:image', 'og:image:alt'] as const
 
 /**
- * Description, canonical link, Open Graph tags and JSON-LD for the page on screen. Crawlers get the same
- * tags in the HTML itself from middleware.ts; this keeps the browser (and Google's rendered view) in step.
+ * Description, canonical link, Open Graph tags and JSON-LD for the page on screen. Prerendered product
+ * pages arrive with the same tags in their HTML (scripts/prerender.mjs); this keeps them right as the shopper moves around.
  * The title is left to useDocumentTitle.
  */
 export function useSeo(page: PageMeta | null, jsonLd?: unknown) {
@@ -70,6 +72,7 @@ export function useSeo(page: PageMeta | null, jsonLd?: unknown) {
       document.head.querySelector('script[type="application/ld+json"][data-seo]')?.remove()
       restore('name', 'description')
       for (const k of OG) restore('property', k)
+      for (const k of PAGE_ONLY) document.head.querySelector(`meta[property="${k}"]`)?.remove()
     }
     // `key` and `ld` capture everything `page` and `jsonLd` hold.
     // eslint-disable-next-line react-hooks/exhaustive-deps

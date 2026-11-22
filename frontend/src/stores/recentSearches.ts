@@ -18,6 +18,6 @@ export const useRecentSearches = create<RecentState>()(
       },
       clear: () => set({ terms: [] }),
     }),
-    { name: 'om.recent-searches', storage: createJSONStorage(() => localStorage) },
+    { name: 'om.recent-searches', storage: createJSONStorage(() => localStorage), skipHydration: true },
   ),
 )

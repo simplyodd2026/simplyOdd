@@ -13,6 +13,7 @@ import { money } from '@/lib/format'
 import { refreshScroll } from '@/lib/motion'
 import { scrollToTop, scrollToY, startSmoothScroll } from '@/lib/scroll'
 import { SHIPPING } from '@/lib/constants'
+import { prerendered } from '@/lib/prerender'
 
 /** A quiet service line above the header; the messages cross-fade rather than scroll. */
 function AnnouncementBar({ threshold }: { threshold: number }) {
@@ -49,7 +50,8 @@ function PageTransition() {
   const { pathname } = useLocation()
   const outlet = useOutlet()
   return (
-    <AnimatePresence mode="wait" onExitComplete={() => { scrollToTop(); refreshScroll() }}>
+    // On a prerendered page the first view is already in the HTML, so it isn't faded in from blank.
+    <AnimatePresence mode="wait" initial={!prerendered} onExitComplete={() => { scrollToTop(); refreshScroll() }}>
       <motion.div key={pathname} initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
         exit={{ opacity: 0, transition: { duration: 0.35, ease: [0.76, 0, 0.24, 1] } }}>
         {outlet}

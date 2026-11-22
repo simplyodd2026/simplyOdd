@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { ClientPortal } from '@/components/ui/ClientPortal'
 import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCategories, usePopularSearches, useProducts, useSuggestions } from '@/lib/queries'
@@ -33,7 +33,8 @@ export function SearchOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [setSearch])
 
-  return createPortal(
+  return (
+    <ClientPortal>
     <AnimatePresence>
       {searchOpen && (
         <motion.div role="dialog" aria-modal="true" aria-label="Search"
@@ -43,8 +44,8 @@ export function SearchOverlay() {
           <SearchPanel close={close} />
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
+    </ClientPortal>
   )
 }
 

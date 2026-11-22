@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { ClientPortal } from '@/components/ui/ClientPortal'
 import { AnimatePresence, motion } from 'motion/react'
 import type { ProductImage } from '@/lib/types'
 import { cn } from '@/lib/cn'
@@ -74,7 +74,8 @@ export function Viewer({ images, name, index, onChange }: { images: ProductImage
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  return createPortal(
+  return (
+    <ClientPortal>
     <AnimatePresence>
       {index !== null && (
         <motion.div role="dialog" aria-modal="true" aria-label={`${name} images`}
@@ -103,7 +104,7 @@ export function Viewer({ images, name, index, onChange }: { images: ProductImage
           </div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
+    </ClientPortal>
   )
 }

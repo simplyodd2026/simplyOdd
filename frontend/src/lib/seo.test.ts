@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { clip, ldJson, productJsonLd, productMeta } from './seo'
+import { clip, ldJson, productJsonLd, productMeta, SITE_DESCRIPTION } from './seo'
 import { useSeo } from './useSeo'
 import type { Category, Product } from './types'
 
@@ -32,6 +32,8 @@ describe('product metadata', () => {
       offers: { price: '1499.00', priceCurrency: 'INR', availability: 'https://schema.org/InStock' },
     })
     expect(ld.aggregateRating).toBeUndefined() // no reviews, no rating
+    expect(ld.description).toBe('Light, shaped differently. A sculptural lamp. Printed to order.')
+    expect((productJsonLd(product({ tagline: 'Ends here.' }), null)['@graph'] as any[])[0].description).toMatch(/^Ends here\. A/)
     expect(crumbs.itemListElement.map((c: any) => c.name)).toEqual(['Home', 'Shop', 'Lighting', 'Loop Lamp'])
   })
 
@@ -52,7 +54,7 @@ describe('product metadata', () => {
 
 describe('useSeo', () => {
   it('sets the head tags and puts the site defaults back afterwards', () => {
-    document.head.innerHTML = '<meta name="description" content="Site default" />'
+    document.head.innerHTML = '<meta name="description" content="Product specific" />'
     const m = productMeta(product())
     const { unmount } = renderHook(() => useSeo(m, productJsonLd(product(), category)))
     expect(document.head.querySelector('link[rel=canonical]')?.getAttribute('href')).toBe(m.canonical)
@@ -62,7 +64,7 @@ describe('useSeo', () => {
     unmount()
     expect(document.head.querySelector('link[rel=canonical]')).toBeNull()
     expect(document.head.querySelector('script[type="application/ld+json"]')).toBeNull()
-    expect(document.head.querySelector('meta[name=description]')?.getAttribute('content')).toBe('Site default')
-    expect(document.head.querySelector('meta[property="og:title"]')).toBeNull()
+    expect(document.head.querySelector('meta[name=description]')?.getAttribute('content')).toBe(SITE_DESCRIPTION)
+    expect(document.head.querySelector('meta[property="og:title"]')?.getAttribute('content')).toBe('Simply Odd')
   })
 })

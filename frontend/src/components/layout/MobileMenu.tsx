@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import { ClientPortal } from '@/components/ui/ClientPortal'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCategories } from '@/lib/queries'
@@ -31,7 +31,8 @@ export function MobileMenu() {
   useOverlay(menuOpen, close)
   const ref = useFocusOnOpen(menuOpen)
 
-  return createPortal(
+  return (
+    <ClientPortal>
     <AnimatePresence>
       {menuOpen && (
         <motion.div ref={ref} role="dialog" aria-modal="true" aria-label="Menu" data-lenis-prevent
@@ -77,7 +78,7 @@ export function MobileMenu() {
           </nav>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
+    </ClientPortal>
   )
 }

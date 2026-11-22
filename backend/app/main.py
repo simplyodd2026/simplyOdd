@@ -68,6 +68,14 @@ def create_app(settings: Settings | None = None, store: DocumentStore | None = N
                        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
                        allow_headers=["Authorization", "Content-Type", "X-Chat-Token"])
 
+    @app.middleware("http")
+    async def flush_site_rebuild(request, call_next):
+        response = await call_next(request)
+        rebuild = getattr(request.app.state, "services", None) and request.app.state.services.rebuild
+        if rebuild and rebuild.due():
+            await rebuild.flush()
+        return response
+
     api = APIRouter(prefix="/api")
 
     @api.get("/health", tags=["meta"])

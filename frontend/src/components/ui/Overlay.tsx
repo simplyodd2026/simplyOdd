@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
+import { ClientPortal } from '@/components/ui/ClientPortal'
 import { AnimatePresence, motion } from 'motion/react'
 import { lockScroll, unlockScroll } from '@/lib/scroll'
 import { cn } from '@/lib/cn'
@@ -45,7 +45,8 @@ export function Drawer({ open, onClose, title, label, children, footer, side = '
   useOverlay(open, onClose)
   const ref = useFocusOnOpen(open)
   const from = side === 'right' ? '100%' : '-100%'
-  return createPortal(
+  return (
+    <ClientPortal>
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={label ?? (typeof title === 'string' ? title : undefined)}>
@@ -69,8 +70,8 @@ export function Drawer({ open, onClose, title, label, children, footer, side = '
           </motion.div>
         </div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
+    </ClientPortal>
   )
 }
 
@@ -79,7 +80,8 @@ export function Modal({ open, onClose, title, children, wide }: {
 }) {
   useOverlay(open, onClose)
   const ref = useFocusOnOpen(open)
-  return createPortal(
+  return (
+    <ClientPortal>
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true">
@@ -98,7 +100,7 @@ export function Modal({ open, onClose, title, children, wide }: {
           </motion.div>
         </div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
+    </ClientPortal>
   )
 }

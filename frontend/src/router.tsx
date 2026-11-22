@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, type RouteObject } from 'react-router-dom'
 import { SiteLayout } from '@/components/layout/SiteLayout'
 import { PageSpinner } from '@/components/ui/Spinner'
 import { useSession } from '@/stores/session'
@@ -56,7 +56,8 @@ function ToLogin() {
   return <Navigate to={{ pathname: '/login', search }} replace />
 }
 
-export const router = createBrowserRouter([
+// Route definitions only: main.tsx builds the browser router from these and entry-server.tsx the static one.
+export const routes: RouteObject[] = [
   {
     element: <SiteLayout />,
     errorElement: <RouteError />,
@@ -128,4 +129,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]

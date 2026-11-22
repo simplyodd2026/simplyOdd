@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     public_base_url: str = "http://localhost:8000"
     # Canonical storefront origin, used for the URLs listed in /api/sitemap.xml.
     site_url: str = "https://simplyodd.in"
+    # Vercel Deploy Hook that rebuilds the storefront (its product pages are prerendered at build time).
+    # A secret: set it on the Cloud Run service only. Unset = no automatic rebuilds.
+    vercel_deploy_hook_url: str | None = None
+    # At most one rebuild per this many seconds; changes in between are batched into the next one.
+    site_rebuild_min_interval: int = 120
 
     firebase_project_id: str | None = None
     firebase_storage_bucket: str | None = None

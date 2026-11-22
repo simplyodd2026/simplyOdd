@@ -22,6 +22,7 @@ from app.services.orders import OrderService
 from app.services.payments import PaymentRegistry, build_registry
 from app.services.pricing import PricingService
 from app.services.reviews import ReviewService
+from app.services.site_rebuild import SiteRebuild
 
 LOCAL_MEDIA_ROOT = Path(".data/media")
 
@@ -41,6 +42,7 @@ class Services:
     insights: InsightsService
     homepage: HomepageService
     chat: ChatService
+    rebuild: SiteRebuild
 
 
 def build_media(settings: Settings) -> MediaStorage:
@@ -75,8 +77,9 @@ def build_services(settings: Settings, store: DocumentStore | None = None, llm: 
     knowledge = get_knowledge(tuple(p["label"] for p in payments.public() if p["id"] != "cod"))
     chat = ChatService(store, settings, catalog, ChatTools(catalog, orders, insights, knowledge), knowledge,
                        llm or build_llm(settings))
+    rebuild = SiteRebuild(store, settings.vercel_deploy_hook_url, settings.site_rebuild_min_interval)
     return Services(settings, store, media, catalog, coupons, pricing, payments, orders, accounts, reviews, insights,
-                    homepage, chat)
+                    homepage, chat, rebuild)
 
 
 def services(request: Request) -> Services:
