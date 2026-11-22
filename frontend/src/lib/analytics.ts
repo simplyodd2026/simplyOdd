@@ -2,7 +2,7 @@
 // (injected at build time by vite.config.ts).
 // The app is a SPA, so page views are sent manually on each route change.
 
-import type { Order, Product } from './types'
+import type { Order, Product, Quote } from './types'
 import { chosenVariant } from './variants'
 
 type Gtag = (...args: unknown[]) => void
@@ -76,35 +76,85 @@ export function initAnalytics(router: AppRouter) {
   router.subscribe((state) => sendPageView(state.location))
 }
 
-// ---- Meta Pixel standard events ----------------------------------------------------------
+// ---- Ecommerce events (GA4 + Meta Pixel) ------------------------------------------------
+// Each moment in the buying journey sends the GA4 event and its Meta Pixel twin:
+//   product page opens  -> view_item       / ViewContent
+//   added to the bag    -> add_to_cart     / AddToCart
+//   checkout opens      -> begin_checkout  / InitiateCheckout
+//   payment succeeded   -> purchase        / Purchase
+// Both calls are no-ops when their script isn't loaded (no GA id, admin pages, ad blockers).
 
 type PixelProduct = Pick<Product, 'id' | 'name' | 'price' | 'variants' | 'default_variant'>
+type Line = { id: string; name: string; price: number; quantity: number }
 
-/** Meta Pixel AddToCart. `unitPrice` defaults to the product's default-variant price. */
+const gaEvent = (name: string, params: Record<string, unknown>) => {
+  if (GA_ID && typeof window !== 'undefined' && typeof window.gtag === 'function') window.gtag('event', name, params)
+}
+
+const gaItems = (lines: Line[]) =>
+  lines.map((l) => ({ item_id: l.id, item_name: l.name, price: l.price, quantity: l.quantity }))
+
+const pixelContents = (lines: Line[]) => ({
+  content_ids: lines.map((l) => l.id),
+  content_type: 'product',
+  contents: lines.map((l) => ({ id: l.id, quantity: l.quantity, item_price: l.price })),
+})
+
+const productPrice = (product: PixelProduct) => chosenVariant(product, null)?.price ?? product.price
+
+/** Product page opened. `unitPrice` defaults to the product's default-variant price. */
+export function trackViewItem(product: PixelProduct, unitPrice?: number) {
+  const price = unitPrice ?? productPrice(product)
+  const lines = [{ id: product.id, name: product.name, price, quantity: 1 }]
+  gaEvent('view_item', { currency: 'INR', value: price, items: gaItems(lines) })
+  window.fbq?.('track', 'ViewContent', { ...pixelContents(lines), content_name: product.name, value: price, currency: 'INR' })
+}
+
+/** Added to the bag. `unitPrice` defaults to the product's default-variant price. */
 export function trackAddToCart(product: PixelProduct, quantity = 1, unitPrice?: number) {
-  const price = unitPrice ?? chosenVariant(product, null)?.price ?? product.price
-  window.fbq?.('track', 'AddToCart', {
-    content_ids: [product.id],
-    content_name: product.name,
-    content_type: 'product',
-    contents: [{ id: product.id, quantity, item_price: price }],
-    value: price * quantity,
-    currency: 'INR',
+  const price = unitPrice ?? productPrice(product)
+  const lines = [{ id: product.id, name: product.name, price, quantity }]
+  const value = price * quantity
+  gaEvent('add_to_cart', { currency: 'INR', value, items: gaItems(lines) })
+  window.fbq?.('track', 'AddToCart', { ...pixelContents(lines), content_name: product.name, value, currency: 'INR' })
+}
+
+/** Checkout page opened, with the priced bag. */
+export function trackBeginCheckout(quote: Quote) {
+  const lines = quote.lines.map((l) => ({ id: l.product_id, name: l.name, price: l.unit_price, quantity: l.quantity }))
+  const currency = quote.currency || 'INR'
+  gaEvent('begin_checkout', { currency, value: quote.total, coupon: quote.coupon_code ?? undefined, items: gaItems(lines) })
+  window.fbq?.('track', 'InitiateCheckout', {
+    ...pixelContents(lines),
+    num_items: lines.reduce((n, l) => n + l.quantity, 0),
+    value: quote.total,
+    currency,
   })
 }
 
-/** Meta Pixel Purchase, sent once when an order is placed. The order id is the event id, so repeats are deduplicated. */
+/**
+ * Sent once, after payment succeeded and the order was created. The order number is GA's transaction_id
+ * and the order id is Meta's event id, so a repeat is never counted twice.
+ */
 export function trackPurchase(order: Order) {
+  const lines = order.items.map((i) => ({ id: i.product_id, name: i.name, price: i.unit_price, quantity: i.quantity }))
+  const currency = order.currency || 'INR'
+  gaEvent('purchase', {
+    transaction_id: order.number,
+    currency,
+    value: order.total,
+    shipping: order.shipping,
+    coupon: order.coupon_code ?? undefined,
+    items: gaItems(lines),
+  })
   window.fbq?.(
     'track',
     'Purchase',
     {
-      content_ids: order.items.map((i) => i.product_id),
-      content_type: 'product',
-      contents: order.items.map((i) => ({ id: i.product_id, quantity: i.quantity, item_price: i.unit_price })),
-      num_items: order.items.reduce((n, i) => n + i.quantity, 0),
+      ...pixelContents(lines),
+      num_items: lines.reduce((n, l) => n + l.quantity, 0),
       value: order.total,
-      currency: order.currency || 'INR',
+      currency,
     },
     { eventID: `purchase-${order.id}` },
   )

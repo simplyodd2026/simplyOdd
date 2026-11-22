@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ApiError } from '@/lib/api'
@@ -20,7 +20,7 @@ import { Icon } from '@/components/ui/Icon'
 import { Barcode, ReceiptCoupon, ReceiptLines, ReceiptPaper, Tear } from '@/features/checkout/Receipt'
 import { AddressFields, emptyAddress, validateAddress, type AddressErrors } from '@/features/account/AddressForm'
 import { getAdapter, PaymentCancelled } from '@/features/payments'
-import { trackPurchase } from '@/lib/analytics'
+import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 
 type Step = 'address' | 'shipping' | 'payment'
 // Partial payment is paused for now; flip this to offer it again.
@@ -67,6 +67,14 @@ export default function CheckoutPage() {
       setPanelState(getAdapter(first)?.initialState)
     }
   }, [config, provider])
+
+  // begin_checkout / InitiateCheckout: once per visit to checkout, as soon as the bag has been priced.
+  const checkoutTracked = useRef(false)
+  useEffect(() => {
+    if (checkoutTracked.current || !quote || !quote.lines.length) return
+    checkoutTracked.current = true
+    trackBeginCheckout(quote)
+  }, [quote])
 
   const address: ShippingAddress | null = useMemo(() => {
     const a = addressId === 'new' ? draft : saved.find((x) => x.id === addressId)

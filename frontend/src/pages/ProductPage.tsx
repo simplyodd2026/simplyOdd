@@ -31,7 +31,7 @@ import { filamentLabel, productFilaments, useFilaments } from '@/lib/filaments'
 import NotFoundPage from './NotFoundPage'
 import { MAX_PER_PRODUCT, SHIPPING } from '@/lib/constants'
 import { responsive } from '@/lib/image'
-import { trackAddToCart } from '@/lib/analytics'
+import { trackAddToCart, trackViewItem } from '@/lib/analytics'
 
 const EASE = [0.16, 1, 0.3, 1] as const
 // The gallery frame: a cut slab with three soft corners, the crisp one top right.
@@ -70,6 +70,9 @@ export default function ProductPage() {
   const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
   useEffect(() => { setQty(1); setShot(0); setColor(null); setVariant(null); setPersonal({}); setTriedToAdd(false) }, [slug])
+  // One view_item / ViewContent per product opened, once its data has loaded.
+  const viewed = data?.product
+  useEffect(() => { if (viewed) trackViewItem(viewed) }, [viewed?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // On small screens, a slim purchase bar docks to the bottom once the main buttons scroll away.
   useEffect(() => {
