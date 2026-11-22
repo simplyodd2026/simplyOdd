@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "https://simplyodd-api-18861122418.asia-south1.run.app/api/sitemap.xml" },
     { "source": "/((?!api/|seed/|assets/).*)", "destination": "/index.html" }
