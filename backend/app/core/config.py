@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     cors_origins: Csv = ["http://localhost:5173"]
     # Public URL of this API, used to build local-disk image links.
     public_base_url: str = "http://localhost:8000"
+    # Canonical storefront origin, used for the URLs listed in /api/sitemap.xml.
+    site_url: str = "https://simplyodd.in"
 
     firebase_project_id: str | None = None
     firebase_storage_bucket: str | None = None

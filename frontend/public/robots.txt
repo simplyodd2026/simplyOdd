@@ -1,0 +1,14 @@
+# Simply Odd storefront. Product, collection and info pages, images, CSS and JS stay crawlable.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order/
+Disallow: /login
+Disallow: /wishlist
+Disallow: /search
+Disallow: /api/
+
+Sitemap: https://simplyodd.in/sitemap.xml

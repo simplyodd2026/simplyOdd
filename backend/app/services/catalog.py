@@ -45,6 +45,9 @@ class CatalogService:
         self._cache = (time.monotonic(), products)
         return products
 
+    async def published_products(self) -> list[Product]:
+        return [p for p in await self._all_products() if p.is_published]
+
     # ------------------------------------------------------------- products
     async def list_products(
         self,
