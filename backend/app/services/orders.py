@@ -95,7 +95,13 @@ class OrderService:
         if req.coupon_code and not coupon:
             raise BadRequest(quote.coupon_message or "That coupon can't be applied")
 
-        due_now = quote.deposit if req.payment_plan == "partial" else quote.total
+        if req.payment_plan not in quote.payment_plans:
+            raise BadRequest("Orders with personalised pieces are paid with a 50% advance now and the rest on delivery"
+                             if quote.payment_plans == ["partial"] else
+                             "Choose full payment or cash on delivery")
+        if (req.payment_plan == "cod") != (provider.id == "cod"):
+            raise BadRequest("Choose a payment method")
+        due_now = {"full": quote.total, "partial": quote.deposit, "cod": 0.0}[req.payment_plan]
         ts = now()
         order = Order(
             id=new_id("o_"), number="", user_id=user.uid, email=req.address.email,
@@ -146,11 +152,15 @@ class OrderService:
 
         seq = await self.store.next_sequence("orders", start=10000)
         order.number = f"OM-{seq}"
-        partial = order.payment.balance > 0
-        order.payment.status = "partially_paid" if partial else "paid"
-        order.payment.transaction_id = result.transaction_id
-        order.payment.paid_at = now()
-        self._event(order, "confirmed", "50% advance received" if partial else "Payment received")
+        if order.payment.plan == "cod":
+            order.payment.status = "cod_due"
+            self._event(order, "confirmed", "Cash on delivery")
+        else:
+            partial = order.payment.balance > 0
+            order.payment.status = "partially_paid" if partial else "paid"
+            order.payment.transaction_id = result.transaction_id
+            order.payment.paid_at = now()
+            self._event(order, "confirmed", "50% advance received" if partial else "Payment received")
         await self.store.record_sales(_per_product((i.product_id, i.quantity) for i in order.items))
         order.sales_counted = True
         self.catalog.invalidate()

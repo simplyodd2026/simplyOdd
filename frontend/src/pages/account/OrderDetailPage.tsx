@@ -64,7 +64,7 @@ export default function OrderDetailPage() {
             </div>
             <div>
               <dt className="mb-2 text-sm text-fog">Payment</dt>
-              <dd>{PAYMENT_STATUS_LABEL[order.payment.status]}<span className="text-smoke">, {order.payment.provider === 'mock' ? 'test card' : order.payment.provider}</span></dd>
+              <dd>{PAYMENT_STATUS_LABEL[order.payment.status]}<span className="text-smoke">, {order.payment.provider === 'mock' ? 'test card' : order.payment.provider === 'cod' ? 'cash on delivery' : order.payment.provider}</span></dd>
               {order.payment.plan === 'partial' && <dd className="mt-1 text-sm text-smoke">50% paid online, {money(order.payment.balance)} on delivery</dd>}
               {order.tracking_number && <><dt className="mb-2 mt-4 text-sm text-fog">Tracking number</dt><dd className="tabular-nums">{order.tracking_number}</dd></>}
             </div>

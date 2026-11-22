@@ -72,7 +72,7 @@ def build_services(settings: Settings, store: DocumentStore | None = None, llm: 
     reviews = ReviewService(store, catalog, orders)
     insights = InsightsService(store, catalog, orders, accounts)
     homepage = HomepageService(store, catalog)
-    knowledge = get_knowledge(tuple(p["label"] for p in payments.public()))
+    knowledge = get_knowledge(tuple(p["label"] for p in payments.public() if p["id"] != "cod"))
     chat = ChatService(store, settings, catalog, ChatTools(catalog, orders, insights, knowledge), knowledge,
                        llm or build_llm(settings))
     return Services(settings, store, media, catalog, coupons, pricing, payments, orders, accounts, reviews, insights,

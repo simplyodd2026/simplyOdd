@@ -116,7 +116,7 @@ export default function AdminOrderDetailPage() {
             <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
               <dt className="text-fog">Method</dt><dd>{order.payment.provider}</dd>
               <dt className="text-fog">Status</dt><dd>{PAYMENT_STATUS_LABEL[order.payment.status]}</dd>
-              <dt className="text-fog">Plan</dt><dd>{order.payment.plan === 'partial' ? 'Partial (50% now, rest on delivery)' : 'Full payment'}</dd>
+              <dt className="text-fog">Plan</dt><dd>{order.payment.plan === 'partial' ? 'Partial (50% now, rest on delivery)' : order.payment.plan === 'cod' ? 'Cash on delivery' : 'Full payment'}</dd>
               <dt className="text-fog">Paid online</dt><dd className="tabular-nums">{money(order.payment.amount)}</dd>
               {order.payment.balance > 0 && <><dt className="text-fog">On delivery</dt><dd className="tabular-nums">{money(order.payment.balance)}</dd></>}
               {order.payment.reference && <><dt className="text-fog">Reference</dt><dd className="break-all">{order.payment.reference}</dd></>}

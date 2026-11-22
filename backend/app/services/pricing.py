@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.core.constants import (CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
                                 PARTIAL_SHARE, STANDARD_SHIPPING_FEE)
 from app.core.utils import money
-from app.models.cart import (CartLine, Personalization, PersonalizationValue, Quote, QuoteLine, QuoteRequest,
+from app.models.cart import (CartLine, PaymentPlan, Personalization, PersonalizationValue, Quote, QuoteLine, QuoteRequest,
                              ShippingOption, personalization_key)
 from app.models.catalog import Product
 from app.models.filament import FILAMENTS_BY_ID, FilamentChoice
@@ -107,7 +107,7 @@ class PricingService:
             coupon_code=coupon.code if coupon else None, coupon_message=message, coupon_needs_amount=needs_amount,
             coupon_amount=total if coupon and coupon.kind == "custom_total" else None,
             shipping_method=req.shipping_method, shipping=shipping, shipping_options=options,
-            total=total, deposit=money(total * PARTIAL_SHARE), currency=CURRENCY,
+            total=total, deposit=money(total * PARTIAL_SHARE), payment_plans=payment_plans(lines), currency=CURRENCY,
             item_count=sum(line.quantity for line in lines if line.available),
             has_issues=any(not line.available for line in lines),
         )
@@ -123,6 +123,13 @@ def _line_image(p: Product, variant: str | None, color: str | None) -> str | Non
     fits = [i for i in p.images if i.variant in (None, variant)] or p.images
     ranked = sorted(fits, key=lambda i: (not (variant and i.variant == variant), not (color and i.color == color)))
     return ranked[0].url if ranked else None
+
+
+def payment_plans(lines: list[QuoteLine]) -> list[PaymentPlan]:
+    """Personalised (customised) bags take the 50% advance only; the rest pay in full online or on delivery."""
+    if any(line.personalization_details for line in lines):
+        return ["partial"]
+    return ["full", "cod"]
 
 
 def _personalize(p: Product, values: Personalization | None) -> tuple[list[PersonalizationValue], str | None]:

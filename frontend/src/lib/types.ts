@@ -138,6 +138,8 @@ export interface Quote {
   total: number
   /** Paid online up front on the partial plan. */
   deposit: number
+  /** How this bag may be paid: ['partial'] when it holds a personalised piece, else ['full', 'cod']. */
+  payment_plans: PaymentPlan[]
   currency: string
   item_count: number
   has_issues: boolean
@@ -173,8 +175,8 @@ export type OrderStatus =
   | 'pending' | 'confirmed' | 'processing' | 'shipped'
   | 'out_for_delivery' | 'delivered' | 'cancelled' | 'refunded'
 export type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'partially_paid' | 'failed' | 'refund_pending' | 'refunded' | 'cod_due' | 'void'
-/** full: the whole total online. partial: 50% online now, the rest on delivery. */
-export type PaymentPlan = 'full' | 'partial'
+/** full: the whole total online. partial: 50% online now, the rest on delivery. cod: all of it on delivery. */
+export type PaymentPlan = 'full' | 'partial' | 'cod'
 
 export interface ShippingAddress {
   full_name: string

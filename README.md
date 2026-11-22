@@ -62,11 +62,13 @@ cd frontend && npm run build                  # typecheck + production build
 | Layer | File |
 |---|---|
 | Backend contract (`start` / `verify` / `refund`) | `backend/app/services/payments/base.py` |
-| Providers: `mock`, `razorpay` | `backend/app/services/payments/*.py` |
+| Providers: `mock`, `razorpay`, `cod` (always on) | `backend/app/services/payments/*.py` |
 | Frontend adapters (open provider UI, return payload) | `frontend/src/features/payments/*` |
 
 Enable providers with `PAYMENT_PROVIDERS=razorpay` plus `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET`.
-Customers pay the full total online, or 50% online and the rest on delivery (the order's `payment.plan`).
+The order's `payment.plan` follows the bag (`backend/app/services/pricing.py`, `payment_plans`): a bag with a
+personalised piece is paid 50% online and the rest on delivery (`partial`) and nothing else; every other bag is
+paid in full online (`full`) or cash on delivery (`cod`). Checkout refuses any other plan.
 Razorpay signatures are verified server-side with HMAC-SHA256.
 
 To add Stripe:

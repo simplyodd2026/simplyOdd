@@ -72,7 +72,7 @@ def test_optional_fields_only_cost_extra_when_used(client, products):
 def test_order_keeps_the_personalisation(client, products):
     cup = personalise(client, products["vortex-pen-cup"])
     body = {"items": [{"product_id": cup["id"], "quantity": 1, "personalization": {"name": "Aanya"}}],
-            "address": address(), "payment_provider": "mock"}
+            "address": address(), "payment_provider": "mock", "payment_plan": "partial"}
     r = pay(client, body)
     assert r.status_code == 201, r.text
     order = r.json()

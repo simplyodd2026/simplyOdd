@@ -135,12 +135,11 @@ def test_mock_payment_flow_counts_and_uncounts_sales(client, products):
 
 def test_admin_status_flow_and_reviews(client, products):
     pid = products["grid-tray"]["id"]
-    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "mock",
-            "payment_plan": "partial"}
+    body = {"items": [{"product_id": pid, "quantity": 1}], "address": address(), "payment_provider": "cod",
+            "payment_plan": "cod"}
     order = pay(client, body).json()
-    assert order["payment"]["amount"] + order["payment"]["balance"] == order["total"]
-    assert order["payment"]["amount"] == round(order["total"] / 2, 2)
-    assert order["status"] == "confirmed" and order["payment"]["status"] == "partially_paid"
+    assert order["payment"]["amount"] == 0 and order["payment"]["balance"] == order["total"]
+    assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
 
     # Non-admins are refused
     assert client.post(f"/api/admin/orders/{order['id']}/status", json={"status": "processing"}, headers=CUSTOMER).status_code == 403
@@ -244,3 +243,39 @@ def test_guest_without_email_can_check_out_and_see_only_their_order(client, prod
     assert client.get(f"/api/me/orders/{order['id']}", headers=guest).status_code == 200
     assert client.get(f"/api/me/orders/{order['id']}", headers=OTHER).status_code == 404
     assert client.get(f"/api/me/orders/{order['id']}").status_code == 401
+
+
+def test_payment_plans_follow_personalisation(client, products):
+    from tests.test_personalization import personalise
+    plain = products["grid-tray"]["id"]
+    cup = personalise(client, products["vortex-pen-cup"])
+    plain_line = {"product_id": plain, "quantity": 1}
+    custom_line = {"product_id": cup["id"], "quantity": 1, "personalization": {"name": "Aanya"}}
+    quote = lambda items: client.post("/api/cart/quote", json={"items": items}).json()
+    assert quote([plain_line])["payment_plans"] == ["full", "cod"]
+    # One personalised piece puts the whole bag on the 50% advance.
+    assert quote([plain_line, custom_line])["payment_plans"] == ["partial"]
+
+    def start(items, provider, plan):
+        return client.post("/api/checkout", headers=CUSTOMER, json={
+            "items": items, "address": address(), "payment_provider": provider, "payment_plan": plan})
+
+    # Ordinary bags: full online or cash on delivery, never the advance.
+    assert start([plain_line], "mock", "partial").status_code == 400
+    assert start([plain_line], "mock", "full").status_code == 201
+    # Customised bags: the advance only.
+    assert start([custom_line], "mock", "full").status_code == 400
+    assert start([custom_line], "cod", "cod").status_code == 400
+    assert start([custom_line], "mock", "partial").status_code == 201
+    # The plan and the method have to agree.
+    assert start([plain_line], "mock", "cod").status_code == 400
+    assert start([plain_line], "cod", "full").status_code == 400
+
+    # Cash on delivery: confirmed straight away, nothing collected, sale counted; cancelling voids it.
+    order = pay(client, {"items": [plain_line], "address": address(), "payment_provider": "cod", "payment_plan": "cod"})
+    assert order.status_code == 201, order.text
+    order = order.json()
+    assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
+    assert order["payment"]["provider"] == "cod" and order["payment"]["paid_at"] is None
+    c = client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER).json()
+    assert c["status"] == "cancelled" and c["payment"]["status"] == "void"

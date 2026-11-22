@@ -201,7 +201,7 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
             req = CheckoutRequest(items=[CartLine(product_id=ids[s], quantity=1, color=(COLORS.get(s) or [None])[0])
                                          for s in picks],
                                   address=ShippingAddress(**addr, email=email),
-                                  payment_provider="mock", payment_plan="partial" if n % 2 else "full")
+                                  payment_provider="cod" if n % 2 else "mock", payment_plan="cod" if n % 2 else "full")
             order, _ = await svc.orders.checkout(user, req)
             placed = now() - timedelta(days=rng.randint(2, 28), hours=rng.randint(0, 23))
             status = rng.choice(["delivered", "delivered", "shipped", "processing"])
@@ -213,8 +213,8 @@ async def _seed_history(svc: Services, ids: dict[str, str]) -> None:
             order.history.append(StatusEvent(status=status, at=placed + timedelta(days=2)))
             order.status = status
             settled = status == "delivered" or order.payment.plan == "full"
-            order.payment.status = "paid" if settled else "partially_paid"
-            order.payment.paid_at = placed
+            order.payment.status = "paid" if settled else "cod_due"
+            order.payment.paid_at = placed if settled else None
             order.tracking_number = f"DTDC{rng.randint(10**8, 10**9)}" if status in ("shipped", "delivered") else None
             await svc.store.set("orders", order.id, order.model_dump())
             if status == "delivered":

@@ -22,3 +22,17 @@ class MockProvider(PaymentProvider):
     async def refund(self, order: Order) -> str | None:
         return new_id("mockrf_")
 
+
+
+class CashOnDeliveryProvider(PaymentProvider):
+    """Nothing is collected online: the whole total is paid in cash or UPI when the order arrives."""
+
+    id = "cod"
+    label = "Cash on delivery"
+    description = "Pay in cash or UPI when your order arrives."
+
+    async def start(self, order: Order) -> StartResult:
+        return StartResult(reference=new_id("cod_"))
+
+    async def verify(self, order: Order, payload: dict) -> VerifyResult:
+        return VerifyResult(ok=True)

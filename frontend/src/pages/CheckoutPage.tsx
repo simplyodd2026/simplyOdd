@@ -23,8 +23,6 @@ import { getAdapter, PaymentCancelled } from '@/features/payments'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 
 type Step = 'address' | 'shipping' | 'payment'
-// Partial payment is paused for now; flip this to offer it again.
-const PARTIAL_PAYMENT_AVAILABLE = false
 
 const STEPS: { id: Step; label: string }[] = [
   { id: 'address', label: 'Address' },
@@ -60,13 +58,22 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (saved.length && addressId === 'new' && !draft.line1) setAddressId((saved.find((a) => a.is_default) ?? saved[0]).id)
   }, [saved.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Online gateways, for the full and partial plans. Cash on delivery is chosen as a plan instead.
+  const online = useMemo(() => config?.payment_providers.filter((p) => p.id !== 'cod') ?? [], [config])
   useEffect(() => {
-    if (!provider && config?.payment_providers.length) {
-      const first = config.payment_providers[0].id
+    if (!provider && online.length) {
+      const first = online[0].id
       setProvider(first)
       setPanelState(getAdapter(first)?.initialState)
     }
-  }, [config, provider])
+  }, [online, provider])
+  // The bag decides how it can be paid (a personalised piece means the 50% advance only), so keep the plan to one it allows.
+  // A payment that already went through keeps its plan.
+  const plans = quote?.payment_plans
+  useEffect(() => {
+    if (plans?.length && !plans.includes(plan) && !paid) setPlan(plans[0])
+  }, [plans, plan, paid])
+  const method = plan === 'cod' ? 'cod' : provider
 
   // begin_checkout / InitiateCheckout: once per visit to checkout, as soon as the bag has been priced.
   const checkoutTracked = useRef(false)
@@ -136,7 +143,7 @@ export default function CheckoutPage() {
       if (paid) return await confirm(paid)
       const checkout = {
         items: cart.items, address, shipping_method: cart.shippingMethod, coupon_code: cart.couponCode, coupon_amount: cart.couponAmount,
-        payment_provider: provider, payment_plan: plan, notes: null,
+        payment_provider: method, payment_plan: plan, notes: null,
       }
       // No account needed: guests get an anonymous session to attach the order to.
       if (!user) await auth.ensureGuest()
@@ -154,7 +161,7 @@ export default function CheckoutPage() {
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step)
-  const adapter = getAdapter(provider)
+  const adapter = getAdapter(method)
   const shippingOptions = quote?.shipping_options ?? []
   // What the customer pays now: the whole total, or the 50% advance on the partial plan.
   const dueNow = quote && (plan === 'partial' ? quote.deposit : quote.total)
@@ -297,31 +304,36 @@ export default function CheckoutPage() {
                 {quote && (
                   <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment plan">
                     {([
-                      ['full', 'Full payment', 'Pay the whole amount now.', quote.total],
-                      ['partial', 'Partial payment', `Pay 50% now and ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
-                    ] as const).map(([id, label, note, amount]) => {
+                      ['full', 'Pay online', 'Pay the whole amount now.', quote.total],
+                      ['partial', 'Pay 50% now', `Then ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
+                      ['cod', 'Cash on delivery', 'Pay in cash or UPI when your order arrives.', quote.total],
+                    ] as const).filter(([id]) => quote.payment_plans.includes(id)).map(([id, label, note, amount]) => {
                       const active = plan === id
-                      const unavailable = id === 'partial' && !PARTIAL_PAYMENT_AVAILABLE
                       return (
-                        <button key={id} role="radio" aria-checked={active} disabled={unavailable || (!!paid && !active)} onClick={() => setPlan(id)}
+                        <button key={id} role="radio" aria-checked={active} disabled={!!paid && !active} onClick={() => setPlan(id)}
                           className={cn(option(active), 'flex items-center gap-3 disabled:cursor-not-allowed disabled:opacity-40')}>
                           {tick(active)}
                           <span className="flex-1">
                             <span className="block text-[16px] font-medium text-ink">{label}</span>
-                            <span className="text-[13.5px] text-smoke">{unavailable ? 'Unavailable for some time. Please choose full payment.' : note}</span>
+                            <span className="text-[13.5px] text-smoke">{note}</span>
                           </span>
                           <span className="text-[16px] tabular-nums text-ink">{money(amount)}</span>
                         </button>
                       )
                     })}
+                    {quote.payment_plans.length === 1 && quote.payment_plans[0] === 'partial' && (
+                      <p className="text-[13.5px] text-smoke">
+                        Your bag has a personalised piece, made just for you, so orders like this are paid with a 50% advance.
+                      </p>
+                    )}
                   </div>
                 )}
                 {/* With a single gateway there's nothing to choose, so the plan is the only choice shown. */}
-                {(config?.payment_providers.length ?? 0) > 1 && (
+                {plan !== 'cod' && online.length > 1 && (
                   <>
                   <h3 className="mt-2 text-[15px] font-medium text-ink">Pay with</h3>
                   <div className="flex flex-col gap-3" role="radiogroup" aria-label="Payment method">
-                    {config?.payment_providers.map((pr) => {
+                    {online.map((pr) => {
                       const a = getAdapter(pr.id)
                       const active = provider === pr.id
                       const Panel = a?.Panel
@@ -344,7 +356,7 @@ export default function CheckoutPage() {
                   </>
                 )}
                 {payError && <p className="border-l-2 border-accent pl-4 text-accent" role="alert">{payError}</p>}
-                <Button size="lg" variant="primary" className="w-full" loading={busy} disabled={!provider || !quote || quote.has_issues} onClick={placeOrder}>
+                <Button size="lg" variant="primary" className="w-full" loading={busy} disabled={!method || !quote || quote.has_issues || !quote.payment_plans.includes(plan)} onClick={placeOrder}>
                   {paid ? 'Finish placing order' : adapter?.cta?.(totalLabel) ?? `Pay ${totalLabel}`}
                 </Button>
               </section>

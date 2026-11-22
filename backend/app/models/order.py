@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import EmailStr, Field, model_validator
 
-from app.models.cart import MAX_LINES, CartLine, Personalization, PersonalizationValue, ShippingMethod
+from app.models.cart import MAX_LINES, CartLine, PaymentPlan, Personalization, PersonalizationValue, ShippingMethod
 from app.models.common import Schema
 from app.models.filament import FilamentChoice
 
@@ -11,11 +11,9 @@ OrderStatus = Literal[
     "pending", "confirmed", "processing", "shipped",
     "out_for_delivery", "delivered", "cancelled", "refunded",
 ]
-# "cod_due" only appears on orders placed before cash on delivery was removed.
+# "cod_due": a cash-on-delivery order, nothing collected yet.
 PaymentStatus = Literal["pending", "authorized", "paid", "partially_paid", "failed", "refund_pending", "refunded",
                         "cod_due", "void"]
-# full: the whole total online. partial: half online now, the rest on delivery.
-PaymentPlan = Literal["full", "partial"]
 
 # Which transitions an admin may make. Cancel/refund have dedicated endpoints.
 STATUS_FLOW: dict[str, list[str]] = {

@@ -22,8 +22,6 @@ from app.core.constants import EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, ST
 from app.core.constants import PARTIAL_SHARE
 
 CONTACT_EMAIL = "simplyodd2026@gmail.com"
-# Mirrors PARTIAL_PAYMENT_AVAILABLE in frontend/src/pages/CheckoutPage.tsx: the plan exists but is paused.
-PARTIAL_PAYMENT_OFFERED = False
 
 TOPICS = ("about", "shipping", "delivery", "payments", "returns", "refunds", "cancellation", "custom_orders",
           "care", "materials", "international", "contact", "tracking")
@@ -44,10 +42,10 @@ class Entry:
 
 def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
     methods = ", ".join(payment_labels) if payment_labels else "the online payment options shown at checkout"
-    partial = (f"Yes. You can pay {int(PARTIAL_SHARE * 100)}% online at checkout and the rest when your order "
-               "is delivered." if PARTIAL_PAYMENT_OFFERED else
-               "Partial payment isn't offered at checkout right now, so orders are paid in full online. "
-               f"If you need a different arrangement, email {CONTACT_EMAIL}.")
+    share = f"{int(PARTIAL_SHARE * 100)}%"
+    partial = (f"Only for personalised pieces. Because they're made just for you, orders with a personalised piece "
+               f"are paid {share} online at checkout and the rest when the order is delivered. Other orders are paid "
+               "in full online or by cash on delivery.")
     return [
         Entry("about", "about", "What is Simply Odd?",
               "Simply Odd makes quirky, 3D-printed home décor. Everything is designed in-house, printed on our own "
@@ -77,10 +75,12 @@ def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
               "Not yet. We're working on it.",
               ("international", "abroad", "outside", "overseas", "country", "countries", "worldwide")),
         Entry("payment-methods", "payments", "How can I pay?",
-              f"Orders are paid online at checkout. Available now: {methods}.",
+              f"You can pay in full online ({methods}) or by cash on delivery. Orders with a personalised piece "
+              f"are paid {share} online at checkout and the rest on delivery.",
               ("pay", "payment", "methods", "upi", "card", "netbanking", "razorpay")),
         Entry("cod", "payments", "Do you offer cash on delivery?",
-              "Cash on delivery isn't available. Orders are paid online at checkout.",
+              "Yes, you can pay in cash or UPI when your order arrives. It isn't available for orders with a "
+              f"personalised piece: those are paid {share} online at checkout and the rest on delivery.",
               ("cod", "cash")),
         Entry("partial", "payments", "Can I pay part now and the rest later?", partial,
               ("partial", "payment", "advance", "half", "installment", "instalment", "later", "deposit", "50")),

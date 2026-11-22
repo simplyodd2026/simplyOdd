@@ -98,6 +98,10 @@ class QuoteLine(Schema):
     issue: str | None = None
 
 
+# full: the whole total online. partial: half online now, the rest on delivery. cod: all of it on delivery.
+PaymentPlan = Literal["full", "partial", "cod"]
+
+
 class ShippingOption(Schema):
     method: ShippingMethod
     label: str
@@ -118,6 +122,9 @@ class Quote(Schema):
     shipping_options: list[ShippingOption]
     total: float
     deposit: float  # paid online up front on the partial plan
+    # How this bag may be paid. A personalised piece can't be resold, so a bag with one takes the
+    # 50% advance only; everything else is paid in full online or cash on delivery.
+    payment_plans: list[PaymentPlan]
     currency: str
     item_count: int
     has_issues: bool
