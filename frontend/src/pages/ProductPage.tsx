@@ -6,6 +6,8 @@ import { useProduct, useConfig } from '@/lib/queries'
 import { useCart } from '@/stores/cart'
 import { useUi } from '@/stores/ui'
 import { useDocumentTitle } from '@/lib/hooks'
+import { productJsonLd, productMeta } from '@/lib/seo'
+import { useSeo } from '@/lib/useSeo'
 import { money } from '@/lib/format'
 import { useTilt } from '@/lib/useTilt'
 import { Container } from '@/components/layout/Container'
@@ -69,6 +71,7 @@ export default function ProductPage() {
   }
   const filaments = useFilaments()
   useDocumentTitle(data?.product.name)
+  useSeo(data ? productMeta(data.product) : null, data ? productJsonLd(data.product, data.category) : undefined)
   useEffect(() => { setQty(1); setShot(0); setColor(null); setVariant(null); setPersonal({}); setTriedToAdd(false) }, [slug])
   // One view_item / ViewContent per product opened, once its data has loaded.
   const viewed = data?.product

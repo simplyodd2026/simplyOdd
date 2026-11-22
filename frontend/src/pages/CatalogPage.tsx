@@ -7,6 +7,8 @@ import { ProductResults } from '@/features/catalog/ProductResults'
 import { useCatalogParams } from '@/features/catalog/useCatalogParams'
 import { useCategories, useProducts } from '@/lib/queries'
 import { useDocumentTitle } from '@/lib/hooks'
+import { collectionJsonLd, collectionMeta } from '@/lib/seo'
+import { useSeo } from '@/lib/useSeo'
 import NotFoundPage from './NotFoundPage'
 
 type Preset = 'all' | 'new' | 'bestseller' | 'category'
@@ -32,6 +34,7 @@ export default function CatalogPage({ preset }: { preset: Preset }) {
 
   const copy = preset === 'category' ? { title: category?.name ?? '', intro: category?.description ?? '' } : COPY[preset]
   useDocumentTitle(copy.title || 'Shop')
+  useSeo(category ? collectionMeta(category) : null, category ? collectionJsonLd(category) : undefined)
 
   if (preset === 'category' && !catsLoading && !category) return <NotFoundPage />
 
