@@ -6,6 +6,7 @@ import { Footer } from './Footer'
 import { CartDrawer } from './CartDrawer'
 import { SearchOverlay } from './SearchOverlay'
 import { MobileMenu } from './MobileMenu'
+import { InAppBrowserBanner } from './InAppBrowserBanner'
 import { Toaster } from '@/components/ui/Toaster'
 import { ChatWidget } from '@/features/chat/ChatWidget'
 import { useConfig } from '@/lib/queries'
@@ -93,6 +94,7 @@ export function SiteLayout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-ink focus:px-5 focus:py-2.5 focus:text-paper">
         Skip to content
       </a>
+      <InAppBrowserBanner />
       <AnnouncementBar threshold={config?.free_shipping_threshold ?? SHIPPING.freeOver} />
       <Navbar />
       <main id="main" ref={main} className="flex-1">

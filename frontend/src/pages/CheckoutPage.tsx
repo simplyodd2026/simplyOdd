@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api, ApiError } from '@/lib/api'
 import { auth } from '@/lib/auth'
-import { isInAppBrowser } from '@/lib/inAppBrowser'
 import { refreshProfile, useConfig, useQuote } from '@/lib/queries'
 import type { AddressInput, CheckoutResponse, Order, PaymentPlan, ShippingAddress } from '@/lib/types'
 import { useCart } from '@/stores/cart'
@@ -230,8 +229,8 @@ export default function CheckoutPage() {
                 <div>
                   <h2 className="mb-4 font-display text-[1.6rem] text-ink">Contact</h2>
                   <Input label="Email for order updates" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
-                  {!user && !isInAppBrowser() && (
-                    <p className="mt-3 text-[14px] text-smoke">Checking out as a guest. <Link to="/login?next=/checkout" className="link-draw text-ink">Sign in</Link> to use saved addresses.</p>
+                  {!user && (
+                    <p className="mt-3 text-[14px] text-smoke">Checking out as a guest. <Link to="/login?next=/checkout" className="link-draw text-ink">Sign in with Google</Link> to use saved addresses, or carry on: no account needed.</p>
                   )}
                 </div>
                 <div>

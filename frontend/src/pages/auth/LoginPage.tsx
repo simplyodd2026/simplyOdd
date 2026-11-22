@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Field'
 import { AuthShell, Divider, GoogleButton } from '@/features/auth/AuthShell'
 import { useAuthRedirect } from '@/features/auth/useAuthRedirect'
-import { isInAppBrowser } from '@/lib/inAppBrowser'
+import { isInAppBrowser, openInBrowser } from '@/lib/inAppBrowser'
+import { Icon } from '@/components/ui/Icon'
 
 /** Google is the only way in: the first sign-in creates the account. */
 export default function LoginPage() {
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'copied' | 'failed' | null>(null)
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true)
@@ -24,13 +25,22 @@ export default function LoginPage() {
 
   return (
     <AuthShell title="Sign in" intro="Sign in or create an account with Google. Your account is set up automatically the first time.">
+      {/* In Instagram & co. Google refuses to sign in, so leaving for a real browser is the main action here. */}
       {isInAppBrowser() && (
-        <div className="mb-6 border border-dashed border-accent/60 p-4 text-[14px] leading-relaxed text-graphite" role="note">
-          Google sign-in doesn’t work inside this app’s browser. Tap <span className="text-ink">⋯</span> and choose <span className="text-ink">Open in browser</span> to sign in.
-          You don’t need an account to buy: you can check out as a guest.
-          <button type="button" className="link-draw mt-2 block text-ink" onClick={() => { void navigator.clipboard?.writeText(location.href).then(() => setCopied(true)).catch(() => undefined) }}>
-            {copied ? 'Link copied' : 'Copy link'}
+        <div className="mb-8">
+          <button type="button" onClick={async () => { const r = await openInBrowser(); if (r !== 'opened') setCopied(r) }}
+            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-full bg-ink text-[15px] font-medium text-paper transition-transform duration-300 active:scale-[0.98]">
+            <Icon name="external" size={18} /> Open in browser to sign in
           </button>
+          {copied && (
+            <p className="mt-3 text-center text-[14px] text-ink" role="status">
+              {copied === 'copied' ? 'Link copied. ' : ''}Tap <span className="font-medium">⋮</span> or <span className="font-medium">⋯</span> at the top right and choose <span className="font-medium">Open in browser</span>.
+            </p>
+          )}
+          <p className="mt-4 text-[14px] leading-relaxed text-graphite">
+            Google sign-in doesn’t work inside this app’s browser. You don’t need an account to buy: you can check out as a guest.
+          </p>
+          <p className="mt-6 text-center text-[13px] text-fog">or try here</p>
         </div>
       )}
       <GoogleButton busy={busy} onClick={() => run(() => auth.signInWithGoogle())} />
