@@ -200,7 +200,7 @@ export default function CheckoutPage() {
 
           {isLoading || !quote ? <Skeleton className="h-60" /> : (
             <>
-              <ReceiptLines quote={quote} />
+              <ReceiptLines quote={quote} codFee={plan === 'cod' ? quote.cod_fee : 0} />
               {quote.has_issues && (
                 <p className="mt-4 text-[14px] text-accent">Some items in your bag changed. <Link to="/cart" className="underline underline-offset-4">Review your bag</Link>.</p>
               )}
@@ -306,7 +306,7 @@ export default function CheckoutPage() {
                     {([
                       ['full', 'Pay online', 'Pay the whole amount now.', quote.total],
                       ['partial', 'Pay 50% now', `Then ${money(quote.total - quote.deposit)} when your order is delivered.`, quote.deposit],
-                      ['cod', 'Cash on delivery', 'Pay in cash or UPI when your order arrives.', quote.total],
+                      ['cod', 'Cash on delivery', `Pay in cash or UPI when your order arrives. Includes a ${money(quote.cod_fee)} COD fee.`, quote.total + quote.cod_fee],
                     ] as const).filter(([id]) => quote.payment_plans.includes(id)).map(([id, label, note, amount]) => {
                       const active = plan === id
                       return (

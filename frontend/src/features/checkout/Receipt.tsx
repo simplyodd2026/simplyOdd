@@ -50,7 +50,8 @@ export function Leader({ label, value, strong, accent }: { label: ReactNode; val
 }
 
 /** The items and the money: one line per piece, then subtotal, discount, shipping and the total. */
-export function ReceiptLines({ quote }: { quote: Quote }) {
+/** `codFee` is shown and added to the total once cash on delivery is chosen. */
+export function ReceiptLines({ quote, codFee = 0 }: { quote: Quote; codFee?: number }) {
   return (
     <>
       <ul className="flex flex-col gap-4">
@@ -73,12 +74,13 @@ export function ReceiptLines({ quote }: { quote: Quote }) {
         <Leader label="Subtotal" value={money(quote.subtotal)} />
         {quote.discount > 0 && <Leader label={`Discount${quote.coupon_code ? ` (${quote.coupon_code})` : ''}`} value={`−${money(quote.discount)}`} accent />}
         <Leader label="Shipping" value={quote.shipping === 0 ? 'Free' : money(quote.shipping)} />
+        {codFee > 0 && <Leader label="Cash on delivery fee" value={money(codFee)} />}
       </dl>
       {/* The total sits between two rules, the way a till marks the amount due. */}
       <div className="mt-6 border-y-[3px] border-double border-ink/40 py-4">
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-display text-[1.6rem] text-ink">Total</span>
-          <span className="font-display text-[clamp(1.9rem,4vw,2.4rem)] leading-none tabular-nums text-ink">{money(quote.total)}</span>
+          <span className="font-display text-[clamp(1.9rem,4vw,2.4rem)] leading-none tabular-nums text-ink">{money(quote.total + codFee)}</span>
         </div>
         <p className="mt-1 text-right text-[12.5px] text-fog">In Indian rupees</p>
       </div>

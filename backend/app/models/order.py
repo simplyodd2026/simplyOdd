@@ -99,6 +99,7 @@ class Order(Schema):
     discount: float
     coupon_code: str | None = None
     shipping: float
+    cod_fee: float = 0  # cash-on-delivery charge, included in total
     total: float
     currency: str
     status: OrderStatus = "pending"

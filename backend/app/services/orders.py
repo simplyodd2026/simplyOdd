@@ -101,7 +101,9 @@ class OrderService:
                              "Choose full payment or cash on delivery")
         if (req.payment_plan == "cod") != (provider.id == "cod"):
             raise BadRequest("Choose a payment method")
-        due_now = {"full": quote.total, "partial": quote.deposit, "cod": 0.0}[req.payment_plan]
+        cod_fee = quote.cod_fee if req.payment_plan == "cod" else 0.0
+        total = money(quote.total + cod_fee)
+        due_now = {"full": total, "partial": quote.deposit, "cod": 0.0}[req.payment_plan]
         ts = now()
         order = Order(
             id=new_id("o_"), number="", user_id=user.uid, email=req.address.email,
@@ -112,10 +114,10 @@ class OrderService:
                              unit_price=line.unit_price, quantity=line.quantity, line_total=line.line_total)
                    for line in quote.lines],
             address=req.address, shipping_method=req.shipping_method, subtotal=quote.subtotal,
-            discount=quote.discount, coupon_code=quote.coupon_code, shipping=quote.shipping,
-            total=quote.total, currency=quote.currency, notes=req.notes,
+            discount=quote.discount, coupon_code=quote.coupon_code, shipping=quote.shipping, cod_fee=cod_fee,
+            total=total, currency=quote.currency, notes=req.notes,
             payment=PaymentInfo(provider=provider.id, plan=req.payment_plan, amount=due_now,
-                                balance=money(quote.total - due_now), currency=quote.currency),
+                                balance=money(total - due_now), currency=quote.currency),
             history=[StatusEvent(status="pending", at=ts, note="Order placed")],
             sales_counted=False, created_at=ts, updated_at=ts,
         )

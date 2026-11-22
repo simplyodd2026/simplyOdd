@@ -11,3 +11,4 @@ EXPRESS_SHIPPING_FEE = 249
 MAX_PER_PRODUCT = 10  # most of one piece a single order can hold, across all its colours
 
 PARTIAL_SHARE = 0.5  # share of the total paid online on the partial plan
+COD_FEE = 149  # added to the total on the cash-on-delivery plan

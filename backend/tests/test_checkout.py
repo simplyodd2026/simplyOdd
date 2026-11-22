@@ -139,6 +139,7 @@ def test_admin_status_flow_and_reviews(client, products):
             "payment_plan": "cod"}
     order = pay(client, body).json()
     assert order["payment"]["amount"] == 0 and order["payment"]["balance"] == order["total"]
+    assert order["cod_fee"] == 149 and order["total"] == order["subtotal"] + order["shipping"] + 149
     assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
 
     # Non-admins are refused
@@ -252,7 +253,7 @@ def test_payment_plans_follow_personalisation(client, products):
     plain_line = {"product_id": plain, "quantity": 1}
     custom_line = {"product_id": cup["id"], "quantity": 1, "personalization": {"name": "Aanya"}}
     quote = lambda items: client.post("/api/cart/quote", json={"items": items}).json()
-    assert quote([plain_line])["payment_plans"] == ["full", "cod"]
+    assert quote([plain_line])["payment_plans"] == ["full", "cod"] and quote([plain_line])["cod_fee"] == 149
     # One personalised piece puts the whole bag on the 50% advance.
     assert quote([plain_line, custom_line])["payment_plans"] == ["partial"]
 
@@ -277,5 +278,7 @@ def test_payment_plans_follow_personalisation(client, products):
     order = order.json()
     assert order["status"] == "confirmed" and order["payment"]["status"] == "cod_due"
     assert order["payment"]["provider"] == "cod" and order["payment"]["paid_at"] is None
+    online = pay(client, {"items": [plain_line], "address": address(), "payment_provider": "mock"}).json()
+    assert online["cod_fee"] == 0 and online["total"] == order["total"] - 149
     c = client.post(f"/api/me/orders/{order['id']}/cancel", headers=CUSTOMER).json()
     assert c["status"] == "cancelled" and c["payment"]["status"] == "void"

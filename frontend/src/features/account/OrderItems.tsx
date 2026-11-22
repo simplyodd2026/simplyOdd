@@ -26,7 +26,7 @@ export function OrderItems({ order, linkProducts = true }: { order: Order; linkP
           </li>
         ))}
       </ul>
-      <Totals quote={order} />
+      <Totals quote={order} codFee={order.cod_fee ?? 0} />
       {order.payment.plan === 'cod' && (
         <dl className="-mt-2 flex flex-col gap-2.5 text-[15px]">
           <div className="flex justify-between gap-4 tabular-nums"><dt className="text-smoke">Due on delivery (cash or UPI)</dt><dd>{money(order.payment.balance)}</dd></div>

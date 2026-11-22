@@ -125,6 +125,7 @@ class Quote(Schema):
     # How this bag may be paid. A personalised piece can't be resold, so a bag with one takes the
     # 50% advance only; everything else is paid in full online or cash on delivery.
     payment_plans: list[PaymentPlan]
+    cod_fee: float  # added to the total if the bag is paid cash on delivery
     currency: str
     item_count: int
     has_issues: bool

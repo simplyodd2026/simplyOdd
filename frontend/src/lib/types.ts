@@ -140,6 +140,8 @@ export interface Quote {
   deposit: number
   /** How this bag may be paid: ['partial'] when it holds a personalised piece, else ['full', 'cod']. */
   payment_plans: PaymentPlan[]
+  /** Added to the total if the bag is paid cash on delivery. */
+  cod_fee: number
   currency: string
   item_count: number
   has_issues: boolean
@@ -218,6 +220,8 @@ export interface Order {
   discount: number
   coupon_code: string | null
   shipping: number
+  /** Cash-on-delivery charge, already included in total. */
+  cod_fee: number
   total: number
   currency: string
   status: OrderStatus

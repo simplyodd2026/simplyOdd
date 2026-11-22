@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 
 from app.core.constants import EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE
-from app.core.constants import PARTIAL_SHARE
+from app.core.constants import COD_FEE, PARTIAL_SHARE
 
 CONTACT_EMAIL = "simplyodd2026@gmail.com"
 
@@ -75,11 +75,13 @@ def _entries(payment_labels: tuple[str, ...]) -> list[Entry]:
               "Not yet. We're working on it.",
               ("international", "abroad", "outside", "overseas", "country", "countries", "worldwide")),
         Entry("payment-methods", "payments", "How can I pay?",
-              f"You can pay in full online ({methods}) or by cash on delivery. Orders with a personalised piece "
+              f"You can pay in full online ({methods}) or by cash on delivery (an extra {_rupees(COD_FEE)}). "
+              "Orders with a personalised piece "
               f"are paid {share} online at checkout and the rest on delivery.",
               ("pay", "payment", "methods", "upi", "card", "netbanking", "razorpay")),
         Entry("cod", "payments", "Do you offer cash on delivery?",
-              "Yes, you can pay in cash or UPI when your order arrives. It isn't available for orders with a "
+              f"Yes, you can pay in cash or UPI when your order arrives, for an extra {_rupees(COD_FEE)}. "
+              "It isn't available for orders with a "
               f"personalised piece: those are paid {share} online at checkout and the rest on delivery.",
               ("cod", "cash")),
         Entry("partial", "payments", "Can I pay part now and the rest later?", partial,

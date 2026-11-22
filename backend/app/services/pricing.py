@@ -2,7 +2,7 @@
 it renders the quote returned from here, and checkout recomputes it."""
 from __future__ import annotations
 
-from app.core.constants import (CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
+from app.core.constants import (COD_FEE, CURRENCY, EXPRESS_SHIPPING_FEE, FREE_SHIPPING_THRESHOLD, MAX_PER_PRODUCT,
                                 PARTIAL_SHARE, STANDARD_SHIPPING_FEE)
 from app.core.utils import money
 from app.models.cart import (CartLine, PaymentPlan, Personalization, PersonalizationValue, Quote, QuoteLine, QuoteRequest,
@@ -107,7 +107,7 @@ class PricingService:
             coupon_code=coupon.code if coupon else None, coupon_message=message, coupon_needs_amount=needs_amount,
             coupon_amount=total if coupon and coupon.kind == "custom_total" else None,
             shipping_method=req.shipping_method, shipping=shipping, shipping_options=options,
-            total=total, deposit=money(total * PARTIAL_SHARE), payment_plans=payment_plans(lines), currency=CURRENCY,
+            total=total, deposit=money(total * PARTIAL_SHARE), payment_plans=payment_plans(lines), cod_fee=COD_FEE, currency=CURRENCY,
             item_count=sum(line.quantity for line in lines if line.available),
             has_issues=any(not line.available for line in lines),
         )

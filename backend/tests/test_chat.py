@@ -308,7 +308,8 @@ def test_faq_uses_real_policy(chat):
     r = say(chat, sid, h, "What does shipping cost?")
     assert r["type"] == "faq" and "₹199" in r["message"] and "₹1,499" in r["message"]
     assert "personalised" in say(chat, sid, h, "Can I make a partial payment?")["message"]
-    assert "Yes" in say(chat, sid, h, "Do you offer cash on delivery?")["message"]
+    cod = say(chat, sid, h, "Do you offer cash on delivery?")["message"]
+    assert "Yes" in cod and "₹149" in cod
     assert "14 days" in say(chat, sid, h, "What is your return policy?")["message"]
 
 
